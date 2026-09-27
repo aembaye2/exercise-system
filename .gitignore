@@ -1,0 +1,15 @@
+node_modules
+dist
+dist-lib
+*.tsbuildinfo
+
+/.quarto/
+**/*.quarto_ipynb
+
+# Quarto rendered output / deployment config
+/quarto-demo/_book/
+/quarto-demo/summary_files/
+/quarto-demo/rsconnect/
+
+# Scratch notes
+Z_temp.md

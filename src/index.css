@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+}
+
+.markdown p {
+  margin-block: 0.5em;
+}
+.markdown p:first-child {
+  margin-top: 0;
+}
+.markdown p:last-child {
+  margin-bottom: 0;
+}
+.markdown .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.25em;
+}
+.markdown code {
+  @apply rounded bg-slate-200 px-1 dark:bg-slate-800;
+}
+.markdown ul {
+  @apply list-disc pl-6;
+}
+.markdown ol {
+  @apply list-decimal pl-6;
+}
+.markdown table {
+  @apply my-2 border-collapse text-sm;
+}
+.markdown th,
+.markdown td {
+  @apply border border-slate-300 px-2 py-1 text-right dark:border-slate-700;
+}
+.markdown th {
+  @apply bg-slate-100 font-medium dark:bg-slate-800;
+}
+.markdown th:first-child,
+.markdown td:first-child {
+  @apply text-left;
+}

@@ -1,0 +1,40 @@
+---
+engine: knitr
+---
+
+# Chapter 2: Supply and demand
+
+```{=html}
+<link rel="stylesheet" href="assets/exercise-system/exercise-system.css" />
+<div id="quiz1" class="exercise-system-root">Loading practice questions …</div>
+<script type="module">
+  import { mount } from "./assets/exercise-system/exercise-system.js";
+  import { assessment, questions } from "./assets/exercise-system/quiz1.js";
+
+  const el = document.getElementById("quiz1");
+  try {
+    mount(el, { assessment, questions });
+  } catch (err) {
+    el.textContent = "Could not load the practice questions: " + err.message;
+    console.error(err);
+  }
+</script>
+```
+
+## Other Exercise
+
+```{=html}
+<div id="quiz2" class="exercise-system-root">Loading practice questions …</div>
+<script type="module">
+  import { mount } from "./assets/exercise-system/exercise-system.js";
+  import { assessment, questions } from "./assets/exercise-system/quiz2.js";
+
+  const el = document.getElementById("quiz2");
+  try {
+    mount(el, { assessment, questions });
+  } catch (err) {
+    el.textContent = "Could not load the practice questions: " + err.message;
+    console.error(err);
+  }
+</script>
+```

@@ -1,0 +1,65 @@
+project:
+  type: book
+  resources:
+    - assets/exercise-system/**
+
+book:
+  title: "Econ30303-Studyguide"
+  author:
+    - name: Abel Embaye
+      email: aembaye@uark.edu
+      # degrees: PhD
+      # affiliations:
+      #   - name: TBD
+  #date: "`r format(Sys.time(), '%B %d, %Y')`"
+  date: today
+  date-format: "MMMM D, YYYY"
+  sharing: [twitter, facebook]
+  twitter-card: true
+  # repo-url: https://github.com/aembaye2/thisbook
+  repo-actions: [edit, issue]
+  downloads: pdf
+  favicon: https://datavizcatalogue.com/methods/images/top_images/SVG/density_plot.svg
+  #cover-image: https://datavizcatalogue.com/methods/images/top_images/SVG/density_plot.svg
+  navbar:
+    logo: https://datavizcatalogue.com/methods/images/top_images/SVG/density_plot.svg
+  page-footer:
+    right: |
+      <!-- Current resource authored via <a href="https://quarto.org/docs/books/">Quarto</a>. -->
+  chapters:
+    - index.qmd
+    - 01-Ch02.qmd
+  #appendices:
+    #- a01-Appendix1.qmd
+
+custom-callout: ## https://quarto.thecoatlessprofessor.com/custom-callout/
+  definition:
+    title: "Definition"
+    icon-symbol: "📜"
+    color: "#C1AA98"
+bibliography: references.bib
+
+format:
+  html: 
+    #include-in-header: assets/katex-header.html
+    toc-title: On this page
+    code-annotations: hover
+    theme:
+      light: flatly
+      dark: darkly
+    crossref:
+      custom:
+        - kind: float
+          reference-prefix: Video
+          key: vid
+    back-to-top-navigation: true
+  pdf: default                                 
+  ## `knitr:::webshot_available()`
+      #documentclass: scrreprt
+      #cover-image: https://cdn.pixabay.com/photo/2016/08/02/18/27/statistic-1564428_1280.png
+engine: knitr
+lightbox: true
+filters:
+  - custom-callout
+comments:
+  hypothesis: true

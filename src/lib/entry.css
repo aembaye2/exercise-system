@@ -1,0 +1,69 @@
+/* Deliberately skips Tailwind's preflight reset and does not import
+   src/index.css: this bundle is meant to be embedded inside a page with its
+   own styles and its own <body> (e.g. a Quarto document), so it must not
+   apply a global CSS reset or repaint the page background. Everything here
+   is scoped under .exercise-system-widget, the wrapper entry.tsx renders. */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css" source(none);
+@source "..";
+/* Tailwind's utilities are global, so drop names the host page (Quarto/Bootstrap)
+   uses for its own layout; e.g. .collapse would hide Quarto's left sidebar. */
+@source not inline("collapse container fixed sticky static visible invisible table");
+
+.exercise-system-widget {
+  color-scheme: light dark;
+  box-sizing: border-box;
+}
+.exercise-system-widget *,
+.exercise-system-widget *::before,
+.exercise-system-widget *::after {
+  box-sizing: inherit;
+}
+
+/* Unlayered so host-page list styles (e.g. Quarto/Bootstrap) can't re-add bullets. */
+.exercise-system-widget nav ol,
+.exercise-system-widget nav li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.exercise-system-widget .markdown {
+  p {
+    margin-block: 0.5em;
+  }
+  p:first-child {
+    margin-top: 0;
+  }
+  p:last-child {
+    margin-bottom: 0;
+  }
+  .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-block: 0.25em;
+  }
+  code {
+    @apply rounded bg-slate-200 px-1 dark:bg-slate-800;
+  }
+  ul {
+    @apply list-disc pl-6;
+  }
+  ol {
+    @apply list-decimal pl-6;
+  }
+  table {
+    @apply my-2 border-collapse text-sm;
+  }
+  th,
+  td {
+    @apply border border-slate-300 px-2 py-1 text-right dark:border-slate-700;
+  }
+  th {
+    @apply bg-slate-100 font-medium dark:bg-slate-800;
+  }
+  th:first-child,
+  td:first-child {
+    @apply text-left;
+  }
+}
