@@ -1,0 +1,35 @@
+---
+title: "JSXDrawing in Quarto"
+format:
+  html:
+    css: jsxdrawing.min.css
+    include-after-body:
+      text: |
+        <script src="jsxdrawing.min.js"></script>
+---
+
+Render with `quarto preview example.qmd` from this folder (so
+`jsxdrawing.min.js`, `jsxdrawing.min.css` and `question1.json` sit next to it).
+
+## Question 1 (props from a JSON file)
+
+```{=html}
+<div data-drawing-app data-props-src="question1.json"></div>
+```
+
+## Question 2 (inline props)
+
+```{=html}
+<div data-drawing-app>
+  <script type="application/json">
+    {
+      "questionText": "Draw the budget line for income 80 and prices of 10 for both goods.",
+      "boundingBox": [-1, 11, -1, 11],
+      "width": 600,
+      "height": 600,
+      "enabledTools": ["select", "segment", "eraser"],
+      "expectedDrawing": [{ "type": "segment", "yIntercept": 8, "slope": -1, "tolerance": 0.1 }]
+    }
+  </script>
+</div>
+```
