@@ -1,0 +1,1 @@
+{"questionText":"Draw the line segments that intersect at the given points.","boundingBox":[-1,11,-1,11],"xLabel":"x-axis","yLabel":"y-axis","width":700,"height":700,"showColorPicker":false,"enabledTools":["select","segment","text","coordinate","eraser","scatter"],"expectedDrawing":[{"type":"segment","yIntercept":8,"slope":-1,"tolerance":0.1}]}

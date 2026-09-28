@@ -40,6 +40,12 @@ const questionProps: DrawingAppProps = {
       slope: 1,
       tolerance: 0.1,
     },
+    {
+      type: "segment",
+      yIntercept: 10,
+      slope: -1,
+      tolerance: 0.1,
+    },
   ],
   suggestedAnswer: [
     {
