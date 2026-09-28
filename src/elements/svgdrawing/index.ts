@@ -14,7 +14,7 @@ export type { AnswerObject, DrawingPart, DrawnObject, InitialObject, Pt, Tol, To
 export { sampleFunction } from "./geometry";
 
 export const drawingElement: ElementDefinition<DrawingPart> = {
-  type: "drawing",
+  type: "svgdrawing",
   check: checkDrawing,
   validate: validateDrawing,
   grade: gradeDrawing,

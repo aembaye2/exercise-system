@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { snapPoint } from "../elements/drawing/editing";
-import { exampleDrawing } from "../elements/drawing/gradeDrawing";
-import type { DrawnObject } from "../elements/drawing/types";
+import { snapPoint } from "../elements/svgdrawing/editing";
+import { exampleDrawing } from "../elements/svgdrawing/gradeDrawing";
+import type { DrawnObject } from "../elements/svgdrawing/types";
+import { exampleJsxGraph } from "../elements/jsxgraph/gradeJsxGraph";
 import { exampleTable } from "../elements/table/gradeTable";
 import { gradeQuestion } from "../engine/gradeQuestion";
 import type { AnswerValues, JsonValue, Part } from "../engine/types";
@@ -14,7 +15,8 @@ function perfectAnswers(parts: Part[]): AnswerValues {
   const values: AnswerValues = {};
   for (const p of parts) {
     if (p.type === "multiple-choice") values[p.name] = p.options.findIndex((o) => o.correct);
-    else if (p.type === "drawing") values[p.name] = exampleDrawing(p) as unknown as JsonValue;
+    else if (p.type === "svgdrawing") values[p.name] = exampleDrawing(p) as unknown as JsonValue;
+    else if (p.type === "jsxgraph") values[p.name] = exampleJsxGraph(p) as unknown as JsonValue;
     else if (p.type === "table") values[p.name] = exampleTable(p);
     else values[p.name] = String(p.correct);
   }
@@ -104,7 +106,7 @@ describe("drawing questions", () => {
   // Students can only place points on the snap grid (lines are moved by whole
   // snap steps from a copy, so they stay exact). The correct drawing, snapped,
   // must still earn full marks, or the tolerances are too tight to reach.
-  const snapped = (part: Extract<Part, { type: "drawing" }>, obj: DrawnObject): DrawnObject => {
+  const snapped = (part: Extract<Part, { type: "svgdrawing" }>, obj: DrawnObject): DrawnObject => {
     switch (obj.type) {
       case "point": {
         const [x, y] = snapPoint(part, [obj.x, obj.y]);
@@ -121,7 +123,7 @@ describe("drawing questions", () => {
   it.each(questions.map((q) => [q.id, q] as const))("%s: a grid-snapped correct drawing still scores 100%%", (_id, q) => {
     for (let seed = 0; seed < 200; seed++) {
       for (const p of createVariant(q, seed).parts) {
-        if (p.type !== "drawing") continue;
+        if (p.type !== "svgdrawing") continue;
         const value = exampleDrawing(p).map((o) => snapped(p, o)) as unknown as JsonValue;
         expect(gradeQuestion([p], { [p.name]: value }).score, `seed ${seed}`).toBe(1);
       }

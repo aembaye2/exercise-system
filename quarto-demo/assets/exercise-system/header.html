@@ -1,0 +1,21 @@
+<!-- Loaded on every page of the book by _quarto.yml (format > html > include-in-header).
+     Mounts every <div class="exercise-system-root" data-quiz="quizN.js"> on the page,
+     so a chapter only needs the div. The stylesheet comes from `css:` in _quarto.yml.
+     The library is imported only when the page has a quiz. Paths are relative to the
+     page, so keep chapters in the book's top folder (or adjust them). -->
+<script type="module">
+  const roots = document.querySelectorAll("[data-quiz]:not([data-mounted])");
+  if (roots.length > 0) {
+    const { mount } = await import("./assets/exercise-system/exercise-system.js");
+    for (const el of roots) {
+      el.dataset.mounted = "";
+      try {
+        const { assessment, questions } = await import(`./assets/exercise-system/${el.dataset.quiz}`);
+        mount(el, { assessment, questions });
+      } catch (err) {
+        el.textContent = `Could not load the practice questions (${el.dataset.quiz}): ${err.message}`;
+        console.error(err);
+      }
+    }
+  }
+</script>

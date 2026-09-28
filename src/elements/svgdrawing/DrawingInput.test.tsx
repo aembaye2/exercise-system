@@ -7,7 +7,7 @@ import { DrawingInput } from "./DrawingInput";
 import type { DrawingPart } from "./types";
 
 const part: DrawingPart = {
-  type: "drawing",
+  type: "svgdrawing",
   name: "g",
   x: { max: 20, snap: 0.5, label: "Quantity" },
   y: { max: 20, snap: 0.5, label: "Price" },

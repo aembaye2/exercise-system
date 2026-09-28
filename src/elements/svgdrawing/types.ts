@@ -62,7 +62,7 @@ export type AnswerObject =
   | (AnswerBase & { type: "curve"; points: Pt[]; relation?: "on" | "above" | "below"; through?: Pt });
 
 export interface DrawingPart extends BasePart {
-  type: "drawing";
+  type: "svgdrawing";
   x: Axis;
   y: Axis;
   initial?: InitialObject[];
@@ -84,6 +84,6 @@ export const CURVE_POINTS = 4;
 
 declare module "../../engine/types" {
   interface PartTypeMap {
-    drawing: DrawingPart;
+    svgdrawing: DrawingPart;
   }
 }

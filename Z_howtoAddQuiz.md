@@ -4,7 +4,7 @@ To make Quiz 2, you add one entry to src/assessments/index.ts. If the three ques
 
 1. Choose the three questions.
 - Existing questions: use their id values. You'll find them at the top of each qNN_*.ts file, for example types-of-goods, market-equilibrium-mixed and economic-terms-dropdown.
-- New questions: create each one first as src/questions/q11_description.ts, q12_… and so on, and add each to the questions array in src/questions/index.ts. The Readme walks through this.
+- New questions: create each one first as src/questions/NN_type_description.ts (for example 14_number_opportunity_cost.ts) and so on, and add each to the questions array in src/questions/index.ts. The Readme walks through this.
 
 2. Add Quiz 2 to src/assessments/index.ts. Copy the Quiz 1 entry, paste it after Quiz 1 inside the assessments array, and change:
 - id: a new, unique value such as exam2. It's used in the URL and as the key for saved progress, so don't change it once students have started.

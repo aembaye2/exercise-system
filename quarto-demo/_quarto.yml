@@ -18,7 +18,7 @@ book:
   twitter-card: true
   # repo-url: https://github.com/aembaye2/thisbook
   repo-actions: [edit, issue]
-  downloads: pdf
+  #downloads: pdf
   favicon: https://datavizcatalogue.com/methods/images/top_images/SVG/density_plot.svg
   #cover-image: https://datavizcatalogue.com/methods/images/top_images/SVG/density_plot.svg
   navbar:
@@ -42,6 +42,9 @@ bibliography: references.bib
 format:
   html: 
     #include-in-header: assets/katex-header.html
+    # Exercise system: stylesheet and quiz loader are set once here for every page.
+    css: assets/exercise-system/exercise-system.css
+    include-in-header: assets/exercise-system/header.html
     toc-title: On this page
     code-annotations: hover
     theme:

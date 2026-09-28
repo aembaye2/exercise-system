@@ -1,16 +1,14 @@
 import type { AnyQuestion } from "../engine/types";
-import { priceElasticity } from "./q01_price_elasticity";
-import { typesOfGoods } from "./q02_types_of_goods";
-import { marketEquilibrium } from "./q03_market_equilibrium";
-import { firmProfit } from "./q04_firm_profit";
-import { presentValue } from "./q05_present_value";
-import { economicTerms } from "./q06_economic_terms";
-import { taxIncidence } from "./q07_tax_incidence";
-import { indifferenceCurve } from "./q08_indifference_curve";
-import { demandShift } from "./q09_demand_shift";
-import { gdpDeflator } from "./q10_gdp_deflator";
-import { comparativeAdvantage } from "./q11_comparative_advantage";
-import { gainsFromTrade } from "./q12_gains_from_trade";
+import { priceElasticity } from "./01_number_price_elasticity";
+import { typesOfGoods } from "./02_mc_types_of_goods";
+import { marketEquilibrium } from "./03_number-mc_market_equilibrium";
+import { firmProfit } from "./04_integer_firm_profit";
+import { presentValue } from "./05_number_present_value";
+import { economicTerms } from "./06_mc_economic_terms";
+import { gdpDeflator } from "./10_number_gdp_deflator";
+import { comparativeAdvantage } from "./11_mc-number_comparative_advantage";
+import { gainsFromTrade } from "./12_table_gains_from_trade";
+import { budgetLine } from "./13_jsxgraph_budget_line";
 
 /** Every question available to assessments. Add new questions here. */
 export const questions: AnyQuestion[] = [
@@ -20,12 +18,10 @@ export const questions: AnyQuestion[] = [
   firmProfit,
   presentValue,
   economicTerms,
-  taxIncidence,
-  indifferenceCurve,
-  demandShift,
   gdpDeflator,
   comparativeAdvantage,
   gainsFromTrade,
+  budgetLine,
 ];
 
 const byId = new Map(questions.map((q) => [q.id, q]));

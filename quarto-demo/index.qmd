@@ -2,4 +2,14 @@
 
 📜 The begining is the most important part of a journey! 📜
 
-## Testing the exercise system (auto-graded)
+## Sample Exercise:
+
+```{=html}
+<div class="exercise-system-root" data-quiz="round2Quiz.js">Loading practice questions …</div>
+```
+
+## Round2 Exercise:
+
+```{=html}
+<div class="exercise-system-root" data-quiz="round2Quiz.js">Loading practice questions …</div>
+```

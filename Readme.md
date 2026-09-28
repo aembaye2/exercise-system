@@ -48,6 +48,7 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | Multiple choice (radio + dropdown), number, integer elements | Done |
 | **Drawing element** (points, lines, polygons, curves on a graph) | Done. Added beyond phase 1 |
 | **Table element** (fillable table with fixed and blank cells, partial credit) | Done. Added beyond phase 1 |
+| **JSXGraph element** (drawing component built into the app; graded on Submit) | Done. Added beyond phase 1. Demo: `13_jsxgraph_budget_line.ts` in Exercise 1 |
 | Exercise and exam modes, attempts, best score | Done |
 | localStorage persistence, reset, JSON export, import/review page | Done |
 | Accessibility, mobile layout, dark mode | Done |
@@ -108,15 +109,19 @@ exercise_system/
 │   │   ├── multipleChoice/
 │   │   ├── number/
 │   │   ├── integer/
-│   │   ├── drawing/          # interactive graph input + geometric grading
+│   │   ├── svgdrawing/       # interactive SVG graph input + geometric grading
 │   │   ├── table/            # fillable table (e.g. gains-from-trade worksheets)
+│   │   ├── jsxgraph/         # element around the JSXGraph drawing component (input + grading)
 │   │   └── TextInput.tsx     # shared text box used by number/integer
 │   ├── questions/            # question bank: one file per question + index.ts
 │   ├── assessments/index.ts  # assessment definitions (exercises, quizzes)
 │   ├── components/           # QuestionView, AssessmentView, ReviewView, Markdown, ...
+│   │   └── jsxgraphComponent/  # JSXGraph drawing board + toolbar + grading (copied from jsxgraph-library)
 │   ├── pages/                # Home, Results, Import
 │   ├── lib/                  # embeddable build: entry.tsx (mount API) + QuizWidget
 │   └── test/                 # test setup + fixtures
+├── jsxgraph-library/         # standalone JSXGraph widget project (the component was copied from here)
+├── svg-drawing-library/      # separate project: the SVG drawing widget
 ├── dist/                     # built standalone app (generated)
 ├── dist-lib/                 # built library: exercise-system.js / .css (generated)
 └── quarto-demo/              # sample Quarto book that embeds the library
@@ -173,7 +178,7 @@ You can override `maxAttempts` for each question in the assessment definition.
 
 ### Question types at a glance
 
-There are **5 element types**. A question is made of one or more **parts**, and each part uses
+There are **6 element types**. A question is made of one or more **parts**, and each part uses
 one element, so a single question can mix them. For example, you could combine a number box with
 a multiple-choice part, or a drawing with a follow-up number.
 
@@ -182,29 +187,28 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `multiple-choice` | picks one option | radio buttons or an inline dropdown; shuffled or fixed order; show a random subset (`numberAnswers`) | 1 if the correct option is chosen, else 0; optional per-option feedback |
 | `number` | types a decimal number | units after the box (`suffix`) | relative/absolute tolerance (`relabs`), significant figures (`sigfig`) or decimal places (`decdig`) |
 | `integer` | types a whole number | units after the box | exact match |
-| `drawing` | draws on a graph | adds points, lines (drawn fresh or shifted from a given curve), shaded areas (polygons) and curves | position within a tolerance, direction of a shift, area overlap, or which side of a reference curve |
+| `svgdrawing` | draws on an SVG graph | adds points, lines (drawn fresh or shifted from a given curve), shaded areas (polygons) and curves | position within a tolerance, direction of a shift, area overlap, or which side of a reference curve |
+| `jsxgraph` | draws on a JSXGraph canvas | the tools of the drawing component (`src/components/jsxgraphComponent`) | the exercise app's **Submit**: the drawing is compared with `expectedDrawing` (slope/intercept lines or exact points), partial credit per shape |
 | `table` | fills in blank cells of a table | fixed cells, section rows, grouped column headers | each blank like a `number` part; partial credit (default) or all-or-nothing |
 
-`multiple-choice`, `number` and `integer` come from the phase 1 plan. `drawing` and `table` were
-added later. All five are included in the embeddable library.
+`multiple-choice`, `number` and `integer` come from the phase 1 plan. `svgdrawing`, `table` and `jsxgraph` were
+added later. All six are included in the embeddable library.
 
 **Which questions use which elements.** The question bank in `src/questions/` has an example of
 each element type:
 
 | File | Question | Parts |
 | --- | --- | --- |
-| `q01_price_elasticity.ts` | Price elasticity of demand (midpoint method) | number (`relabs`) |
-| `q02_types_of_goods.ts` | Types of goods | multiple choice (4 random options from a pool) |
-| `q03_market_equilibrium.ts` | Market equilibrium and price controls | number + multiple choice (weighted) |
-| `q04_firm_profit.ts` | Profit of a firm | integer |
-| `q05_present_value.ts` | Present value | number (`sigfig`) |
-| `q06_economic_terms.ts` | Economic terms | multiple choice (dropdown inside a sentence) |
-| `q07_tax_incidence.ts` | A per-unit tax | drawing (shifted line, point, shaded area) + number |
-| `q08_indifference_curve.ts` | Optimal bundle and indifference curve | drawing (curve) + number |
-| `q09_demand_shift.ts` | Shifts in demand | drawing (shifted line) + multiple choice |
-| `q10_gdp_deflator.ts` | Nominal GDP, real GDP, and the GDP deflator | 3 numbers |
-| `q11_comparative_advantage.ts` | Opportunity cost, absolute and comparative advantage | 4 numbers + 4 dropdowns, with a Markdown table in the question text |
-| `q12_gains_from_trade.ts` | Gains from trade | table (16 blanks) |
+| `01_number_price_elasticity.ts` | Price elasticity of demand (midpoint method) | number (`relabs`) |
+| `02_mc_types_of_goods.ts` | Types of goods | multiple choice (4 random options from a pool) |
+| `03_number-mc_market_equilibrium.ts` | Market equilibrium and price controls | number + multiple choice (weighted) |
+| `04_integer_firm_profit.ts` | Profit of a firm | integer |
+| `05_number_present_value.ts` | Present value | number (`sigfig`) |
+| `06_mc_economic_terms.ts` | Economic terms | multiple choice (dropdown inside a sentence) |
+| `10_number_gdp_deflator.ts` | Nominal GDP, real GDP, and the GDP deflator | 3 numbers |
+| `11_mc-number_comparative_advantage.ts` | Opportunity cost, absolute and comparative advantage | 4 numbers + 4 dropdowns, with a Markdown table in the question text |
+| `12_table_gains_from_trade.ts` | Gains from trade | table (16 blanks) |
+| `13_jsxgraph_budget_line.ts` | Budget line | `jsxgraph` (draw a segment on the JSXGraph board; graded on Submit) |
 
 The Quarto demo also has plain multiple-choice questions written as `.js` files, in
 `quarto-demo/assets/exercise-system/questions/round2/`.
@@ -263,11 +267,11 @@ question is finished.
 
 Accepts only `/^[+-]?\d+$/`, so `3.0` and `1e2` are rejected. Grading checks for exact equality.
 
-### `drawing`
+### `svgdrawing`
 
 This is an SVG graph that students draw on with the mouse, touch or keyboard. Use it for
 supply-and-demand shifts, tax wedges, surplus areas, indifference curves and similar graphs.
-The full spec is in `src/elements/drawing/types.ts`. In short:
+The full spec is in `src/elements/svgdrawing/types.ts`. In short:
 
 - **`x`, `y`**: the axes (`max`, plus optional `min`, `label`, grid `step`, drag `snap`).
 - **`initial`**: fixed objects already on the graph (points, lines, polygons, curves). They
@@ -285,8 +289,8 @@ The full spec is in `src/elements/drawing/types.ts`. In short:
     curve with `sampleFunction(f, xmin, xmax, n)`.
 - **`tol`**: the tolerance in graph units. The default is 4% of each axis range.
 
-Look at `src/questions/q07_tax_incidence.ts`, `q08_indifference_curve.ts` and
-`q09_demand_shift.ts` for working examples.
+No demo question uses this element any more; see `src/elements/svgdrawing/drawing.test.ts` for example
+specs.
 
 ### `table`
 
@@ -321,14 +325,66 @@ parts, each with its own `comparison`/`rtol`/`digits` if needed.
   "With Trade – Consumption, Saudi Arabia, Corn (bushels)", without revealing their values.
 - Once the question is finished, each wrong cell shows its correct value in green, in place.
 
-See `src/questions/q12_gains_from_trade.ts`. It computes every cell from the production
+See `src/questions/12_table_gains_from_trade.ts`. It computes every cell from the production
 possibilities rather than hard-coding the answers.
+
+### `jsxgraph`
+
+A JSXGraph drawing board with a toolbar, used when the `svgdrawing` element isn't enough (for example
+segments on a budget-line graph). The board is a **component of this app**
+(`src/components/jsxgraphComponent/`, originally copied from `jsxgraph-library/`), not a separate
+bundle. It has no Grade button: the student draws and presses the app's normal **Submit**, and the
+drawing is graded then.
+
+```ts
+{
+  type: "jsxgraph",
+  name: "budget",
+  props: {                                   // DrawingQuestionProps (JSON)
+    boundingBox: [-1, 11, -1, 11],
+    xLabel: "Pizzas",
+    yLabel: "Books",
+    enabledTools: ["select", "segment", "eraser"],
+    expectedDrawing: [                       // required: what Submit grades against
+      { type: "segment", yIntercept: 6, slope: -0.75, tolerance: 0.1 },
+    ],
+  },
+}
+```
+
+- **`props`** are the component's `DrawingQuestionProps` (see `DrawingApp.tsx`): board size and
+  labels, `initialObjects`, `enabledTools`/`enabledActions`, colors, button visibility, `width`
+  and `height`. Only `expectedDrawing` is required (`check` throws an `AuthoringError` without it).
+- **The value** of the part is the list of shapes the student drew (`UserDrawing[]`), updated on
+  every change (draw, drag, erase, undo, redo, clear). It is saved, exported and restored like any
+  other value: the board is rebuilt from it when saved progress is loaded.
+- **Grading** runs `gradeDrawing(expectedDrawing, drawings, boundingBox)` on Submit. Shapes are
+  matched in order; a line or segment given as `slope`/`yIntercept` only has to lie on that line,
+  within `tolerance` (default 10%); exact-points shapes get 5% of the board diagonal. The score is
+  the share of expected shapes drawn correctly. The feedback names the wrong shapes but not the
+  expected values. An empty board is invalid, so it doesn't use an attempt.
+- **When the question is finished** the board is locked (`readOnly`) and the correct answer is
+  drawn dashed on top (`suggestedAnswer` if given, otherwise `expectedDrawing`).
+- **Dependencies:** `jsxgraph` and `lucide-react` (both bundled, including into `exercise-system.js`
+  for Quarto).
+
+See `src/questions/13_jsxgraph_budget_line.ts`. Files: `src/elements/jsxgraph/` (`JsxGraphInput.tsx`,
+`gradeJsxGraph.ts`, `types.ts`) and `src/components/jsxgraphComponent/` (`DrawingApp.tsx`,
+`canvas/drawingLogic.tsx` for the board, `canvas/drawingTools.tsx`, `canvas/grading.ts`,
+`canvas/DrawingCanvas.css`).
+
+The component is a copy: fixes made in `jsxgraph-library/` don't reach it automatically.
 
 ---
 
 ## How to add a new question
 
-1. **Create a file** in `src/questions/`, for example `src/questions/q13_opportunity_cost.ts`:
+**File names** are `NN_<type>_<description>`, for example `01_number_price_elasticity.ts` or
+`07_mc_microeconomics_defined.js`. `<type>` is the element type of the question's parts, shortened to
+`mc` for `multiple-choice`; a question that mixes types lists them in order, joined by `-`
+(`03_number-mc_market_equilibrium.ts`). `NN` is the number in that folder.
+
+1. **Create a file** in `src/questions/`, for example `src/questions/14_number_opportunity_cost.ts`:
 
    ```ts
    import type { Question } from "../engine/types";
@@ -466,7 +522,7 @@ of registration.
    ```
 
 `src/elements/integer/` is the smallest complete example to copy. `src/elements/table/` is a
-mid-sized one that reuses the `number` grader for each cell, and `src/elements/drawing/` is the
+mid-sized one that reuses the `number` grader for each cell, and `src/elements/svgdrawing/` is the
 most complex.
 
 ---
@@ -496,25 +552,80 @@ Since there's no backend, the browser and JSON files stand in for one.
 
 `npm run build:lib` produces a self-contained bundle in `dist-lib/`:
 
-- `exercise-system.js`: an ES module with React, all 5 element types and KaTeX
-- `exercise-system.css`: Tailwind styles plus the KaTeX fonts, inlined
+- `exercise-system.js`: an ES module with React, all 6 element types, JSXGraph and KaTeX
+  (about 2.2 MB)
+- `exercise-system.css`: Tailwind styles plus the KaTeX fonts, inlined (about 1.5 MB)
 
 The bundle exports `mount(element, { assessment, questions })`, which returns an unmount function.
-It also exports `sampleFunction` for drawing questions. The embedded widget shows one assessment
-and doesn't use the URL hash, so it won't clash with the page's own navigation.
+It also exports `sampleFunction` for `svgdrawing` questions. The embedded widget shows one
+assessment and doesn't use the URL hash, so it won't clash with the page's own navigation.
 
-### Workflow
+**Once the book is set up (steps 1 to 3), a quiz is deployed with one line** in any chapter:
 
-1. **Build and copy** the bundle into the book's assets folder:
+````markdown
+```{=html}
+<div class="exercise-system-root" data-quiz="sampleQuiz.js"></div>
+```
+````
+
+The stylesheet and the script that mounts the quiz are loaded once for the whole book, from
+`_quarto.yml`. Chapters contain no `<link>` and no `<script>`.
+
+### One-time setup of a book
+
+1. **Build and copy** the bundle into the book's assets folder. Repeat this whenever the library
+   changes:
 
    ```powershell
    npm run build:lib
-   Copy-Item dist-lib\exercise-system.js,dist-lib\exercise-system.css quarto-demo\assets\exercise-system\ -Force
+   Copy-Item dist-lib\exercise-system.js, dist-lib\exercise-system.css quarto-demo\assets\exercise-system\ -Force
    ```
 
-2. **Write the questions as plain `.js` files** in `assets/exercise-system/questions/`. They have
-   the same shape as the `.ts` files in `src/questions/`, just without type annotations. Drawing
-   questions import the helper from the bundle:
+2. **Add the loader.** Create `assets/exercise-system/header.html` (the demo has a copy in
+   `quarto-demo/assets/exercise-system/`). It mounts every `<div data-quiz="...">` on the page,
+   and imports the library only on pages that have one:
+
+   ```html
+   <script type="module">
+     const roots = document.querySelectorAll("[data-quiz]:not([data-mounted])");
+     if (roots.length > 0) {
+       const { mount } = await import("./assets/exercise-system/exercise-system.js");
+       for (const el of roots) {
+         el.dataset.mounted = "";
+         try {
+           const { assessment, questions } = await import(`./assets/exercise-system/${el.dataset.quiz}`);
+           mount(el, { assessment, questions });
+         } catch (err) {
+           el.textContent = `Could not load the practice questions (${el.dataset.quiz}): ${err.message}`;
+           console.error(err);
+         }
+       }
+     }
+   </script>
+   ```
+
+3. **Register it in `_quarto.yml`**: the stylesheet and the loader for every page, and the assets
+   folder so Quarto copies it into the rendered book:
+
+   ```yaml
+   project:
+     resources:
+       - assets/exercise-system/**
+
+   format:
+     html:
+       css: assets/exercise-system/exercise-system.css
+       include-in-header: assets/exercise-system/header.html
+   ```
+
+   The paths in `header.html` are relative to the page, so keep the chapters in the book's top
+   folder (or change them). The stylesheet is downloaded once and then cached for all pages.
+
+### Adding a quiz
+
+1. **Write the questions as plain `.js` files** in `assets/exercise-system/questions/`, named
+   `NN_<type>_<description>.js`. They have the same shape as the `.ts` files in `src/questions/`,
+   just without type annotations. `svgdrawing` questions import the helper from the bundle:
 
    ```js
    import { sampleFunction } from "../exercise-system.js";   // from questions/
@@ -525,12 +636,12 @@ and doesn't use the URL hash, so it won't clash with the page's own navigation.
    If one import in a quiz fails, the whole quiz stays stuck on "Loading…". To find the missing
    file, look for a 404 in the browser console (F12).
 
-3. **Write an assessment module**, for example `assets/exercise-system/quiz1.js`, that exports
-   `questions` and `assessment`:
+2. **Write an assessment module**, for example `assets/exercise-system/sampleQuiz.js`, that
+   exports `questions` and `assessment`:
 
    ```js
-   import { priceElasticity } from "./questions/q01_price_elasticity.js";
-   import { typesOfGoods } from "./questions/q02_types_of_goods.js";
+   import { priceElasticity } from "./questions/sample/01_number_price_elasticity.js";
+   import { typesOfGoods } from "./questions/sample/02_mc_types_of_goods.js";
 
    export const questions = [priceElasticity, typesOfGoods];
 
@@ -542,60 +653,25 @@ and doesn't use the URL hash, so it won't clash with the page's own navigation.
    };
    ```
 
-4. **Embed it** in a `.qmd` chapter. Each quiz is a `<div>` whose `data-quiz` attribute names its
-   quiz file, relative to `assets/exercise-system/`. One loader script then mounts every such div
-   on the page:
-
-   ````markdown
-   ```{=html}
-   <link rel="stylesheet" href="assets/exercise-system/exercise-system.css" />
-   <div class="exercise-system-root" data-quiz="quiz1.js">Loading practice questions…</div>
-   <script type="module">
-     // Mounts every <div data-quiz="..."> on the page with the quiz file it names
-     // (relative to assets/exercise-system/). No ids to keep in sync.
-     import { mount } from "./assets/exercise-system/exercise-system.js";
-
-     for (const el of document.querySelectorAll("[data-quiz]:not([data-mounted])")) {
-       el.dataset.mounted = "";
-       try {
-         const { assessment, questions } = await import(`./assets/exercise-system/${el.dataset.quiz}`);
-         mount(el, { assessment, questions });
-       } catch (err) {
-         el.textContent = `Could not load the practice questions (${el.dataset.quiz}): ${err.message}`;
-         console.error(err);
-       }
-     }
-   </script>
-   ```
-   ````
+3. **Embed it** with the one line shown at the top of this section. The `data-quiz` value is the
+   quiz file name, relative to `assets/exercise-system/`.
 
    - **To show a different quiz**, change only the `data-quiz="…"` value. There's no id or import
      line to keep in sync.
-   - **For more quizzes on the same page**, add more divs anywhere below the first, for example
-     `<div class="exercise-system-root" data-quiz="quiz2.js"></div>`. The stylesheet `<link>` and
-     the loader script are only needed once per page. If you paste the script again, it skips
-     quizzes that are already loaded, so nothing loads twice.
-   - **If the file name is wrong or the file doesn't load**, the page shows "Could not load the
-     practice questions (quiz1.js): …" instead of hanging on "Loading…".
-   - **Keep each `assessment.id` unique across the whole site.** Saved progress is stored in the
-     browser under that id, so two quizzes with the same id share their answers, even if they're
-     in different books on the same site.
+   - **For more quizzes on the same page**, add more divs. Each one names its own quiz file.
+   - **If the file name is wrong or the file doesn't load**, the div shows "Could not load the
+     practice questions (sampleQuiz.js): …" instead of hanging on "Loading…".
+   - **Keep each `assessment.id` unique across the whole site**, and use each quiz once per page.
+     Saved progress is stored in the browser under that id, so two quizzes with the same id
+     (or the same quiz twice) share their answers, even in different books on the same site.
    - **To make a quiz wider** than the text column, wrap the block in a Quarto column class such
      as `::: {.column-body-outset}` … `:::`, or `.column-page` for wider still.
 
-5. **Make sure Quarto copies the assets.** `_quarto.yml` needs:
-
-   ```yaml
-   project:
-     resources:
-       - assets/exercise-system/**
-   ```
-
-6. **Render** with `cd quarto-demo` and then `quarto render`. ES modules don't load from
+4. **Render** with `cd quarto-demo` and then `quarto render`. ES modules don't load from
    `file://`, so view the result through a local server (for example `quarto preview`).
 
-To use the bundle in another Quarto book, copy the same two files into that book's
-`assets/exercise-system/` folder.
+To use the bundle in another Quarto book, copy the same two files and `header.html` into that
+book's `assets/exercise-system/` folder and add the `_quarto.yml` settings from step 3.
 
 ---
 
@@ -614,8 +690,8 @@ The tests cover:
   (`engine/assessment.test.ts`)
 - storage and export round-trips (`engine/storage.test.ts`)
 - each element: preparation, parsing edge cases, every comparison mode including negative and
-  near-zero values, drawing geometry and grading, table validation and partial credit, and input
-  components
+  near-zero values, drawing geometry and grading, table validation and partial credit, the
+  jsxgraph grading and input syncing (`elements/jsxgraph/`), and input components
 - every question in the bank across many seeds (`questions/questions.test.ts`)
 - a component test that submits a wrong answer and then a right one
   (`components/QuestionView.test.tsx`), and the import page (`pages/Import.test.tsx`)

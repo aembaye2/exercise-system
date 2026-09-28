@@ -17,17 +17,7 @@ export const assessments: Assessment[] = [
       { questionId: "comparative-advantage-table", points: 10  },
       { questionId: "gains-from-trade-table", points: 10 },
       { questionId: "economic-terms-dropdown", points: 10 },
-    ],
-  },
-  {
-    id: "ex2",
-    title: "Exercise 2: Drawing graphs",
-    description: "Draw on supply-and-demand and consumer-choice graphs. Unlimited attempts, new variants on demand; your best score counts.",
-    mode: "exercise",
-    questions: [
-      { questionId: "demand-shift-drawing", points: 10 },
-      { questionId: "tax-incidence-drawing", points: 20 },
-      { questionId: "indifference-curve-drawing", points: 15 },
+      { questionId: "budget-line-jsxgraph", points: 10 },
     ],
   },
 ];

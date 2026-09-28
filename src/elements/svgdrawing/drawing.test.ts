@@ -6,7 +6,7 @@ import { checkDrawing, exampleDrawing, gradeDrawing, parseDrawing, scoreObject, 
 import type { AnswerObject, DrawingPart, DrawnObject, Pt } from "./types";
 
 const base = (over: Partial<DrawingPart> = {}): DrawingPart => ({
-  type: "drawing",
+  type: "svgdrawing",
   name: "g",
   x: { max: 20, snap: 0.5 },
   y: { max: 20, snap: 0.5 },
