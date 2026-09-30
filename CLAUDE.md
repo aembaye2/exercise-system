@@ -4,7 +4,7 @@ Guidance for working in this repo. User-facing documentation (element types, how
 
 ## What this is
 
-A React + TypeScript + Vite exercise/quiz system for economics: seeded question variants, graded parts (multiple-choice, number, integer, table, jsxgraph, svgDrawing, matching, true-false), exercise and exam modes, localStorage persistence. It ships as a standalone app and as an embeddable bundle (`exercise-system.js/.css`) used by Quarto books.
+A React + TypeScript + Vite exercise/quiz system for economics: seeded question variants, graded parts (multiple-choice, number, integer, table, jsxgraph, svgDrawing, matching, true-false, ordering), exercise and exam modes, localStorage persistence. It ships as a standalone app and as an embeddable bundle (`exercise-system.js/.css`) used by Quarto books.
 
 Sibling projects in this folder, each with its own package.json:
 - `jsxgraph-library/`: the JSXGraph drawing widget (has its own `CLAUDE.md` and `README.md`).
@@ -67,10 +67,17 @@ The environment is Windows (PowerShell/Git Bash). Verify changes with `npm run t
 - `src/elements/trueFalse/`: a table of statements, each graded independently as True/False (`TrueFalseInput.tsx`, `gradeTrueFalse.ts`, `types.ts`). No `prepare()` step; smallest element alongside `integer`.
 - Demo: `src/questions/16_true-false_elasticity_statements.ts` (in assessment `ex1`).
 
+## ordering element
+
+- `src/elements/ordering/`: a single sequence of boxes (e.g. a causal chain) the student drags into the correct order, like `matching` but with one column instead of two. `OrderingInput.tsx`, `gradeOrdering.ts`, `prepareOrdering.ts`, `types.ts`.
+- `prepareOrdering` shuffles the boxes once per variant and stores it as `startOrder`; the correct order is always the authored `items` order. Same "always a complete arrangement to grade" pattern as `matching`.
+- `layout: "vertical" | "horizontal"` and `showArrows` are teacher-set per question (author-time authoring fields on the part), not a student preference. `layout` picks stacked boxes with up/down move buttons and a ↓ between them, or a row of boxes with left/right move buttons and a → between them.
+- Demo: `src/questions/17_ordering_income_demand_price.ts` (in assessment `ex1`), horizontal layout.
+
 ## Conventions
 
 - Question files are named `NN_<type>_<description>` (`mc` = multiple-choice; mixed types joined with `-`), in `src/questions/` and in the Quarto `questions/` folders.
-- Element types: `multiple-choice`, `number`, `integer`, `table`, `jsxgraph` (`src/elements/jsxgraph/`), `svgDrawing` (`src/elements/svgDrawing/`), `matching` (`src/elements/matching/`), `true-false` (`src/elements/trueFalse/`).
+- Element types: `multiple-choice`, `number`, `integer`, `table`, `jsxgraph` (`src/elements/jsxgraph/`), `svgDrawing` (`src/elements/svgDrawing/`), `matching` (`src/elements/matching/`), `true-false` (`src/elements/trueFalse/`), `ordering` (`src/elements/ordering/`).
 - Randomness only through the seeded `rng` passed to `generate`; `engine/seed.ts` is the only non-seeded source.
 - An invalid part value must return `{ valid: false }` from `validate`, not a wrong grade, so no attempt is used.
 - Question text is Markdown with KaTeX: write a literal dollar sign as `\$` inside TS template strings.

@@ -12,6 +12,7 @@ import { budgetLine } from "./13_jsxgraph_budget_line";
 import { productionPossibilities } from "./14_svgDrawing_ppf";
 import { econVocabularyMatching } from "./15_matching_econ_vocabulary";
 import { elasticityStatements } from "./16_true-false_elasticity_statements";
+import { incomeDemandPriceChain } from "./17_ordering_income_demand_price";
 
 /** Every question available to assessments. Add new questions here. */
 export const questions: AnyQuestion[] = [
@@ -28,6 +29,7 @@ export const questions: AnyQuestion[] = [
   productionPossibilities,
   econVocabularyMatching,
   elasticityStatements,
+  incomeDemandPriceChain,
 ];
 
 const byId = new Map(questions.map((q) => [q.id, q]));

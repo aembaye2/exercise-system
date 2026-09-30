@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { exampleJsxGraph } from "../elements/jsxgraph/gradeJsxGraph";
 import { exampleMatching } from "../elements/matching/gradeMatching";
+import { exampleOrdering } from "../elements/ordering/gradeOrdering";
 import { exampleSvgDrawing } from "../elements/svgDrawing/gradeSvgDrawing";
 import { exampleTable } from "../elements/table/gradeTable";
 import { exampleTrueFalse } from "../elements/trueFalse/gradeTrueFalse";
@@ -20,6 +21,7 @@ function perfectAnswers(parts: Part[]): AnswerValues {
     else if (p.type === "table") values[p.name] = exampleTable(p);
     else if (p.type === "matching") values[p.name] = exampleMatching(p);
     else if (p.type === "true-false") values[p.name] = exampleTrueFalse(p);
+    else if (p.type === "ordering") values[p.name] = exampleOrdering(p);
     else values[p.name] = String(p.correct);
   }
   return values;

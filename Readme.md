@@ -51,6 +51,7 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | **svgDrawing element** (plain-SVG twin of the JSXGraph board; same tools, graded on Submit) | Done. Added beyond phase 1. Demo: `14_svgDrawing_ppf.ts` in Exercise 1 |
 | **matching element** (drag-and-drop reordering to match a lettered column to a numbered one) | Done. Added beyond phase 1. Demo: `15_matching_econ_vocabulary.ts` in Exercise 1 |
 | **true-false element** (a table of statements, each marked True/False independently) | Done. Added beyond phase 1. Demo: `16_true-false_elasticity_statements.ts` in Exercise 1 |
+| **ordering element** (drag-and-drop a single sequence of boxes into the correct order) | Done. Added beyond phase 1. Demo: `17_ordering_income_demand_price.ts` in Exercise 1 |
 | Exercise and exam modes, attempts, best score | Done |
 | localStorage persistence, reset, JSON export, import/review page | Done |
 | Accessibility, mobile layout, dark mode | Done |
@@ -180,7 +181,7 @@ You can override `maxAttempts` for each question in the assessment definition.
 
 ### Question types at a glance
 
-There are **8 element types**. A question is made of one or more **parts**, and each part uses
+There are **9 element types**. A question is made of one or more **parts**, and each part uses
 one element, so a single question can mix them. For example, you could combine a number box with
 a multiple-choice part, or a drawing with a follow-up number.
 
@@ -194,9 +195,10 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `table` | fills in blank cells of a table | fixed cells, section rows, grouped column headers | each blank like a `number` part; partial credit (default) or all-or-nothing |
 | `matching` | drag-and-drop reorders the right column to match the fixed, numbered left column | left column (1, 2, 3, …) fixed at prepare time; right column (a, b, c, …) shuffled at prepare time | fraction of rows where the right item lines up with its correct left item; partial credit (default) or all-or-nothing |
 | `true-false` | marks each statement in a table True or False, independently | a list of statements, each with its own `correct` boolean | fraction of statements marked correctly; partial credit (default) or all-or-nothing |
+| `ordering` | drag-and-drop arranges a single sequence of boxes into the correct order | a list of items (authored in correct order), shuffled at prepare time; `layout: "vertical" \| "horizontal"` and an optional arrow between boxes | fraction of boxes in their correct position; partial credit (default) or all-or-nothing |
 
 `multiple-choice`, `number` and `integer` come from the phase 1 plan. `table`, `jsxgraph`, `svgDrawing`,
-`matching` and `true-false` were added later. All eight are included in the embeddable library.
+`matching`, `true-false` and `ordering` were added later. All nine are included in the embeddable library.
 
 **Which questions use which elements.** The question bank in `src/questions/` has an example of
 each element type:
@@ -216,6 +218,7 @@ each element type:
 | `14_svgDrawing_ppf.ts` | Production possibilities frontier | `svgDrawing` (draw a segment on the plain-SVG board; graded on Submit) |
 | `15_matching_econ_vocabulary.ts` | Economic vocabulary | `matching` (5 terms sampled from a pool, matched to their definitions) |
 | `16_true-false_elasticity_statements.ts` | Price elasticity of demand | `true-false` (3 fixed statements) |
+| `17_ordering_income_demand_price.ts` | Order the causal chain | `ordering` (3 fixed items, horizontal layout) |
 
 The Quarto demo also has plain multiple-choice questions written as `.js` files, in
 `quarto-demo/assets/exercise-system/questions/round2/`.
@@ -343,6 +346,40 @@ until each right item lines up with its correct left item.
 
 See `src/questions/15_matching_econ_vocabulary.ts`. Files: `src/elements/matching/`
 (`MatchingInput.tsx`, `gradeMatching.ts`, `prepareMatching.ts`, `types.ts`).
+
+### `ordering`
+
+A single sequence of boxes (e.g. the steps of a causal chain) that the student drags into the
+correct order, with an optional arrow between boxes showing the direction of the sequence. Unlike
+`matching`, there's only one column/row, and the authored order itself is the correct answer.
+
+```ts
+{
+  type: "ordering",
+  name: "chain",
+  items: ["Income increases", "Demand shifts right", "Price increases"], // authored in correct order
+  layout: "horizontal",                       // "vertical" (default) or "horizontal"; the author's choice
+  showArrows: true,                           // default; a → (horizontal) or ↓ (vertical) between boxes
+  grading: "partial",                         // default; or "all-or-nothing"
+}
+```
+
+- At least two `items`. The starting order is shuffled once per variant by `prepare()` and stored
+  as `startOrder`; the correct order is always the authored order.
+- `layout` and `showArrows` are authoring choices (set per question), not student-facing settings:
+  pick `"horizontal"` for a short causal chain like the example above, `"vertical"` (default) for a
+  longer list of steps.
+- **The value** is the boxes' current order as indices into `items`. As with `matching`, there's
+  always a complete arrangement to grade, even untouched — an unmoved submission is graded against
+  the shuffled starting order.
+- **Grading**: position `i` is correct when it holds `items[i]`. The score is the fraction of boxes
+  in their correct position (`partial`, default) or 1 only if the whole sequence is correct
+  (`all-or-nothing`). Feedback names the wrong position numbers but never reveals the correct order.
+- Once the question is finished, each box is marked right or wrong in place, and a wrong box shows
+  the item that belongs there underneath, in green.
+
+See `src/questions/17_ordering_income_demand_price.ts`. Files: `src/elements/ordering/`
+(`OrderingInput.tsx`, `gradeOrdering.ts`, `prepareOrdering.ts`, `types.ts`).
 
 ### `true-false`
 
@@ -603,8 +640,9 @@ of registration.
 `src/elements/integer/` is the smallest complete example to copy. `src/elements/trueFalse/` is a
 similarly small one with no `prepare()` step, just an array of independently graded rows.
 `src/elements/table/` is a mid-sized one that reuses the `number` grader for each cell,
-`src/elements/matching/` is a mid-sized one that uses `prepare()` to shuffle an order (like
-`multipleChoice`) and grades a student-reordered array, and `src/elements/jsxgraph/` /
+`src/elements/matching/` and `src/elements/ordering/` are mid-sized ones that use `prepare()` to
+shuffle an order (like `multipleChoice`) and grade a student-reordered array (`ordering` is the
+simpler of the two: one column instead of matching two), and `src/elements/jsxgraph/` /
 `src/elements/svgDrawing/` are the most complex (a thin adapter around a drawing board that lives
 under `src/components/`).
 
@@ -635,7 +673,7 @@ Since there's no backend, the browser and JSON files stand in for one.
 
 `npm run build:lib` produces a self-contained bundle in `dist-lib/`:
 
-- `exercise-system.js`: an ES module with React, all 8 element types, JSXGraph and KaTeX
+- `exercise-system.js`: an ES module with React, all 9 element types, JSXGraph and KaTeX
   (about 2.2 MB)
 - `exercise-system.css`: Tailwind styles plus the KaTeX fonts, inlined (about 1.5 MB)
 

@@ -21,6 +21,7 @@ export const assessments: Assessment[] = [
       { questionId: "ppf-svgdrawing", points: 10 },
       { questionId: "econ-vocabulary-matching", points: 10 },
       { questionId: "elasticity-true-false", points: 10 },
+      { questionId: "income-demand-price-ordering", points: 10 },
     ],
   },
 ];
