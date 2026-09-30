@@ -10,8 +10,6 @@ import { QuizWidget } from "./QuizWidget";
 import type { AnyQuestion, Assessment } from "../engine/types";
 
 export type { AnyQuestion, Assessment, AssessmentQuestionRef, Part, Question, Rng } from "../engine/types";
-// Question authors need this to build a reference curve for an "svgdrawing" part.
-export { sampleFunction } from "../elements/svgdrawing";
 
 export interface MountOptions {
   assessment: Assessment;

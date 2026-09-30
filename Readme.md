@@ -46,9 +46,9 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | --- | --- |
 | Seeded RNG, question engine, element registry | Done |
 | Multiple choice (radio + dropdown), number, integer elements | Done |
-| **Drawing element** (points, lines, polygons, curves on a graph) | Done. Added beyond phase 1 |
 | **Table element** (fillable table with fixed and blank cells, partial credit) | Done. Added beyond phase 1 |
 | **JSXGraph element** (drawing component built into the app; graded on Submit) | Done. Added beyond phase 1. Demo: `13_jsxgraph_budget_line.ts` in Exercise 1 |
+| **svgDrawing element** (plain-SVG twin of the JSXGraph board; same tools, graded on Submit) | Done. Added beyond phase 1. Demo: `14_svgDrawing_ppf.ts` in Exercise 1 |
 | Exercise and exam modes, attempts, best score | Done |
 | localStorage persistence, reset, JSON export, import/review page | Done |
 | Accessibility, mobile layout, dark mode | Done |
@@ -109,19 +109,20 @@ exercise_system/
 │   │   ├── multipleChoice/
 │   │   ├── number/
 │   │   ├── integer/
-│   │   ├── svgdrawing/       # interactive SVG graph input + geometric grading
 │   │   ├── table/            # fillable table (e.g. gains-from-trade worksheets)
 │   │   ├── jsxgraph/         # element around the JSXGraph drawing component (input + grading)
+│   │   ├── svgDrawing/       # element around the plain-SVG drawing component (input + grading)
 │   │   └── TextInput.tsx     # shared text box used by number/integer
 │   ├── questions/            # question bank: one file per question + index.ts
 │   ├── assessments/index.ts  # assessment definitions (exercises, quizzes)
 │   ├── components/           # QuestionView, AssessmentView, ReviewView, Markdown, ...
-│   │   └── jsxgraphComponent/  # JSXGraph drawing board + toolbar + grading (copied from jsxgraph-library)
+│   │   ├── jsxgraphComponent/   # JSXGraph drawing board + toolbar + grading (copied from jsxgraph-library)
+│   │   └── svgDrawingComponent/ # plain-SVG drawing board + toolbar + grading (copied from svg-drawing-library)
 │   ├── pages/                # Home, Results, Import
 │   ├── lib/                  # embeddable build: entry.tsx (mount API) + QuizWidget
 │   └── test/                 # test setup + fixtures
 ├── jsxgraph-library/         # standalone JSXGraph widget project (the component was copied from here)
-├── svg-drawing-library/      # separate project: the SVG drawing widget
+├── svg-drawing-library/      # standalone plain-SVG widget project (the component was copied from here)
 ├── dist/                     # built standalone app (generated)
 ├── dist-lib/                 # built library: exercise-system.js / .css (generated)
 └── quarto-demo/              # sample Quarto book that embeds the library
@@ -187,11 +188,11 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `multiple-choice` | picks one option | radio buttons or an inline dropdown; shuffled or fixed order; show a random subset (`numberAnswers`) | 1 if the correct option is chosen, else 0; optional per-option feedback |
 | `number` | types a decimal number | units after the box (`suffix`) | relative/absolute tolerance (`relabs`), significant figures (`sigfig`) or decimal places (`decdig`) |
 | `integer` | types a whole number | units after the box | exact match |
-| `svgdrawing` | draws on an SVG graph | adds points, lines (drawn fresh or shifted from a given curve), shaded areas (polygons) and curves | position within a tolerance, direction of a shift, area overlap, or which side of a reference curve |
 | `jsxgraph` | draws on a JSXGraph canvas | the tools of the drawing component (`src/components/jsxgraphComponent`) | the exercise app's **Submit**: the drawing is compared with `expectedDrawing` (slope/intercept lines or exact points), partial credit per shape |
+| `svgDrawing` | draws on a plain-SVG canvas | the same tools as `jsxgraph` (`src/components/svgDrawingComponent`), no JSXGraph dependency | same as `jsxgraph`: graded on **Submit** against `expectedDrawing`, partial credit per shape |
 | `table` | fills in blank cells of a table | fixed cells, section rows, grouped column headers | each blank like a `number` part; partial credit (default) or all-or-nothing |
 
-`multiple-choice`, `number` and `integer` come from the phase 1 plan. `svgdrawing`, `table` and `jsxgraph` were
+`multiple-choice`, `number` and `integer` come from the phase 1 plan. `table`, `jsxgraph` and `svgDrawing` were
 added later. All six are included in the embeddable library.
 
 **Which questions use which elements.** The question bank in `src/questions/` has an example of
@@ -209,6 +210,7 @@ each element type:
 | `11_mc-number_comparative_advantage.ts` | Opportunity cost, absolute and comparative advantage | 4 numbers + 4 dropdowns, with a Markdown table in the question text |
 | `12_table_gains_from_trade.ts` | Gains from trade | table (16 blanks) |
 | `13_jsxgraph_budget_line.ts` | Budget line | `jsxgraph` (draw a segment on the JSXGraph board; graded on Submit) |
+| `14_svgDrawing_ppf.ts` | Production possibilities frontier | `svgDrawing` (draw a segment on the plain-SVG board; graded on Submit) |
 
 The Quarto demo also has plain multiple-choice questions written as `.js` files, in
 `quarto-demo/assets/exercise-system/questions/round2/`.
@@ -267,31 +269,6 @@ question is finished.
 
 Accepts only `/^[+-]?\d+$/`, so `3.0` and `1e2` are rejected. Grading checks for exact equality.
 
-### `svgdrawing`
-
-This is an SVG graph that students draw on with the mouse, touch or keyboard. Use it for
-supply-and-demand shifts, tax wedges, surplus areas, indifference curves and similar graphs.
-The full spec is in `src/elements/svgdrawing/types.ts`. In short:
-
-- **`x`, `y`**: the axes (`max`, plus optional `min`, `label`, grid `step`, drag `snap`).
-- **`initial`**: fixed objects already on the graph (points, lines, polygons, curves). They
-  aren't graded.
-- **`tools`**: what the student can add (`point`, `line`, `polygon`, `curve`), with a `label`,
-  a short `tag` drawn on the graph, and `max` for how many of each. A line tool can start as a
-  copy of an initial line (`copyOf`).
-- **`answer`**: the expected objects. Each one is matched to a drawn object of the same type:
-  - `point` must be near `(x, y)`.
-  - `line` must lie on a given line, **or** be parallel to `shiftOf` and shifted in a
-    `direction` (`up`/`down`/`left`/`right`) by any amount.
-  - `polygon` must overlap a convex polygon by at least `minOverlap` (intersection over union).
-  - `curve` is a 4-point curve. Only its two middle points are graded, as `on`/`above`/`below`
-    a reference polyline, optionally with one point required at `through`. Build the reference
-    curve with `sampleFunction(f, xmin, xmax, n)`.
-- **`tol`**: the tolerance in graph units. The default is 4% of each axis range.
-
-No demo question uses this element any more; see `src/elements/svgdrawing/drawing.test.ts` for example
-specs.
-
 ### `table`
 
 A fillable table. Fixed cells show given values; blank cells are text boxes graded like `number`
@@ -330,11 +307,10 @@ possibilities rather than hard-coding the answers.
 
 ### `jsxgraph`
 
-A JSXGraph drawing board with a toolbar, used when the `svgdrawing` element isn't enough (for example
-segments on a budget-line graph). The board is a **component of this app**
-(`src/components/jsxgraphComponent/`, originally copied from `jsxgraph-library/`), not a separate
-bundle. It has no Grade button: the student draws and presses the app's normal **Submit**, and the
-drawing is graded then.
+A JSXGraph drawing board with a toolbar (segments, lines, shapes, curves, ...). The board is a
+**component of this app** (`src/components/jsxgraphComponent/`, originally copied from
+`jsxgraph-library/`), not a separate bundle. It has no Grade button: the student draws and presses
+the app's normal **Submit**, and the drawing is graded then.
 
 ```ts
 {
@@ -374,6 +350,41 @@ See `src/questions/13_jsxgraph_budget_line.ts`. Files: `src/elements/jsxgraph/` 
 `canvas/DrawingCanvas.css`).
 
 The component is a copy: fixes made in `jsxgraph-library/` don't reach it automatically.
+
+### `svgDrawing`
+
+The plain-SVG twin of `jsxgraph`: same tool set (segment, line, arrow, rectangle, circle, polygon,
+scatter, curve, text, coordinate, eraser, ...), same `DrawingQuestionProps` shape, same grading
+(`gradeDrawing` on `expectedDrawing`, slope/intercept or exact points) - just rendered as hand-written
+SVG instead of wrapping the JSXGraph library, so it doesn't pull in JSXGraph (about 2.2 MB). Use it
+instead of `jsxgraph` when you don't need anything JSXGraph-specific.
+
+```ts
+{
+  type: "svgDrawing",
+  name: "ppf",
+  props: {                                   // DrawingQuestionProps (JSON)
+    boundingBox: [-1, 11, -1, 11],
+    xLabel: "Guns",
+    yLabel: "Butter",
+    enabledTools: ["select", "segment", "eraser"],
+    expectedDrawing: [                       // required: what Submit grades against
+      { type: "segment", yIntercept: 8, slope: -1, tolerance: 0.1 },
+    ],
+  },
+}
+```
+
+Everything under "**props**", "**The value**", "**Grading**", "**When the question is finished**" in
+the `jsxgraph` section above applies unchanged. The only real difference: the eraser is a footer
+toggle button here rather than a toolbar tool (everything else in `enabledTools` lives in the
+toolbar grid).
+
+See `src/questions/14_svgDrawing_ppf.ts`. Files: `src/elements/svgDrawing/` (`SvgDrawingInput.tsx`,
+`gradeSvgDrawing.ts`, `types.ts`) and `src/components/svgDrawingComponent/` (`DrawingApp.tsx`,
+`canvas/DrawingBoard.tsx`, `canvas/DrawingToolbar.tsx`, `canvas/grading.ts`, `canvas/DrawingCanvas.css`).
+
+The component is a copy: fixes made in `svg-drawing-library/` don't reach it automatically.
 
 ---
 
@@ -522,8 +533,9 @@ of registration.
    ```
 
 `src/elements/integer/` is the smallest complete example to copy. `src/elements/table/` is a
-mid-sized one that reuses the `number` grader for each cell, and `src/elements/svgdrawing/` is the
-most complex.
+mid-sized one that reuses the `number` grader for each cell, and `src/elements/jsxgraph/` /
+`src/elements/svgDrawing/` are the most complex (a thin adapter around a drawing board that lives
+under `src/components/`).
 
 ---
 
@@ -557,8 +569,8 @@ Since there's no backend, the browser and JSON files stand in for one.
 - `exercise-system.css`: Tailwind styles plus the KaTeX fonts, inlined (about 1.5 MB)
 
 The bundle exports `mount(element, { assessment, questions })`, which returns an unmount function.
-It also exports `sampleFunction` for `svgdrawing` questions. The embedded widget shows one
-assessment and doesn't use the URL hash, so it won't clash with the page's own navigation.
+The embedded widget shows one assessment and doesn't use the URL hash, so it won't clash with the
+page's own navigation.
 
 **Once the book is set up (steps 1 to 3), a quiz is deployed with one line** in any chapter:
 
@@ -625,14 +637,7 @@ The stylesheet and the script that mounts the quiz are loaded once for the whole
 
 1. **Write the questions as plain `.js` files** in `assets/exercise-system/questions/`, named
    `NN_<type>_<description>.js`. They have the same shape as the `.ts` files in `src/questions/`,
-   just without type annotations. `svgdrawing` questions import the helper from the bundle:
-
-   ```js
-   import { sampleFunction } from "../exercise-system.js";   // from questions/
-   import { sampleFunction } from "../../exercise-system.js"; // from questions/<subfolder>/
-   ```
-
-   The path is relative to the question file, so fix it if you move the file into another folder.
+   just without type annotations.
    If one import in a quiz fails, the whole quiz stays stuck on "Loading…". To find the missing
    file, look for a 404 in the browser console (F12).
 
@@ -690,8 +695,8 @@ The tests cover:
   (`engine/assessment.test.ts`)
 - storage and export round-trips (`engine/storage.test.ts`)
 - each element: preparation, parsing edge cases, every comparison mode including negative and
-  near-zero values, drawing geometry and grading, table validation and partial credit, the
-  jsxgraph grading and input syncing (`elements/jsxgraph/`), and input components
+  near-zero values, table validation and partial credit, the jsxgraph/svgDrawing grading and input
+  syncing (`elements/jsxgraph/`, `elements/svgDrawing/`), and input components
 - every question in the bank across many seeds (`questions/questions.test.ts`)
 - a component test that submits a wrong answer and then a right one
   (`components/QuestionView.test.tsx`), and the import page (`pages/Import.test.tsx`)

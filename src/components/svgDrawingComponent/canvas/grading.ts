@@ -1,4 +1,8 @@
-import type { BoundingBox, InitialObjectSpec, Point2D, ToolName, UserDrawing } from "./drawingLogic";
+import type { BoundingBox, InitialObjectSpec, Point2D, ToolName, UserDrawing } from "./DrawingBoard";
+
+// Same grading logic as src/components/jsxgraphComponent/canvas/grading.ts,
+// retyped for this board. The two boards share the same tool set and
+// `UserDrawing`/`InitialObjectSpec` shape, so grading behaves identically.
 
 /** A line/segment the student should draw, described by its equation
  * `y = slope * x + yIntercept` instead of by exact points (e.g. a budget line).
@@ -37,6 +41,9 @@ export interface GradeResult {
 }
 
 export const DEFAULT_RELATIVE_TOLERANCE = 0.1;
+
+/** The board used when a question doesn't give a `boundingBox`. */
+export const DEFAULT_BOUNDING_BOX: BoundingBox = [-10, 10, -10, 10];
 
 function isSlopeIntercept(shape: ExpectedShape): shape is SlopeInterceptShape {
   return "slope" in shape && "yIntercept" in shape;

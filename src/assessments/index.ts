@@ -18,6 +18,7 @@ export const assessments: Assessment[] = [
       { questionId: "gains-from-trade-table", points: 10 },
       { questionId: "economic-terms-dropdown", points: 10 },
       { questionId: "budget-line-jsxgraph", points: 10 },
+      { questionId: "ppf-svgdrawing", points: 10 },
     ],
   },
 ];

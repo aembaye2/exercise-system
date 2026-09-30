@@ -37,8 +37,8 @@ export const budgetLine: Question<Params> = {
         showColorPicker: false,
         showDownloadButton: true,
         showOutputButton: true,
-        //["select", "point", "line", "arrow", "doubleArrow", "rectangle", "circle", "curve", "polygon", "coordinate", "text", "eraser"]
-        enabledTools: ["select", "point", "line", "arrow", "doubleArrow", "rectangle", "circle", "curve", "polygon", "coordinate", "text", "eraser"],
+        //["select", "point", "line", "arrow", "doubleArrow", "rectangle", "circle", "curve", "polygon", "coordinate", "text", "eraser", "segment"]
+        enabledTools: ["select", "point", "segment", "line", "arrow", "doubleArrow", "rectangle", "circle", "curve", "polygon", "coordinate", "text", "eraser", "scatter"],
         enabledActions: ["undo", "redo", "clear"],
         // Graded on Submit, and drawn as the correct answer once the question is finished.
         // y = (income - pizzaPrice * x) / bookPrice
