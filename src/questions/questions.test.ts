@@ -3,6 +3,7 @@ import { exampleJsxGraph } from "../elements/jsxgraph/gradeJsxGraph";
 import { exampleMatching } from "../elements/matching/gradeMatching";
 import { exampleSvgDrawing } from "../elements/svgDrawing/gradeSvgDrawing";
 import { exampleTable } from "../elements/table/gradeTable";
+import { exampleTrueFalse } from "../elements/trueFalse/gradeTrueFalse";
 import { gradeQuestion } from "../engine/gradeQuestion";
 import type { AnswerValues, JsonValue, Part } from "../engine/types";
 import { createVariant } from "../engine/variant";
@@ -18,6 +19,7 @@ function perfectAnswers(parts: Part[]): AnswerValues {
     else if (p.type === "svgDrawing") values[p.name] = exampleSvgDrawing(p) as unknown as JsonValue;
     else if (p.type === "table") values[p.name] = exampleTable(p);
     else if (p.type === "matching") values[p.name] = exampleMatching(p);
+    else if (p.type === "true-false") values[p.name] = exampleTrueFalse(p);
     else values[p.name] = String(p.correct);
   }
   return values;

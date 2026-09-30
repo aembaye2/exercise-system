@@ -4,11 +4,10 @@ Guidance for working in this repo. User-facing documentation (element types, how
 
 ## What this is
 
-A React + TypeScript + Vite exercise/quiz system for economics: seeded question variants, graded parts (multiple-choice, number, integer, table, jsxgraph, svgDrawing), exercise and exam modes, localStorage persistence. It ships as a standalone app and as an embeddable bundle (`exercise-system.js/.css`) used by Quarto books.
+A React + TypeScript + Vite exercise/quiz system for economics: seeded question variants, graded parts (multiple-choice, number, integer, table, jsxgraph, svgDrawing, matching, true-false), exercise and exam modes, localStorage persistence. It ships as a standalone app and as an embeddable bundle (`exercise-system.js/.css`) used by Quarto books.
 
 Sibling projects in this folder, each with its own package.json:
 - `jsxgraph-library/`: the JSXGraph drawing widget (has its own `CLAUDE.md` and `README.md`).
-- `svg-drawing-library/`: the SVG drawing widget.
 - `quarto-demo/`: sample Quarto book that embeds the bundle.
 
 ## Commands
@@ -51,17 +50,21 @@ The environment is Windows (PowerShell/Git Bash). Verify changes with `npm run t
 
 ## svgDrawing element (plain-SVG twin of jsxgraph)
 
-- `src/components/svgDrawingComponent/` is the same board/toolbar/grading design as `jsxgraphComponent` (same `ToolName`s, same `DrawingQuestionProps`, same `gradeDrawing`), copied from `svg-drawing-library/` and adapted for this app the same way jsxgraph was: no Grade button, `initialDrawings`/`readOnly`/`showAnswer` for the app's save/restore and Submit flow. It renders hand-written SVG instead of wrapping the JSXGraph library, so it doesn't pull that dependency in.
+- `src/components/svgDrawingComponent/` is the same board/toolbar/grading design as `jsxgraphComponent` (same `ToolName`s, same `DrawingQuestionProps`, same `gradeDrawing`), originally copied from a sibling `svg-drawing-library/` project (since removed, as it wasn't needed here) and adapted for this app the same way jsxgraph was: no Grade button, `initialDrawings`/`readOnly`/`showAnswer` for the app's save/restore and Submit flow. It renders hand-written SVG instead of wrapping the JSXGraph library, so it doesn't pull that dependency in.
 - `src/elements/svgDrawing/`: `SvgDrawingInput`/`gradeSvgDrawing` mirror `JsxGraphInput`/`gradeJsxGraph` file-for-file. Import pure logic from `canvas/grading` directly, not from the component's `index.ts`, so logic tests don't render the board.
 - One difference from jsxgraph's toolbar: the eraser is a footer toggle button here, not a toolbar tool.
 - Demo: `src/questions/14_svgDrawing_ppf.ts` (in assessment `ex1`).
-- Later fixes to `svg-drawing-library/` are not picked up automatically; port them by hand.
 - There used to be a different, unrelated `svgdrawing` element (axis-based points/lines/polygons/curves with economics-specific grading: shift-direction, polygon overlap, curve relation). It was deleted (unused, no demo or course question referenced it) to free up the name for this one; its grading logic was not ported.
+
+## true-false element
+
+- `src/elements/trueFalse/`: a table of statements, each graded independently as True/False (`TrueFalseInput.tsx`, `gradeTrueFalse.ts`, `types.ts`). No `prepare()` step; smallest element alongside `integer`.
+- Demo: `src/questions/16_true-false_elasticity_statements.ts` (in assessment `ex1`).
 
 ## Conventions
 
 - Question files are named `NN_<type>_<description>` (`mc` = multiple-choice; mixed types joined with `-`), in `src/questions/` and in the Quarto `questions/` folders.
-- Element types: `multiple-choice`, `number`, `integer`, `table`, `jsxgraph` (`src/elements/jsxgraph/`), `svgDrawing` (`src/elements/svgDrawing/`), `matching` (`src/elements/matching/`).
+- Element types: `multiple-choice`, `number`, `integer`, `table`, `jsxgraph` (`src/elements/jsxgraph/`), `svgDrawing` (`src/elements/svgDrawing/`), `matching` (`src/elements/matching/`), `true-false` (`src/elements/trueFalse/`).
 - Randomness only through the seeded `rng` passed to `generate`; `engine/seed.ts` is the only non-seeded source.
 - An invalid part value must return `{ valid: false }` from `validate`, not a wrong grade, so no attempt is used.
 - Question text is Markdown with KaTeX: write a literal dollar sign as `\$` inside TS template strings.

@@ -20,6 +20,7 @@ export const assessments: Assessment[] = [
       { questionId: "budget-line-jsxgraph", points: 10 },
       { questionId: "ppf-svgdrawing", points: 10 },
       { questionId: "econ-vocabulary-matching", points: 10 },
+      { questionId: "elasticity-true-false", points: 10 },
     ],
   },
 ];

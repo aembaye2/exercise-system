@@ -29436,7 +29436,7 @@ var ticks_default = jxg_default.Ticks, bitReverse = [
 	12,
 	13,
 	13
-], border$1 = [
+], border$2 = [
 	16,
 	17,
 	18,
@@ -29536,7 +29536,7 @@ jxg_default.Util = jxg_default.Util || {}, jxg_default.Util.Unzip = function(e) 
 			else for (a -= 257, f = j(cplext[a]) + cplens[a], a = bitReverse[j(5)] >> 3, cpdext[a] > 8 ? (g = j(8), g |= j(cpdext[a] - 8) << 8) : g = j(cpdext[a]), g += cpdist[a], a = 0; a < f; a++) t = u[d - g & 32767], N(t);
 			else if (n === 2) {
 				for (c = Array(320), x = 257 + j(5), C = 1 + j(5), w = 4 + j(4), a = 0; a < 19; a++) c[a] = 0;
-				for (a = 0; a < w; a++) c[border$1[a]] = j(3);
+				for (a = 0; a < w; a++) c[border$2[a]] = j(3);
 				for (f = y.length, r = 0; r < f; r++) y[r] = new P();
 				if (L(y, 19, c, 0)) return M(), 1;
 				for (b = x + C, r = 0; r < b;) if (a = R(y), a < 16) c[r++] = a;
@@ -66703,7 +66703,7 @@ function tableHelpText(e) {
 }
 //#endregion
 //#region src/elements/table/TableInput.tsx
-var border = "border border-slate-300 dark:border-slate-700", headerCell = `${border} bg-slate-100 px-2 py-1 font-medium dark:bg-slate-800`;
+var border$1 = "border border-slate-300 dark:border-slate-700", headerCell = `${border$1} bg-slate-100 px-2 py-1 font-medium dark:bg-slate-800`;
 function TableInput({ part: e, id: t, labelId: n, describedBy: r, value: a, onChange: o, disabled: c, invalid: l, showCorrect: u }) {
 	let d = typeof a == "object" && a && !Array.isArray(a) ? a : {}, f = e.columns.length + 1, m = e.columnGroups, g = (e, t) => o({
 		...d,
@@ -66748,14 +66748,14 @@ function TableInput({ part: e, id: t, labelId: n, describedBy: r, value: a, onCh
 				})
 			}, t))] })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: e.rows.map((n, r) => n.cells ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 				scope: "row",
-				className: `${border} px-2 py-1 text-left font-normal`,
+				className: `${border$1} px-2 py-1 text-left font-normal`,
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, {
 					inline: !0,
 					children: n.label
 				})
 			}), n.cells.map((n, a) => {
 				if (!isBlank(n)) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
-					className: `${border} px-2 py-1 text-center`,
+					className: `${border$1} px-2 py-1 text-center`,
 					children: n === null ? "" : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, {
 						inline: !0,
 						children: String(n)
@@ -66763,7 +66763,7 @@ function TableInput({ part: e, id: t, labelId: n, describedBy: r, value: a, onCh
 				}, a);
 				let o = cellKey(r, a), f = d[o] ?? "", m = f.trim() === "", _ = u && isCellCorrect(n, f), v = u && !_, y = v || l && m;
 				return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
-					className: `${border} p-1 text-center`,
+					className: `${border$1} p-1 text-center`,
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 						type: "text",
 						id: `${t}-${r}-${a}`,
@@ -66787,7 +66787,7 @@ function TableInput({ part: e, id: t, labelId: n, describedBy: r, value: a, onCh
 			})] }, r) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tr", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
 				colSpan: f,
 				scope: "colgroup",
-				className: `${border} bg-slate-50 px-2 py-1 text-left font-semibold dark:bg-slate-900/60`,
+				className: `${border$1} bg-slate-50 px-2 py-1 text-left font-semibold dark:bg-slate-900/60`,
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, {
 					inline: !0,
 					children: n.label
@@ -66808,7 +66808,132 @@ var tableElement = {
 	helpText: tableHelpText,
 	Input: TableInput
 };
-registerElement$1(multipleChoiceElement), registerElement$1(numberElement), registerElement$1(integerElement), registerElement$1(tableElement), registerElement$1(jsxGraphElement), registerElement$1(svgDrawingElement), registerElement$1(matchingElement);
+//#endregion
+//#region src/elements/trueFalse/gradeTrueFalse.ts
+function checkTrueFalse(e) {
+	if (!Array.isArray(e.statements) || e.statements.length === 0) throw new AuthoringError("true-false part needs at least one statement.");
+	if (e.statements.forEach((e, t) => {
+		if (!e.text?.trim()) throw new AuthoringError(`true-false statement ${t + 1} needs non-empty text.`);
+		if (typeof e.correct != "boolean") throw new AuthoringError(`true-false statement ${t + 1} needs a boolean "correct" value.`);
+	}), e.grading !== void 0 && e.grading !== "partial" && e.grading !== "all-or-nothing") throw new AuthoringError(`unknown grading "${String(e.grading)}".`);
+}
+function answersOf(e, t) {
+	let n = e.statements.length;
+	return !Array.isArray(t) || t.length !== n ? Array(n).fill(null) : t.map((e) => typeof e == "boolean" ? e : null);
+}
+function validateTrueFalse(e, t) {
+	let n = answersOf(e, t), r = n.filter((e) => e === null).length;
+	return r === 0 ? { valid: !0 } : {
+		valid: !1,
+		message: r === n.length ? "Please mark True or False for each statement." : `Please mark True or False for every statement (${r} still unanswered).`
+	};
+}
+function gradeTrueFalse(e, t) {
+	let n = answersOf(e, t), r = e.statements.length, a = e.statements.flatMap((e, t) => n[t] === e.correct ? [] : [t + 1]), o = r - a.length, c = e.grading === "all-or-nothing" ? +(a.length === 0) : o / r;
+	return a.length === 0 ? { score: c } : {
+		score: c,
+		feedback: `${o} of ${r} correct. Check statement${a.length > 1 ? "s" : ""} ${a.join(", ")}.`
+	};
+}
+function formatTrueFalseAnswer(e, t) {
+	let n = answersOf(e, t);
+	return n.every((e) => e === null) ? "_(no answer)_" : e.statements.map((e, t) => `${t + 1}. ${n[t] === null ? "—" : n[t] ? "True" : "False"}`).join("; ");
+}
+function formatTrueFalseCorrect() {
+	return "shown in green in the table.";
+}
+function trueFalseHelpText(e) {
+	if (e.showHelpText !== !1) return "Mark True or False for every statement.";
+}
+//#endregion
+//#region src/elements/trueFalse/TrueFalseInput.tsx
+var border = "border border-slate-300 dark:border-slate-700";
+function TrueFalseInput({ part: e, id: t, labelId: n, describedBy: r, value: a, onChange: o, disabled: c, invalid: l, showCorrect: u }) {
+	let d = answersOf(e, a), f = (e, t) => {
+		let n = [...d];
+		n[e] = t, o(n);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "basis-full overflow-x-auto",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("table", {
+			id: t,
+			"aria-labelledby": n,
+			"aria-describedby": r,
+			"aria-invalid": l || void 0,
+			className: "w-full border-collapse text-sm",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("thead", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", { children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+					scope: "col",
+					className: `${border} px-2 py-1 text-left`,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "sr-only",
+						children: "Statement"
+					})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+					scope: "col",
+					className: `${border} w-16 px-3 py-1 text-center font-medium`,
+					children: "True"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("th", {
+					scope: "col",
+					className: `${border} w-16 px-3 py-1 text-center font-medium`,
+					children: "False"
+				})
+			] }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("tbody", { children: e.statements.map((e, n) => {
+				let r = d[n], a = r === e.correct, o = l && r === null;
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("tr", {
+					className: n % 2 == 1 ? "bg-slate-50 dark:bg-slate-900/40" : void 0,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("td", {
+						className: `${border} px-3 py-2 align-top ${o ? "border-red-500 dark:border-red-400" : ""}`,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, {
+							inline: !0,
+							className: "break-words",
+							children: e.text
+						}), u && !a && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mt-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "sr-only",
+									children: "Correct answer: "
+								}),
+								"Correct: ",
+								e.correct ? "True" : "False"
+							]
+						})]
+					}), [!0, !1].map((o) => {
+						let l = u && o === e.correct;
+						return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("td", {
+							className: `${border} px-3 py-2 text-center ${l ? "bg-emerald-50 dark:bg-emerald-950/30" : u && o === r && !a ? "bg-red-50 dark:bg-red-950/30" : ""}`,
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								type: "radio",
+								name: `${t}-${n}`,
+								"aria-label": `Statement ${n + 1}: ${o ? "True" : "False"}`,
+								checked: r === o,
+								disabled: c,
+								onChange: () => f(n, o),
+								className: "h-4 w-4 accent-indigo-600"
+							})
+						}, String(o));
+					})]
+				}, n);
+			}) })]
+		})
+	});
+}
+//#endregion
+//#region src/elements/trueFalse/index.ts
+var trueFalseElement = {
+	type: "true-false",
+	check: checkTrueFalse,
+	validate: validateTrueFalse,
+	grade: gradeTrueFalse,
+	formatAnswer: formatTrueFalseAnswer,
+	formatCorrectAnswer: formatTrueFalseCorrect,
+	helpText: trueFalseHelpText,
+	Input: TrueFalseInput
+};
+registerElement$1(multipleChoiceElement), registerElement$1(numberElement), registerElement$1(integerElement), registerElement$1(tableElement), registerElement$1(jsxGraphElement), registerElement$1(svgDrawingElement), registerElement$1(matchingElement), registerElement$1(trueFalseElement);
 //#endregion
 //#region src/engine/gradeQuestion.ts
 function weightedScore(e, t) {

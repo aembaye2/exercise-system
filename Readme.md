@@ -50,6 +50,7 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | **JSXGraph element** (drawing component built into the app; graded on Submit) | Done. Added beyond phase 1. Demo: `13_jsxgraph_budget_line.ts` in Exercise 1 |
 | **svgDrawing element** (plain-SVG twin of the JSXGraph board; same tools, graded on Submit) | Done. Added beyond phase 1. Demo: `14_svgDrawing_ppf.ts` in Exercise 1 |
 | **matching element** (drag-and-drop reordering to match a lettered column to a numbered one) | Done. Added beyond phase 1. Demo: `15_matching_econ_vocabulary.ts` in Exercise 1 |
+| **true-false element** (a table of statements, each marked True/False independently) | Done. Added beyond phase 1. Demo: `16_true-false_elasticity_statements.ts` in Exercise 1 |
 | Exercise and exam modes, attempts, best score | Done |
 | localStorage persistence, reset, JSON export, import/review page | Done |
 | Accessibility, mobile layout, dark mode | Done |
@@ -118,12 +119,11 @@ exercise_system/
 │   ├── assessments/index.ts  # assessment definitions (exercises, quizzes)
 │   ├── components/           # QuestionView, AssessmentView, ReviewView, Markdown, ...
 │   │   ├── jsxgraphComponent/   # JSXGraph drawing board + toolbar + grading (copied from jsxgraph-library)
-│   │   └── svgDrawingComponent/ # plain-SVG drawing board + toolbar + grading (copied from svg-drawing-library)
+│   │   └── svgDrawingComponent/ # plain-SVG drawing board + toolbar + grading
 │   ├── pages/                # Home, Results, Import
 │   ├── lib/                  # embeddable build: entry.tsx (mount API) + QuizWidget
 │   └── test/                 # test setup + fixtures
 ├── jsxgraph-library/         # standalone JSXGraph widget project (the component was copied from here)
-├── svg-drawing-library/      # standalone plain-SVG widget project (the component was copied from here)
 ├── dist/                     # built standalone app (generated)
 ├── dist-lib/                 # built library: exercise-system.js / .css (generated)
 └── quarto-demo/              # sample Quarto book that embeds the library
@@ -180,7 +180,7 @@ You can override `maxAttempts` for each question in the assessment definition.
 
 ### Question types at a glance
 
-There are **7 element types**. A question is made of one or more **parts**, and each part uses
+There are **8 element types**. A question is made of one or more **parts**, and each part uses
 one element, so a single question can mix them. For example, you could combine a number box with
 a multiple-choice part, or a drawing with a follow-up number.
 
@@ -193,9 +193,10 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `svgDrawing` | draws on a plain-SVG canvas | the same tools as `jsxgraph` (`src/components/svgDrawingComponent`), no JSXGraph dependency | same as `jsxgraph`: graded on **Submit** against `expectedDrawing`, partial credit per shape |
 | `table` | fills in blank cells of a table | fixed cells, section rows, grouped column headers | each blank like a `number` part; partial credit (default) or all-or-nothing |
 | `matching` | drag-and-drop reorders the right column to match the fixed, numbered left column | left column (1, 2, 3, …) fixed at prepare time; right column (a, b, c, …) shuffled at prepare time | fraction of rows where the right item lines up with its correct left item; partial credit (default) or all-or-nothing |
+| `true-false` | marks each statement in a table True or False, independently | a list of statements, each with its own `correct` boolean | fraction of statements marked correctly; partial credit (default) or all-or-nothing |
 
-`multiple-choice`, `number` and `integer` come from the phase 1 plan. `table`, `jsxgraph`, `svgDrawing` and
-`matching` were added later. All seven are included in the embeddable library.
+`multiple-choice`, `number` and `integer` come from the phase 1 plan. `table`, `jsxgraph`, `svgDrawing`,
+`matching` and `true-false` were added later. All eight are included in the embeddable library.
 
 **Which questions use which elements.** The question bank in `src/questions/` has an example of
 each element type:
@@ -214,6 +215,7 @@ each element type:
 | `13_jsxgraph_budget_line.ts` | Budget line | `jsxgraph` (draw a segment on the JSXGraph board; graded on Submit) |
 | `14_svgDrawing_ppf.ts` | Production possibilities frontier | `svgDrawing` (draw a segment on the plain-SVG board; graded on Submit) |
 | `15_matching_econ_vocabulary.ts` | Economic vocabulary | `matching` (5 terms sampled from a pool, matched to their definitions) |
+| `16_true-false_elasticity_statements.ts` | Price elasticity of demand | `true-false` (3 fixed statements) |
 
 The Quarto demo also has plain multiple-choice questions written as `.js` files, in
 `quarto-demo/assets/exercise-system/questions/round2/`.
@@ -342,6 +344,37 @@ until each right item lines up with its correct left item.
 See `src/questions/15_matching_econ_vocabulary.ts`. Files: `src/elements/matching/`
 (`MatchingInput.tsx`, `gradeMatching.ts`, `prepareMatching.ts`, `types.ts`).
 
+### `true-false`
+
+A table of statements, each with its own independent True/False choice (two radio buttons per
+row), styled after Perseus/Khan-Academy-style "which of the following are true" questions.
+
+```ts
+{
+  type: "true-false",
+  name: "statements",
+  statements: [
+    { text: "Demand is perfectly inelastic when quantity demanded doesn't change at all as price changes.", correct: true },
+    { text: "An elastic demand curve means consumers are relatively unresponsive to price changes.", correct: false },
+    { text: "Price elasticity of demand tends to be higher when there are more close substitutes.", correct: true },
+  ],
+  grading: "partial",                         // default; or "all-or-nothing"
+}
+```
+
+- At least one `statement`, each with Markdown `text` and a boolean `correct`.
+- **The value** is one `true`/`false`/`null` entry per statement (`null` = not yet answered). Every
+  statement must be answered before the part is valid, so an untouched or partly answered table
+  doesn't use an attempt.
+- **Grading**: the score is the fraction of statements marked correctly (`partial`, default) or 1
+  only if every statement is correct (`all-or-nothing`). Feedback names the wrong statement numbers
+  but never reveals whether they should have been True or False.
+- Once the question is finished, each statement's row is marked right or wrong in place, and a
+  wrong row shows its correct answer underneath, in green.
+
+See `src/questions/16_true-false_elasticity_statements.ts`. Files: `src/elements/trueFalse/`
+(`TrueFalseInput.tsx`, `gradeTrueFalse.ts`, `types.ts`).
+
 ### `jsxgraph`
 
 A JSXGraph drawing board with a toolbar (segments, lines, shapes, curves, ...). The board is a
@@ -420,8 +453,6 @@ toolbar grid).
 See `src/questions/14_svgDrawing_ppf.ts`. Files: `src/elements/svgDrawing/` (`SvgDrawingInput.tsx`,
 `gradeSvgDrawing.ts`, `types.ts`) and `src/components/svgDrawingComponent/` (`DrawingApp.tsx`,
 `canvas/DrawingBoard.tsx`, `canvas/DrawingToolbar.tsx`, `canvas/grading.ts`, `canvas/DrawingCanvas.css`).
-
-The component is a copy: fixes made in `svg-drawing-library/` don't reach it automatically.
 
 ---
 
@@ -569,11 +600,13 @@ of registration.
    registerElement<"string">(stringElement);
    ```
 
-`src/elements/integer/` is the smallest complete example to copy. `src/elements/table/` is a
-mid-sized one that reuses the `number` grader for each cell, `src/elements/matching/` is a
-mid-sized one that uses `prepare()` to shuffle an order (like `multipleChoice`) and grades a
-student-reordered array, and `src/elements/jsxgraph/` / `src/elements/svgDrawing/` are the most
-complex (a thin adapter around a drawing board that lives under `src/components/`).
+`src/elements/integer/` is the smallest complete example to copy. `src/elements/trueFalse/` is a
+similarly small one with no `prepare()` step, just an array of independently graded rows.
+`src/elements/table/` is a mid-sized one that reuses the `number` grader for each cell,
+`src/elements/matching/` is a mid-sized one that uses `prepare()` to shuffle an order (like
+`multipleChoice`) and grades a student-reordered array, and `src/elements/jsxgraph/` /
+`src/elements/svgDrawing/` are the most complex (a thin adapter around a drawing board that lives
+under `src/components/`).
 
 ---
 

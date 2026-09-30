@@ -8,6 +8,7 @@ import { multipleChoiceElement } from "./multipleChoice";
 import { numberElement } from "./number";
 import { svgDrawingElement } from "./svgDrawing";
 import { tableElement } from "./table";
+import { trueFalseElement } from "./trueFalse";
 
 registerElement<"multiple-choice">(multipleChoiceElement);
 registerElement<"number">(numberElement);
@@ -16,3 +17,4 @@ registerElement<"table">(tableElement);
 registerElement<"jsxgraph">(jsxGraphElement);
 registerElement<"svgDrawing">(svgDrawingElement);
 registerElement<"matching">(matchingElement);
+registerElement<"true-false">(trueFalseElement);
