@@ -56,6 +56,12 @@ The environment is Windows (PowerShell/Git Bash). Verify changes with `npm run t
 - Demo: `src/questions/14_svgDrawing_ppf.ts` (in assessment `ex1`).
 - There used to be a different, unrelated `svgdrawing` element (axis-based points/lines/polygons/curves with economics-specific grading: shift-direction, polygon overlap, curve relation). It was deleted (unused, no demo or course question referenced it) to free up the name for this one; its grading logic was not ported.
 
+## matching element
+
+- `src/elements/matching/`: a left column (numbered, fixed authored order) and a right column (lettered, shuffled) that the student reorders by drag-and-drop or up/down buttons until each right item lines up with its correct left item. `MatchingInput.tsx`, `gradeMatching.ts`, `prepareMatching.ts`, `types.ts`.
+- `prepareMatching` shuffles the right column once per variant and stores it as `rightOrder`; the left column's order is always the authored order. The value is the right column's current row order as indices into `pairs` — there's always a complete arrangement to grade, even untouched (graded against the shuffled starting order), so it isn't free of an attempt like a blank box would be.
+- Demo: `src/questions/15_matching_econ_vocabulary.ts` (in assessment `ex1`).
+
 ## true-false element
 
 - `src/elements/trueFalse/`: a table of statements, each graded independently as True/False (`TrueFalseInput.tsx`, `gradeTrueFalse.ts`, `types.ts`). No `prepare()` step; smallest element alongside `integer`.

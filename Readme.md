@@ -635,7 +635,7 @@ Since there's no backend, the browser and JSON files stand in for one.
 
 `npm run build:lib` produces a self-contained bundle in `dist-lib/`:
 
-- `exercise-system.js`: an ES module with React, all 7 element types, JSXGraph and KaTeX
+- `exercise-system.js`: an ES module with React, all 8 element types, JSXGraph and KaTeX
   (about 2.2 MB)
 - `exercise-system.css`: Tailwind styles plus the KaTeX fonts, inlined (about 1.5 MB)
 
