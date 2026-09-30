@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { exampleExpression } from "../elements/expression/gradeExpression";
 import { exampleJsxGraph } from "../elements/jsxgraph/gradeJsxGraph";
 import { exampleMatching } from "../elements/matching/gradeMatching";
 import { exampleOrdering } from "../elements/ordering/gradeOrdering";
@@ -22,6 +23,7 @@ function perfectAnswers(parts: Part[]): AnswerValues {
     else if (p.type === "matching") values[p.name] = exampleMatching(p);
     else if (p.type === "true-false") values[p.name] = exampleTrueFalse(p);
     else if (p.type === "ordering") values[p.name] = exampleOrdering(p);
+    else if (p.type === "expression") values[p.name] = exampleExpression(p);
     else values[p.name] = String(p.correct);
   }
   return values;

@@ -52,11 +52,12 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | **matching element** (drag-and-drop reordering to match a lettered column to a numbered one) | Done. Added beyond phase 1. Demo: `15_matching_econ_vocabulary.ts` in Exercise 1 |
 | **true-false element** (a table of statements, each marked True/False independently) | Done. Added beyond phase 1. Demo: `16_true-false_elasticity_statements.ts` in Exercise 1 |
 | **ordering element** (drag-and-drop a single sequence of boxes into the correct order) | Done. Added beyond phase 1. Demo: `17_ordering_income_demand_price.ts` in Exercise 1 |
+| **expression element** (symbolic math input, checked by evaluating at random points, with a live KaTeX preview) | Done. Added beyond phase 1. Demo: `18_expression_marginal_cost.ts` in Exercise 1 |
 | Exercise and exam modes, attempts, best score | Done |
 | localStorage persistence, reset, JSON export, import/review page | Done |
 | Accessibility, mobile layout, dark mode | Done |
 | Embeddable library build + Quarto demo | Done. Added beyond phase 1 |
-| Checkbox, units, symbolic math, manual grading | Not started (see [Roadmap](#roadmap)) |
+| Checkbox, units, manual grading | Not started (see [Roadmap](#roadmap)) |
 
 ---
 
@@ -181,7 +182,7 @@ You can override `maxAttempts` for each question in the assessment definition.
 
 ### Question types at a glance
 
-There are **9 element types**. A question is made of one or more **parts**, and each part uses
+There are **10 element types**. A question is made of one or more **parts**, and each part uses
 one element, so a single question can mix them. For example, you could combine a number box with
 a multiple-choice part, or a drawing with a follow-up number.
 
@@ -196,9 +197,11 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `matching` | drag-and-drop reorders the right column to match the fixed, numbered left column | left column (1, 2, 3, …) fixed at prepare time; right column (a, b, c, …) shuffled at prepare time | fraction of rows where the right item lines up with its correct left item; partial credit (default) or all-or-nothing |
 | `true-false` | marks each statement in a table True or False, independently | a list of statements, each with its own `correct` boolean | fraction of statements marked correctly; partial credit (default) or all-or-nothing |
 | `ordering` | drag-and-drop arranges a single sequence of boxes into the correct order | a list of items (authored in correct order), shuffled at prepare time; `layout: "vertical" \| "horizontal"` and an optional arrow between boxes | fraction of boxes in their correct position; partial credit (default) or all-or-nothing |
+| `expression` | types a math expression, with a live KaTeX preview of it as they type | variables and the range to sample them from (`variables`), number of test points (`samples`) | evaluates the student's and the correct expression at the same random points (via mathjs) and compares within `tolerance` — so algebraically equivalent forms (`x^2 + .5 x + 1` vs `x^2 + 1/2 x + 1`) both grade as correct |
 
 `multiple-choice`, `number` and `integer` come from the phase 1 plan. `table`, `jsxgraph`, `svgDrawing`,
-`matching`, `true-false` and `ordering` were added later. All nine are included in the embeddable library.
+`matching`, `true-false`, `ordering` and `expression` were added later. All ten are included in the
+embeddable library.
 
 **Which questions use which elements.** The question bank in `src/questions/` has an example of
 each element type:
@@ -219,6 +222,7 @@ each element type:
 | `15_matching_econ_vocabulary.ts` | Economic vocabulary | `matching` (5 terms sampled from a pool, matched to their definitions) |
 | `16_true-false_elasticity_statements.ts` | Price elasticity of demand | `true-false` (3 fixed statements) |
 | `17_ordering_income_demand_price.ts` | Order the causal chain | `ordering` (3 fixed items, horizontal layout) |
+| `18_expression_marginal_cost.ts` | Find the marginal cost function | `expression` (derivative of a cubic; 1 variable) |
 
 The Quarto demo also has plain multiple-choice questions written as `.js` files, in
 `quarto-demo/assets/exercise-system/questions/round2/`.
@@ -411,6 +415,46 @@ row), styled after Perseus/Khan-Academy-style "which of the following are true" 
 
 See `src/questions/16_true-false_elasticity_statements.ts`. Files: `src/elements/trueFalse/`
 (`TrueFalseInput.tsx`, `gradeTrueFalse.ts`, `types.ts`).
+
+### `expression`
+
+A text box for typing a math expression (e.g. a polynomial, a derivative), with a live KaTeX
+preview typeset below it as the student types. Checked by **evaluating**, not by comparing text, so
+any algebraically equivalent form is accepted.
+
+```ts
+{
+  type: "expression",
+  name: "mc",
+  correct: "x^2 + 1/2 x + 1",              // mathjs syntax; "x^2 + .5 x + 1" answers this too
+  variables: { x: [1, 9] },                // optional: defaults to [1, 9] for every auto-detected variable
+  samples: 5,                              // optional: how many random points to test; default 5
+  tolerance: 1e-6,                         // optional: relative tolerance when comparing; default 1e-6
+}
+```
+
+- **`correct`** is plain math syntax parsed by [mathjs](https://mathjs.org/): `^` for powers, `*` or
+  a space for implicit multiplication (`2x`, `1/2 x`), `/` for division, and mathjs's built-in
+  functions/constants (`sqrt`, `sin`, `log`, `pi`, `e`, ...). Its variables are auto-detected (every
+  symbol that isn't a mathjs constant or function) unless `variables` is given explicitly.
+- **The value** is the expression exactly as the student typed it (a string).
+- **Grading**: `prepare()` samples `samples` random points per variable, once per variant (so
+  grading — including later review — is deterministic from the seed, like `matching`'s shuffle).
+  Both the student's and the correct expression are evaluated at each point; the score is 1 only if
+  every point matches within `tolerance`, else 0 (no partial credit — a symbolic expression either
+  is or isn't equivalent). An expression that doesn't parse, uses an undeclared symbol, or fails to
+  evaluate (e.g. a typo'd function name) is **invalid**, not wrong, so it doesn't use an attempt.
+- **The live preview**: as the student types, the input is parsed and rendered as typeset math
+  (mathjs's `node.toTex()` piped through the same KaTeX pipeline as question text) below the box.
+  An expression that doesn't parse yet (e.g. mid-typing) just shows a quiet placeholder instead of
+  an error.
+- Once the question is finished, the correct expression is shown as typeset math too.
+- **Extra dependency**: `mathjs` (imported from `mathjs/number`, the plain-JS-number build, to keep
+  BigNumber/Fraction/Complex/Matrix/Unit support — and the bundle — out; this element doesn't need
+  them). This adds a few hundred KB to the embeddable bundle, similar in scale to JSXGraph's cost.
+
+See `src/questions/18_expression_marginal_cost.ts`. Files: `src/elements/expression/`
+(`ExpressionInput.tsx`, `gradeExpression.ts`, `prepareExpression.ts`, `mathUtils.ts`, `types.ts`).
 
 ### `jsxgraph`
 
@@ -642,9 +686,11 @@ similarly small one with no `prepare()` step, just an array of independently gra
 `src/elements/table/` is a mid-sized one that reuses the `number` grader for each cell,
 `src/elements/matching/` and `src/elements/ordering/` are mid-sized ones that use `prepare()` to
 shuffle an order (like `multipleChoice`) and grade a student-reordered array (`ordering` is the
-simpler of the two: one column instead of matching two), and `src/elements/jsxgraph/` /
-`src/elements/svgDrawing/` are the most complex (a thin adapter around a drawing board that lives
-under `src/components/`).
+simpler of the two: one column instead of matching two). `src/elements/expression/` uses
+`prepare()` differently: to freeze random *test points* rather than shuffle anything, and pulls in
+an external parsing/evaluation library (`mathjs`) rather than parsing the value itself like every
+other element. `src/elements/jsxgraph/` / `src/elements/svgDrawing/` are the most complex (a thin
+adapter around a drawing board that lives under `src/components/`).
 
 ---
 
@@ -673,8 +719,8 @@ Since there's no backend, the browser and JSON files stand in for one.
 
 `npm run build:lib` produces a self-contained bundle in `dist-lib/`:
 
-- `exercise-system.js`: an ES module with React, all 9 element types, JSXGraph and KaTeX
-  (about 2.2 MB)
+- `exercise-system.js`: an ES module with React, all 10 element types, JSXGraph, mathjs and KaTeX
+  (about 2.8 MB)
 - `exercise-system.css`: Tailwind styles plus the KaTeX fonts, inlined (about 1.5 MB)
 
 The bundle exports `mount(element, { assessment, questions })`, which returns an unmount function.
@@ -817,9 +863,9 @@ The tests cover:
 The registry is designed so these can be added later without touching the engine:
 
 - Checkbox (multiple answers) with partial credit: all-or-nothing, net-correct, coverage
-- Units input (via mathjs units)
+- Units input (via mathjs units — `expression` already uses mathjs, but the `/number` build excludes unit support to keep the bundle small)
 - Matrix input with symbolic entries (numeric grids are already covered by the `table` element)
-- String input and symbolic math input (checked for equivalence by evaluating at random points)
+- String input (`expression`, added beyond phase 1, covers symbolic math; plain non-numeric string matching is still open)
 - Big-O input
 - Manually graded parts: essay, file upload, image capture
 

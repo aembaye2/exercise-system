@@ -13,6 +13,7 @@ import { productionPossibilities } from "./14_svgDrawing_ppf";
 import { econVocabularyMatching } from "./15_matching_econ_vocabulary";
 import { elasticityStatements } from "./16_true-false_elasticity_statements";
 import { incomeDemandPriceChain } from "./17_ordering_income_demand_price";
+import { marginalCostExpression } from "./18_expression_marginal_cost";
 
 /** Every question available to assessments. Add new questions here. */
 export const questions: AnyQuestion[] = [
@@ -30,6 +31,7 @@ export const questions: AnyQuestion[] = [
   econVocabularyMatching,
   elasticityStatements,
   incomeDemandPriceChain,
+  marginalCostExpression,
 ];
 
 const byId = new Map(questions.map((q) => [q.id, q]));

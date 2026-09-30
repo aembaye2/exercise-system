@@ -1,6 +1,7 @@
 // Registers every element type with the engine. To add a new element type,
 // create its folder under src/elements/ and register it here.
 import { registerElement } from "../engine/registry";
+import { expressionElement } from "./expression";
 import { integerElement } from "./integer";
 import { jsxGraphElement } from "./jsxgraph";
 import { matchingElement } from "./matching";
@@ -20,3 +21,4 @@ registerElement<"svgDrawing">(svgDrawingElement);
 registerElement<"matching">(matchingElement);
 registerElement<"true-false">(trueFalseElement);
 registerElement<"ordering">(orderingElement);
+registerElement<"expression">(expressionElement);
