@@ -61,7 +61,7 @@ The environment is Windows (PowerShell/Git Bash). Verify changes with `npm run t
 ## Conventions
 
 - Question files are named `NN_<type>_<description>` (`mc` = multiple-choice; mixed types joined with `-`), in `src/questions/` and in the Quarto `questions/` folders.
-- Element types: `multiple-choice`, `number`, `integer`, `table`, `jsxgraph` (`src/elements/jsxgraph/`), `svgDrawing` (`src/elements/svgDrawing/`).
+- Element types: `multiple-choice`, `number`, `integer`, `table`, `jsxgraph` (`src/elements/jsxgraph/`), `svgDrawing` (`src/elements/svgDrawing/`), `matching` (`src/elements/matching/`).
 - Randomness only through the seeded `rng` passed to `generate`; `engine/seed.ts` is the only non-seeded source.
 - An invalid part value must return `{ valid: false }` from `validate`, not a wrong grade, so no attempt is used.
 - Question text is Markdown with KaTeX: write a literal dollar sign as `\$` inside TS template strings.

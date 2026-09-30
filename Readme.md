@@ -49,11 +49,12 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | **Table element** (fillable table with fixed and blank cells, partial credit) | Done. Added beyond phase 1 |
 | **JSXGraph element** (drawing component built into the app; graded on Submit) | Done. Added beyond phase 1. Demo: `13_jsxgraph_budget_line.ts` in Exercise 1 |
 | **svgDrawing element** (plain-SVG twin of the JSXGraph board; same tools, graded on Submit) | Done. Added beyond phase 1. Demo: `14_svgDrawing_ppf.ts` in Exercise 1 |
+| **matching element** (drag-and-drop reordering to match a lettered column to a numbered one) | Done. Added beyond phase 1. Demo: `15_matching_econ_vocabulary.ts` in Exercise 1 |
 | Exercise and exam modes, attempts, best score | Done |
 | localStorage persistence, reset, JSON export, import/review page | Done |
 | Accessibility, mobile layout, dark mode | Done |
 | Embeddable library build + Quarto demo | Done. Added beyond phase 1 |
-| Checkbox, matching/ordering, units, symbolic math, manual grading | Not started (see [Roadmap](#roadmap)) |
+| Checkbox, units, symbolic math, manual grading | Not started (see [Roadmap](#roadmap)) |
 
 ---
 
@@ -179,7 +180,7 @@ You can override `maxAttempts` for each question in the assessment definition.
 
 ### Question types at a glance
 
-There are **6 element types**. A question is made of one or more **parts**, and each part uses
+There are **7 element types**. A question is made of one or more **parts**, and each part uses
 one element, so a single question can mix them. For example, you could combine a number box with
 a multiple-choice part, or a drawing with a follow-up number.
 
@@ -191,9 +192,10 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `jsxgraph` | draws on a JSXGraph canvas | the tools of the drawing component (`src/components/jsxgraphComponent`) | the exercise app's **Submit**: the drawing is compared with `expectedDrawing` (slope/intercept lines or exact points), partial credit per shape |
 | `svgDrawing` | draws on a plain-SVG canvas | the same tools as `jsxgraph` (`src/components/svgDrawingComponent`), no JSXGraph dependency | same as `jsxgraph`: graded on **Submit** against `expectedDrawing`, partial credit per shape |
 | `table` | fills in blank cells of a table | fixed cells, section rows, grouped column headers | each blank like a `number` part; partial credit (default) or all-or-nothing |
+| `matching` | drag-and-drop reorders the right column to match the fixed, numbered left column | left column (1, 2, 3, …) fixed at prepare time; right column (a, b, c, …) shuffled at prepare time | fraction of rows where the right item lines up with its correct left item; partial credit (default) or all-or-nothing |
 
-`multiple-choice`, `number` and `integer` come from the phase 1 plan. `table`, `jsxgraph` and `svgDrawing` were
-added later. All six are included in the embeddable library.
+`multiple-choice`, `number` and `integer` come from the phase 1 plan. `table`, `jsxgraph`, `svgDrawing` and
+`matching` were added later. All seven are included in the embeddable library.
 
 **Which questions use which elements.** The question bank in `src/questions/` has an example of
 each element type:
@@ -211,6 +213,7 @@ each element type:
 | `12_table_gains_from_trade.ts` | Gains from trade | table (16 blanks) |
 | `13_jsxgraph_budget_line.ts` | Budget line | `jsxgraph` (draw a segment on the JSXGraph board; graded on Submit) |
 | `14_svgDrawing_ppf.ts` | Production possibilities frontier | `svgDrawing` (draw a segment on the plain-SVG board; graded on Submit) |
+| `15_matching_econ_vocabulary.ts` | Economic vocabulary | `matching` (5 terms sampled from a pool, matched to their definitions) |
 
 The Quarto demo also has plain multiple-choice questions written as `.js` files, in
 `quarto-demo/assets/exercise-system/questions/round2/`.
@@ -304,6 +307,40 @@ parts, each with its own `comparison`/`rtol`/`digits` if needed.
 
 See `src/questions/12_table_gains_from_trade.ts`. It computes every cell from the production
 possibilities rather than hard-coding the answers.
+
+### `matching`
+
+A left column (numbered 1, 2, 3, …, in fixed authored order) and a right column (lettered a, b,
+c, …, shuffled per variant) that the student reorders by drag-and-drop (or the up/down buttons)
+until each right item lines up with its correct left item.
+
+```ts
+{
+  type: "matching",
+  name: "terms",
+  pairs: [                                    // pairs[i].left is the correct match for pairs[i].right
+    { left: "Scarcity", right: "Unlimited wants, limited resources" },
+    { left: "Opportunity cost", right: "Value of the next best alternative given up" },
+    { left: "Market equilibrium", right: "Quantity supplied equals quantity demanded" },
+  ],
+  grading: "partial",                         // default; or "all-or-nothing"
+}
+```
+
+- At least two `pairs`. The left column's order is fixed (authored order); the right column's
+  starting order is shuffled once per variant by `prepare()` and stored as `rightOrder`.
+- **The value** is the right column's current row order as indices into `pairs` (what the student's
+  dragging has produced so far). There's always a complete arrangement to grade, even if the
+  student never drags anything — an untouched submission is graded against the shuffled starting
+  order, so it isn't free of an attempt like a blank text box would be.
+- **Grading**: row `i` is correct when it holds `pairs[i]`. The score is the fraction of correct
+  rows (`partial`, default) or 1 only if every row is correct (`all-or-nothing`). Feedback names the
+  wrong row numbers but never reveals the correct pairing.
+- Once the question is finished, each row is marked right or wrong in place, and a wrong row shows
+  its correct right-hand text underneath, in green.
+
+See `src/questions/15_matching_econ_vocabulary.ts`. Files: `src/elements/matching/`
+(`MatchingInput.tsx`, `gradeMatching.ts`, `prepareMatching.ts`, `types.ts`).
 
 ### `jsxgraph`
 
@@ -533,9 +570,10 @@ of registration.
    ```
 
 `src/elements/integer/` is the smallest complete example to copy. `src/elements/table/` is a
-mid-sized one that reuses the `number` grader for each cell, and `src/elements/jsxgraph/` /
-`src/elements/svgDrawing/` are the most complex (a thin adapter around a drawing board that lives
-under `src/components/`).
+mid-sized one that reuses the `number` grader for each cell, `src/elements/matching/` is a
+mid-sized one that uses `prepare()` to shuffle an order (like `multipleChoice`) and grades a
+student-reordered array, and `src/elements/jsxgraph/` / `src/elements/svgDrawing/` are the most
+complex (a thin adapter around a drawing board that lives under `src/components/`).
 
 ---
 
@@ -564,7 +602,7 @@ Since there's no backend, the browser and JSON files stand in for one.
 
 `npm run build:lib` produces a self-contained bundle in `dist-lib/`:
 
-- `exercise-system.js`: an ES module with React, all 6 element types, JSXGraph and KaTeX
+- `exercise-system.js`: an ES module with React, all 7 element types, JSXGraph and KaTeX
   (about 2.2 MB)
 - `exercise-system.css`: Tailwind styles plus the KaTeX fonts, inlined (about 1.5 MB)
 
@@ -708,7 +746,6 @@ The tests cover:
 The registry is designed so these can be added later without touching the engine:
 
 - Checkbox (multiple answers) with partial credit: all-or-nothing, net-correct, coverage
-- Matching and ordering (drag and drop)
 - Units input (via mathjs units)
 - Matrix input with symbolic entries (numeric grids are already covered by the `table` element)
 - String input and symbolic math input (checked for equivalence by evaluating at random points)

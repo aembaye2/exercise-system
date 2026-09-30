@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exampleJsxGraph } from "../elements/jsxgraph/gradeJsxGraph";
+import { exampleMatching } from "../elements/matching/gradeMatching";
 import { exampleSvgDrawing } from "../elements/svgDrawing/gradeSvgDrawing";
 import { exampleTable } from "../elements/table/gradeTable";
 import { gradeQuestion } from "../engine/gradeQuestion";
@@ -16,6 +17,7 @@ function perfectAnswers(parts: Part[]): AnswerValues {
     else if (p.type === "jsxgraph") values[p.name] = exampleJsxGraph(p) as unknown as JsonValue;
     else if (p.type === "svgDrawing") values[p.name] = exampleSvgDrawing(p) as unknown as JsonValue;
     else if (p.type === "table") values[p.name] = exampleTable(p);
+    else if (p.type === "matching") values[p.name] = exampleMatching(p);
     else values[p.name] = String(p.correct);
   }
   return values;

@@ -13,3 +13,9 @@
 ```{=html}
 <div class="exercise-system-root" data-quiz="round2Quiz.js">Loading practice questions …</div>
 ```
+
+## Quiz 1:
+
+```{=html}
+<div class="exercise-system-root" data-quiz="quiz1.js">Loading practice questions …</div>
+```

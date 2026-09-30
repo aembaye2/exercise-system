@@ -3,6 +3,7 @@
 import { registerElement } from "../engine/registry";
 import { integerElement } from "./integer";
 import { jsxGraphElement } from "./jsxgraph";
+import { matchingElement } from "./matching";
 import { multipleChoiceElement } from "./multipleChoice";
 import { numberElement } from "./number";
 import { svgDrawingElement } from "./svgDrawing";
@@ -14,3 +15,4 @@ registerElement<"integer">(integerElement);
 registerElement<"table">(tableElement);
 registerElement<"jsxgraph">(jsxGraphElement);
 registerElement<"svgDrawing">(svgDrawingElement);
+registerElement<"matching">(matchingElement);

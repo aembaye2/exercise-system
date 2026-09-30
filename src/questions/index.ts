@@ -10,6 +10,7 @@ import { comparativeAdvantage } from "./11_mc-number_comparative_advantage";
 import { gainsFromTrade } from "./12_table_gains_from_trade";
 import { budgetLine } from "./13_jsxgraph_budget_line";
 import { productionPossibilities } from "./14_svgDrawing_ppf";
+import { econVocabularyMatching } from "./15_matching_econ_vocabulary";
 
 /** Every question available to assessments. Add new questions here. */
 export const questions: AnyQuestion[] = [
@@ -24,6 +25,7 @@ export const questions: AnyQuestion[] = [
   gainsFromTrade,
   budgetLine,
   productionPossibilities,
+  econVocabularyMatching,
 ];
 
 const byId = new Map(questions.map((q) => [q.id, q]));
