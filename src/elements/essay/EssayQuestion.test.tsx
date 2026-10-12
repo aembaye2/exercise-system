@@ -27,21 +27,21 @@ describe("essay question (student flow)", () => {
     const box = screen.getByRole("textbox", { name: "Your answer:" });
 
     await user.type(box, "one two three four five six seven eight nine ten eleven");
-    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.click(screen.getByRole("button", { name: "Grade" }));
     expect(screen.getByText(/11 words \(limit 10\)/)).toBeInTheDocument();
     expect(screen.getByText(/Attempts used: 0/)).toBeInTheDocument();
     expect(screen.queryByText("Model answer")).toBeNull();
 
     await user.clear(box);
     await user.type(box, "Quantity demanded exceeds $Q_s$.");
-    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.click(screen.getByRole("button", { name: "Grade" }));
 
     expect(screen.getByRole("status")).toHaveTextContent("Submitted. Your teacher will grade this answer later.");
     expect(screen.getByText(/Awaiting teacher's grade/)).toBeInTheDocument();
     expect(screen.getByText("Model answer")).toBeInTheDocument();
     expect(screen.getByText("shortage")).toBeInTheDocument();
     expect(box).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Submit" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Grade" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "New variant" })).toBeNull();
   });
 
@@ -54,7 +54,7 @@ describe("essay question (student flow)", () => {
       </AssessmentProvider>,
     );
     await user.type(screen.getByRole("textbox", { name: "Your answer:" }), "Prices are capped.");
-    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.click(screen.getByRole("button", { name: "Grade" }));
     expect(screen.getByText(/Awaiting teacher's grade/)).toBeInTheDocument();
     expect(screen.queryByText("Model answer")).toBeNull();
     expect(screen.queryByText(/model answer below/)).toBeNull();

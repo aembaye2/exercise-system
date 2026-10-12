@@ -16,7 +16,7 @@ interface Params {
 
 /**
  * Matching element demo: drag the right-hand definitions to line up with the
- * fixed, numbered terms on the left. Graded on Submit.
+ * fixed, numbered terms on the left. Graded on Grade/Save.
  */
 export const econVocabularyMatching: Question<Params> = {
   id: "econ-vocabulary-matching",

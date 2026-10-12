@@ -36,7 +36,7 @@ describe("QuestionView", () => {
     // Wrong answer.
     await user.clear(input);
     await user.type(input, "999");
-    await user.click(screen.getByRole("button", { name: "Submit" }));
+    await user.click(screen.getByRole("button", { name: "Grade" }));
     expect(screen.getByText("Incorrect")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Submission score: 0%");
     expect(screen.getByText(/Attempts used: 1/)).toBeInTheDocument();
@@ -53,7 +53,7 @@ describe("QuestionView", () => {
     expect(screen.getByText("10 / 10 points")).toBeInTheDocument();
     expect(screen.getByText(/Correct answer:/)).toBeInTheDocument();
     expect(input).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Submit" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Grade" })).toBeDisabled();
   });
 
   it("shows the seed and a fresh variant on 'New variant'", async () => {
@@ -75,7 +75,7 @@ describe("QuestionView", () => {
     expect(screen.getByText(/Correct answer:/)).toBeInTheDocument();
     expect(screen.getByText(/no attempts left/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "New variant" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Submit" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Grade" })).toBeDisabled();
   });
 
   it("grades multi-part questions with per-part badges and MC feedback", async () => {
@@ -127,5 +127,40 @@ describe("QuestionView", () => {
     await user.click(screen.getByRole("button", { name: "Yes, reset" }));
     expect(screen.getByText(/Attempts used: 0/)).toBeInTheDocument();
     expect(screen.getByText("seed 102")).toBeInTheDocument();
+  });
+});
+
+describe("QuestionView: Save button", () => {
+  it("with hidden grades: Save records the answer without any score, feedback or lock", async () => {
+    const user = userEvent.setup();
+    renderQuestion({ ...exam, gradeButton: false });
+    expect(screen.queryByRole("button", { name: "Grade" })).toBeNull();
+    expect(screen.getByText("10 points")).toBeInTheDocument();
+    const input = screen.getByRole("textbox", { name: "Sum:" });
+
+    await user.type(input, "999{Enter}");
+    expect(screen.getByRole("status")).toHaveTextContent(/Answer saved/);
+    expect(screen.queryByText("Incorrect")).toBeNull();
+    expect(screen.queryByText(/Correct answer:/)).toBeNull();
+    expect(screen.queryByText(/Attempts used/)).toBeNull();
+
+    await user.clear(input);
+    await user.type(input, String(correctSum(100)));
+    expect(screen.getByRole("status")).toHaveTextContent(/unsaved changes/);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("status")).toHaveTextContent(/Answer saved/);
+    expect(screen.queryByText("Correct")).toBeNull();
+    expect(input).toBeEnabled();
+  });
+
+  it("next to Grade: Save confirms without grading or using an attempt", async () => {
+    const user = userEvent.setup();
+    renderQuestion({ ...exercise, saveButton: true });
+    await user.type(screen.getByRole("textbox", { name: "Sum:" }), "999");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("status")).toHaveTextContent("Your answers are saved.");
+    expect(screen.getByText(/Attempts used: 0/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Grade" }));
+    expect(screen.getByText("Incorrect")).toBeInTheDocument();
   });
 });

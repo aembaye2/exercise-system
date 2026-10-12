@@ -5,7 +5,8 @@ import { QuestionView } from "./QuestionView";
 import { Button, Card, ConfirmButton, ModeBadge, formatPoints } from "./ui";
 
 /** Announced to screen readers in each question button's label. */
-function statusOf(q: QuestionState): string {
+function statusOf(q: QuestionState, hideGrades: boolean): string {
+  if (hideGrades) return attemptsUsed(q) > 0 ? "saved" : "not started";
   if (q.bestScore >= 1) return "complete";
   if (pendingPoints(q) > 0) return "awaiting teacher's grade";
   if (isFinished(q)) return "closed";
@@ -24,7 +25,7 @@ export interface AssessmentViewProps {
 
 /** The running assessment: header, question navigation, current question. */
 export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
-  const { assessment, state, bank, actions, saved } = useAssessment();
+  const { assessment, state, bank, actions, saved, persistence, hideGrades } = useAssessment();
   const [confirmingReset, setConfirmingReset] = useState(false);
   const { earned, possible, pending } = totals(state);
   const index = state.currentIndex;
@@ -39,15 +40,22 @@ export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
         </div>
         {assessment.description && <p className="text-slate-600 dark:text-slate-400">{assessment.description}</p>}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <p className="text-sm">
-            Total score:{" "}
-            <strong>
-              {formatPoints(earned)} / {possible}
-            </strong>
-            {pending > 0 && (
-              <span className="text-slate-600 dark:text-slate-400"> ({formatPoints(pending)} awaiting teacher's grade)</span>
-            )}
-          </p>
+          {hideGrades ? (
+            <p className="text-sm">
+              Total points: <strong>{possible}</strong>
+              <span className="text-slate-600 dark:text-slate-400"> · Save each answer; scores are not shown here.</span>
+            </p>
+          ) : (
+            <p className="text-sm">
+              Total score:{" "}
+              <strong>
+                {formatPoints(earned)} / {possible}
+              </strong>
+              {pending > 0 && (
+                <span className="text-slate-600 dark:text-slate-400"> ({formatPoints(pending)} awaiting teacher's grade)</span>
+              )}
+            </p>
+          )}
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {onShowResults ? (
               <button
@@ -65,19 +73,21 @@ export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
                 Results &amp; export
               </a>
             )}
-            <ConfirmButton
-              label="Reset assessment"
-              confirmLabel="Yes, reset"
-              prompt="Erase all answers and start over?"
-              onConfirm={actions.reset}
-              confirming={confirmingReset}
-              setConfirming={setConfirmingReset}
-            />
+            {persistence.canReset && (
+              <ConfirmButton
+                label="Reset assessment"
+                confirmLabel="Yes, reset"
+                prompt="Erase all answers and start over?"
+                onConfirm={actions.reset}
+                confirming={confirmingReset}
+                setConfirming={setConfirmingReset}
+              />
+            )}
           </div>
         </div>
         {!saved && (
           <p role="alert" className="rounded-md bg-amber-100 px-3 py-2 text-sm text-amber-900 dark:bg-amber-900/50 dark:text-amber-100">
-            Your browser is blocking storage, so progress will be lost if you reload. Export your results before leaving.
+            {persistence.saveFailedMessage}
           </p>
         )}
       </header>
@@ -85,7 +95,8 @@ export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
       <nav aria-label="Questions">
         <ol className="m-0 flex list-none flex-wrap gap-2 p-0">
           {state.questions.map((q, i) => {
-            const status = statusOf(q);
+            const status = statusOf(q, hideGrades);
+            const points = hideGrades ? `${q.points} points` : `${formatPoints(q.bestScore * q.points)} of ${q.points} points`;
             const title = bank(q.questionId)?.title ?? q.questionId;
             return (
               <li key={i}>
@@ -93,7 +104,7 @@ export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
                   type="button"
                   onClick={() => actions.goTo(i)}
                   aria-current={i === index ? "step" : undefined}
-                  aria-label={`Question ${i + 1}: ${title}, ${status}, ${formatPoints(q.bestScore * q.points)} of ${q.points} points`}
+                  aria-label={`Question ${i + 1}: ${title}, ${status}, ${points}`}
                   className={`rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
                     i === index
                       ? "border-indigo-500 bg-indigo-50 text-indigo-800 dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-200"

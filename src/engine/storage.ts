@@ -49,7 +49,7 @@ function isRecord(x: unknown): x is Record<string, unknown> {
   return typeof x === "object" && x !== null && !Array.isArray(x);
 }
 
-function isCompatibleState(x: unknown, assessment: Assessment): x is AssessmentState {
+export function isCompatibleState(x: unknown, assessment: Assessment): x is AssessmentState {
   if (!isRecord(x) || x.version !== 1 || x.assessmentId !== assessment.id || x.mode !== assessment.mode) return false;
   if (typeof x.currentIndex !== "number" || typeof x.startedAt !== "string") return false;
   if (!Array.isArray(x.questions) || x.questions.length !== assessment.questions.length) return false;

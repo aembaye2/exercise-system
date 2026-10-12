@@ -1,7 +1,0 @@
----
-engine: knitr
----
-
-# Chapter 2: 
-
-TBA

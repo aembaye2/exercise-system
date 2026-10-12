@@ -8,7 +8,7 @@ A React + TypeScript + Vite exercise/quiz system for economics: seeded question 
 
 Sibling projects in this folder, each with its own package.json:
 - `jsxgraph-library/`: the JSXGraph drawing widget (has its own `CLAUDE.md` and `README.md`).
-- `quarto-demo/`: sample Quarto book that embeds the bundle.
+- `quarto-demo/`: minimal Quarto website that embeds the bundle and runs the demo quiz.
 
 ## Commands
 
@@ -17,6 +17,7 @@ npm run dev         # standalone app
 npm run test        # Vitest, run once
 npm run build       # tsc -b + app build -> dist/
 npm run build:lib   # embeddable bundle -> dist-lib/ (then copy to the Quarto assets folder)
+npm run scorm -- quarto-demo/quiz1.js   # SCORM 2004 zip -> dist-scorm/
 ```
 
 The environment is Windows (PowerShell/Git Bash). Verify changes with `npm run test` and `npx tsc -b`.
@@ -32,31 +33,33 @@ The environment is Windows (PowerShell/Git Bash). Verify changes with `npm run t
 - `src/elements/<type>/`: one folder per element type (types, grade logic, input component, `index.ts`); registered in `src/elements/index.ts`.
 - `src/questions/`, `src/assessments/index.ts`: demo question bank and assessments.
 - `src/lib/`: embeddable build entry (`mount`, with `review: true` for the teacher review page).
-- `src/pages/Import.tsx` + `src/components/ReviewView.tsx`: review an exported results file (regrades every submission) and enter teacher grades; `Import` takes the question bank as a prop.
+- `src/pages/Import.tsx` + `src/components/ReviewView.tsx`: review a results file (regrades every submission) and enter teacher grades; `Import` takes the question bank as a prop.
 - `src/components/jsxgraphComponent/`: the JSXGraph drawing board used by the `jsxgraph` element.
 - `src/components/svgDrawingComponent/`: the plain-SVG drawing board used by the `svgDrawing` element.
 
 ## Content lives in two places (important)
 
 - `src/questions/` is the **demo** set only: one question per element type, numbered consecutively `01`-`13` (`ex1` in `src/assessments/index.ts` is the only assessment and must include every bank question; a test checks that). Don't add course questions there. When a demo question is deleted, renumber the remaining files and update `src/questions/index.ts`, the Readme tables and the demo paths in this file.
-- Real course questions and quizzes are plain `.js` files under `quarto-demo/assets/exercise-system/` (e.g. `questions/round2/`, `quiz1.js`). Its `questions/sample/` folder is numbered separately (`01`-`09`) and still has questions that were deleted from `src/questions/`; the `.ts` and `.js` numbers don't correspond.
-- Library code changes go in `src/` first, get tested, then `npm run build:lib` and copy `dist-lib/exercise-system.js/.css` into the Quarto assets. Never hand-edit the bundle.
+- `quarto-demo/` is kept as slim as possible: `_quarto.yml` (website; the quiz loader script is inlined under `include-in-header: text:`), `index.qmd` (one `<div class="exercise-system-root" data-quiz="quiz1.js">`), `quiz1.js` (= assessment `ex1`), `questions/01`-`13` and `assets/exercise-system.js/.css`. Don't add template/book files back.
+- `quarto-demo/questions/NN_*.js` are plain-JS copies of `src/questions/NN_*.ts` with only the types removed (same numbers, names, ids, text). When a demo question changes, update its `.js` twin too; `quiz1.js` lists the same questions as `ex1`.
+- Real course quizzes live in the user's own Quarto books outside this repo (same structure: quiz `.js` + `questions/` + the bundle).
+- Library code changes go in `src/` first, get tested, then `npm run build:lib` and copy `dist-lib/exercise-system.js/.css` into `quarto-demo/assets/`. Never hand-edit the bundle.
 
 ## jsxgraph element (drawing component built into the app)
 
-- `src/components/jsxgraphComponent/` is the JSXGraph board, toolbar and grader, copied from `jsxgraph-library/` and changed for this app. It is **not** loaded as a separate bundle. It has no Grade button: `DrawingApp` reports drawings through `onDrawingsChange`, and the element grades on the app's Submit.
+- `src/components/jsxgraphComponent/` is the JSXGraph board, toolbar and grader, copied from `jsxgraph-library/` and changed for this app. It is **not** loaded as a separate bundle. It has no Grade button: `DrawingApp` reports drawings through `onDrawingsChange`, and the element grades on the app's Grade (or Save).
 - `src/elements/jsxgraph/`: `JsxGraphInput` keeps the part value in sync with the board (value = `UserDrawing[]`); `gradeJsxGraph` calls `gradeDrawing` from `canvas/grading.ts`. Import pure logic from `canvas/grading` directly, not from the component's `index.ts`, so logic tests don't load JSXGraph.
 - The board only draws for itself; `JsxGraphInput` remounts it (via `key`) when the value changes from outside (new variant, loaded progress) so `initialDrawings` restores it. `readOnly` and `showAnswer` cover finished questions.
 - Part `props` are `DrawingQuestionProps` as JSON; `expectedDrawing` is required (`check` enforces it). Keep values JSON-serializable: they're saved and exported.
 - Extra deps: `jsxgraph`, `lucide-react`. The board's CSS (`canvas/DrawingCanvas.css`) uses generic class names (`.toolbar`, `.board`, ...); don't reuse them elsewhere.
 - Later fixes to `jsxgraph-library/` are not picked up automatically; port them by hand.
 - Demo: `src/questions/07_jsxgraph_budget_line.ts` (in assessment `ex1`).
-- The bundle includes JSXGraph (about 2.2 MB). `quarto-demo` quizzes use it: `questions/sample/08_jsxgraph_budget_line.js` and `questions/round2/08_jsxgraph_budget_line.js`.
-- `quarto-demo` loads the stylesheet (`css:`) and a quiz loader (`include-in-header: assets/exercise-system/header.html`) once, from `_quarto.yml`; chapters only contain `<div class="exercise-system-root" data-quiz="quizN.js">`.
+- The bundle includes JSXGraph (about 2.2 MB). `quarto-demo` uses it in `questions/07_jsxgraph_budget_line.js`.
+- `quarto-demo` loads the stylesheet (`css:`) and the quiz loader (inline `include-in-header`) once, from `_quarto.yml`; pages only contain `<div class="exercise-system-root" data-quiz="quizN.js">`.
 
 ## svgDrawing element (plain-SVG twin of jsxgraph)
 
-- `src/components/svgDrawingComponent/` is the same board/toolbar/grading design as `jsxgraphComponent` (same `ToolName`s, same `DrawingQuestionProps`, same `gradeDrawing`), originally copied from a sibling `svg-drawing-library/` project (since removed, as it wasn't needed here) and adapted for this app the same way jsxgraph was: no Grade button, `initialDrawings`/`readOnly`/`showAnswer` for the app's save/restore and Submit flow. It renders hand-written SVG instead of wrapping the JSXGraph library, so it doesn't pull that dependency in.
+- `src/components/svgDrawingComponent/` is the same board/toolbar/grading design as `jsxgraphComponent` (same `ToolName`s, same `DrawingQuestionProps`, same `gradeDrawing`), originally copied from a sibling `svg-drawing-library/` project (since removed, as it wasn't needed here) and adapted for this app the same way jsxgraph was: no Grade button, `initialDrawings`/`readOnly`/`showAnswer` for the app's save/restore and Grade/Save flow. It renders hand-written SVG instead of wrapping the JSXGraph library, so it doesn't pull that dependency in.
 - `src/elements/svgDrawing/`: `SvgDrawingInput`/`gradeSvgDrawing` mirror `JsxGraphInput`/`gradeJsxGraph` file-for-file. Import pure logic from `canvas/grading` directly, not from the component's `index.ts`, so logic tests don't render the board.
 - One difference from jsxgraph's toolbar: the eraser is a footer toggle button here, not a toolbar tool.
 - Demo: `src/questions/08_svgDrawing_ppf.ts` (in assessment `ex1`).
@@ -98,6 +101,24 @@ The environment is Windows (PowerShell/Git Bash). Verify changes with `npm run t
 - Teacher grades live on the submission as `manualGrades: { [part]: { score: 0..1, comment? } }`; `gradeQuestion(parts, values, manualGrades)` swaps them in, so review regrading stays deterministic. `setManualGrade()` in `engine/storage.ts` updates an exported file; `ReviewView` has the points/comment form and "Download graded results".
 - Quarto teacher view: `<div class="exercise-system-root" data-quiz="quizN.js" data-review>` mounts `Import` with that quiz's questions (`mount(..., { review: true })`).
 - Demo: `src/questions/13_essay_quadratic_equation.ts` (in assessment `ex1`).
+
+## Grade and Save buttons
+
+- The question button is **Grade** (formerly Submit). `Assessment.saveButton: true` adds a Save button next to it that only confirms (drafts are always persisted) and uses no attempt.
+- `Assessment.gradeButton: false` (`hidesGrades()` in `engine/types.ts`) = hidden-grades mode: only Save, which dispatches the `save` action (`createAssessmentReducer({ hideGrades: true })`; the plain `assessmentReducer` ignores it). It validates, grades silently, and replaces the current variant's submission (latest save counts, `bestScore` recomputed, never closes the question). `setValue` stays allowed after `isFinished`. The context exposes `hideGrades`; `QuestionView`, `AssessmentView` and `Results` hide scores/feedback/correct answers/attempts with it.
+- SCORM: `connectScorm(api, bank, { hideGrades })`; `scormReport` counts a question done via `isDone(q, hideGrades)` (saved once). Scores still go to the LMS, which hides them until release.
+
+## SCORM packages (Blackboard Ultra)
+
+- `npm run scorm -- <quiz.js> [--passing 0.7] [--out file.zip]` = `build:lib` + `scripts/scorm-package.mjs`: zips `imsmanifest.xml` (SCORM 2004 3rd ed., one SCO; uses only 3rd-edition data-model elements), an `index.html` that calls `mountScorm`, the `dist-lib` bundle, and the quiz plus every module it imports (relative imports, followed transitively; must stay inside the quiz's folder). Output goes to `dist-scorm/` (git-ignored). The script's pure parts are exported and tested in `scripts/scorm-package.test.mjs` (`@vitest-environment node`).
+- Storage is pluggable: `Persistence` (`src/engine/persistence.ts`) is passed to `AssessmentProvider`/`QuizWidget`; `localPersistence` is the default. `canReset: false` hides Reset; `learnerName` pre-fills the name; `saveFailedMessage` replaces the storage warning. Pass a stable object (it's an effect dependency).
+- `src/scorm/`: `findScormApi` (walks parent frames, then `opener`, for `API_1484_11`); `connectScorm` (Initialize, `cmi.exit=suspend`, reads `cmi.scaled_passing_score`/`cmi.learner_name`, `terminate()` sets `session_time`); `suspend.ts` (drops `preparedParts`, rebuilt from seeds on load; strips answers from all but each question's `lastSubmission`; lz-string, `es1:` prefix; 64,000-char limit); `report.ts` (pure `scormReport(state, bank, passingScore)` -> ordered `[element, value]` pairs: score, completion/success/progress, one interaction per question index, written 0..k so indices are created in order).
+- `cmi.interactions.n.timestamp` must be SCORM `time(second,10,2)`: `scormTimestamp` keeps 2 fractional digits (`...:36.12Z`); a `Z` without a fraction is rejected by Blackboard (error 406). A test checks the pattern.
+- `learner_response` comes from each element's `formatAnswer` (typed strings as-is). The drawing elements list every shape with its points rounded to 2 decimals (`Drew 1 shape: segment (0, 8.33) to (10, 0).`), so teachers can see drawings in Blackboard's Student submissions; the same text shows in `ReviewView`.
+- Every failed `SetValue` is logged as `SCORM SetValue(<element>) failed: error <code> <message> (<GetDiagnostic>) [value length N: "<start>"]` and makes `save()` return false, which shows `saveFailedMessage`. The messages never mention exporting (exams): there is no student-facing export button (`buildExport`/`downloadJson` exist but aren't wired to the student UI), and the user doesn't want students prompted to export.
+- Reporting runs on every save but only re-sends score/interactions (and commits immediately) when the report changes, i.e. after a submission; drafts only update `suspend_data`, with a debounced (2 s) commit.
+- Essays: no grade can flow back into a SCORM package; pending essays count 0, `success_status` stays `unknown`, interaction `result` is `neutral`, the essay text is the `learner_response`. Teachers grade in the LMS gradebook.
+- Tests use `src/scorm/fakeLms.ts` (in-memory API that records calls). The user has tested the demo package in Blackboard Ultra (3rd edition): scores, saved progress/resume and Student submissions work; Blackboard validates data-model value formats strictly, so check the spec's type for any new `cmi.*` value.
 
 ## Conventions
 

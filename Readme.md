@@ -11,11 +11,11 @@ GDP, and so on). The engine itself doesn't depend on any subject.
 You can use the system in two ways:
 
 1. **As a standalone web app** (`npm run dev` / `npm run build`). It has a home page that lists the
-   assessments, exercise and exam modes, a results page with JSON export, and an import page where
-   an instructor can review a student's export.
+   assessments, exercise and exam modes, a results page, and an import page where an instructor
+   can review a student's results file (JSON).
 2. **As an embeddable library** (`npm run build:lib`). This produces one `.js` file and one `.css`
    file that can be added to any static page, such as a chapter of a Quarto book, to show a quiz
-   inline. The `quarto-demo/` folder has a working example.
+   inline. The `quarto-demo/` folder is a minimal working example.
 
 `planning.md` holds the original design and milestone plan.
 
@@ -33,6 +33,7 @@ You can use the system in two ways:
 - [How to add a new element type](#how-to-add-a-new-element-type)
 - [Persistence, export and import](#persistence-export-and-import)
 - [Embedding in a Quarto book](#embedding-in-a-quarto-book)
+- [SCORM packages for an LMS (Blackboard Ultra)](#scorm-packages-for-an-lms-blackboard-ultra)
 - [Testing](#testing)
 - [Roadmap](#roadmap)
 
@@ -47,8 +48,8 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | Seeded RNG, question engine, element registry | Done |
 | Multiple choice (radio + dropdown), number, integer elements | Done |
 | **Table element** (fillable table with fixed and blank cells, partial credit) | Done. Added beyond phase 1 |
-| **JSXGraph element** (drawing component built into the app; graded on Submit) | Done. Added beyond phase 1. Demo: `07_jsxgraph_budget_line.ts` in Exercise 1 |
-| **svgDrawing element** (plain-SVG twin of the JSXGraph board; same tools, graded on Submit) | Done. Added beyond phase 1. Demo: `08_svgDrawing_ppf.ts` in Exercise 1 |
+| **JSXGraph element** (drawing component built into the app; graded on Grade) | Done. Added beyond phase 1. Demo: `07_jsxgraph_budget_line.ts` in Exercise 1 |
+| **svgDrawing element** (plain-SVG twin of the JSXGraph board; same tools, graded on Grade) | Done. Added beyond phase 1. Demo: `08_svgDrawing_ppf.ts` in Exercise 1 |
 | **matching element** (drag-and-drop reordering to match a lettered column to a numbered one) | Done. Added beyond phase 1. Demo: `09_matching_econ_vocabulary.ts` in Exercise 1 |
 | **true-false element** (a table of statements, each marked True/False independently) | Done. Added beyond phase 1. Demo: `10_true-false_elasticity_statements.ts` in Exercise 1 |
 | **ordering element** (drag-and-drop a single sequence of boxes into the correct order) | Done. Added beyond phase 1. Demo: `11_ordering_income_demand_price.ts` in Exercise 1 |
@@ -56,7 +57,10 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | **essay element** (hand-graded written answer with word/character limits, MathLive equation editor, model answer shown after submitting) | Done. Added beyond phase 1. Demo: `13_essay_quadratic_equation.ts` in Exercise 1 |
 | **Manual (teacher) grading** (pending results, points + comment in the review page, graded results file; Quarto `data-review` page) | Done. Added beyond phase 1 |
 | Exercise and exam modes, attempts, best score | Done |
-| localStorage persistence, reset, JSON export, import/review page | Done |
+| localStorage persistence, reset, import/review page | Done |
+| Results file (JSON) format and download code (`buildExport`, `downloadJson`) | Done, but no student-facing download button yet (see [Persistence, export and import](#persistence-export-and-import)) |
+| SCORM 2004 3rd edition packages for Blackboard Ultra (`npm run scorm`) | Done; tested in Blackboard Ultra |
+| Grade/Save buttons, hidden grades (`gradeButton: false`) | Done |
 | Accessibility, mobile layout, dark mode | Done |
 | Embeddable library build + Quarto demo | Done. Added beyond phase 1 |
 | Checkbox, units, file upload | Not started (see [Roadmap](#roadmap)) |
@@ -73,6 +77,7 @@ npm run dev        # start the dev server (standalone app)
 npm run test       # run the test suite once (Vitest)
 npm run build      # type-check and build the standalone app into dist/
 npm run build:lib  # build the embeddable bundle into dist-lib/
+npm run scorm -- quarto-demo/quiz1.js  # SCORM 2004 zip into dist-scorm/
 npm run preview    # serve the built app from dist/
 ```
 
@@ -102,6 +107,7 @@ exercise_system/
 ├── index.html                # entry page for the standalone app
 ├── vite.config.ts            # app build + Vitest config
 ├── vite.lib.config.ts        # library build (single ES module + CSS)
+├── scripts/scorm-package.mjs # packages a quiz as a SCORM 2004 zip (npm run scorm)
 ├── src/
 │   ├── engine/               # subject-agnostic core (no React UI)
 │   │   ├── types.ts          # Question, Part, Assessment, Rng, GradeResult, ...
@@ -132,12 +138,13 @@ exercise_system/
 │   │   ├── jsxgraphComponent/   # JSXGraph drawing board + toolbar + grading (copied from jsxgraph-library)
 │   │   └── svgDrawingComponent/ # plain-SVG drawing board + toolbar + grading
 │   ├── pages/                # Home, Results, Import
-│   ├── lib/                  # embeddable build: entry.tsx (mount API) + QuizWidget
+│   ├── lib/                  # embeddable build: entry.tsx (mount, mountScorm) + QuizWidget
+│   ├── scorm/                # SCORM 2004 runtime: LMS API, suspend data, score/interaction reporting
 │   └── test/                 # test setup + fixtures
 ├── jsxgraph-library/         # standalone JSXGraph widget project (the component was copied from here)
 ├── dist/                     # built standalone app (generated)
 ├── dist-lib/                 # built library: exercise-system.js / .css (generated)
-└── quarto-demo/              # sample Quarto book that embeds the library
+└── quarto-demo/              # minimal Quarto site running the demo quiz (quiz1.js + questions/)
 ```
 
 ---
@@ -187,6 +194,36 @@ You can override `maxAttempts` for each question in the assessment definition. A
 hand-graded part (`essay`) is the exception in both modes: one submission closes it, and its score
 waits for the teacher (see [`essay`](#essay)).
 
+### Grade and Save buttons
+
+Each question has a **Grade** button (it was called Submit) that grades the answer and shows the
+score, feedback and, once the question is finished, the correct answer. Two optional assessment
+fields change the buttons:
+
+| Setting | Buttons | What students see |
+| --- | --- | --- |
+| *(default)* | Grade | score and feedback after each Grade, as described above |
+| `saveButton: true` | Grade, Save | the same; Save only confirms that the answers are kept (they're saved on every change anyway) and uses no attempt |
+| `gradeButton: false` | Save | **no grades**: no scores, feedback, correct answers, attempt counts or totals, here or on the results page |
+
+With `gradeButton: false` (grades hidden), Save checks the answer format (an invalid answer is not
+saved), grades the answer silently and stores it as the question's answer, replacing the previous
+save: **the latest save counts**, not the best one, and saving never uses up attempts or closes the
+question, so students can change their answers until the quiz is closed. The status line says
+"Answer saved" or "You have unsaved changes". The silent grade still goes to the LMS in a SCORM
+package and into results files, so a teacher can release grades after the due date (in
+Blackboard, by hiding the grade column until then). `New variant` is not offered in this mode.
+
+```js
+export const assessment = {
+  id: "midterm",
+  title: "Midterm",
+  mode: "exam",
+  gradeButton: false,   // students only Save; grades are hidden
+  questions: [/* ... */],
+};
+```
+
 ---
 
 ## Element types
@@ -202,8 +239,8 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `multiple-choice` | picks one option | radio buttons or an inline dropdown; shuffled or fixed order; show a random subset (`numberAnswers`) | 1 if the correct option is chosen, else 0; optional per-option feedback |
 | `number` | types a decimal number | units after the box (`suffix`) | relative/absolute tolerance (`relabs`), significant figures (`sigfig`) or decimal places (`decdig`) |
 | `integer` | types a whole number | units after the box | exact match |
-| `jsxgraph` | draws on a JSXGraph canvas | the tools of the drawing component (`src/components/jsxgraphComponent`) | the exercise app's **Submit**: the drawing is compared with `expectedDrawing` (slope/intercept lines or exact points), partial credit per shape |
-| `svgDrawing` | draws on a plain-SVG canvas | the same tools as `jsxgraph` (`src/components/svgDrawingComponent`), no JSXGraph dependency | same as `jsxgraph`: graded on **Submit** against `expectedDrawing`, partial credit per shape |
+| `jsxgraph` | draws on a JSXGraph canvas | the tools of the drawing component (`src/components/jsxgraphComponent`) | the app's **Grade** (or Save): the drawing is compared with `expectedDrawing` (slope/intercept lines or exact points), partial credit per shape |
+| `svgDrawing` | draws on a plain-SVG canvas | the same tools as `jsxgraph` (`src/components/svgDrawingComponent`), no JSXGraph dependency | same as `jsxgraph`: graded on **Grade** against `expectedDrawing`, partial credit per shape |
 | `table` | fills in blank cells of a table | fixed cells, section rows, grouped column headers | each blank like a `number` part; partial credit (default) or all-or-nothing |
 | `matching` | drag-and-drop reorders the right column to match the fixed, numbered left column | left column (1, 2, 3, …) fixed at prepare time; right column (a, b, c, …) shuffled at prepare time | fraction of rows where the right item lines up with its correct left item; partial credit (default) or all-or-nothing |
 | `true-false` | marks each statement in a table True or False, independently | a list of statements, each with its own `correct` boolean | fraction of statements marked correctly; partial credit (default) or all-or-nothing |
@@ -226,8 +263,8 @@ each element type:
 | `04_mc_economic_terms.ts` | Economic terms | multiple choice (dropdown inside a sentence) |
 | `05_mc-number_comparative_advantage.ts` | Opportunity cost, absolute and comparative advantage | 4 numbers + 4 dropdowns, with a Markdown table in the question text |
 | `06_table_gains_from_trade.ts` | Gains from trade | table (16 blanks) |
-| `07_jsxgraph_budget_line.ts` | Budget line | `jsxgraph` (draw a segment on the JSXGraph board; graded on Submit) |
-| `08_svgDrawing_ppf.ts` | Production possibilities frontier | `svgDrawing` (draw a segment on the plain-SVG board; graded on Submit) |
+| `07_jsxgraph_budget_line.ts` | Budget line | `jsxgraph` (draw a segment on the JSXGraph board; graded on Grade) |
+| `08_svgDrawing_ppf.ts` | Production possibilities frontier | `svgDrawing` (draw a segment on the plain-SVG board; graded on Grade) |
 | `09_matching_econ_vocabulary.ts` | Economic vocabulary | `matching` (5 terms sampled from a pool, matched to their definitions) |
 | `10_true-false_elasticity_statements.ts` | Price elasticity of demand | `true-false` (3 fixed statements) |
 | `11_ordering_income_demand_price.ts` | Order the causal chain | `ordering` (3 fixed items, horizontal layout) |
@@ -235,10 +272,9 @@ each element type:
 | `13_essay_quadratic_equation.ts` | Solve a quadratic equation | `essay` (hand-graded, up to 80 words; random integer roots) |
 
 The demo files are numbered consecutively (01-13); if you delete one, renumber the rest and update
-the imports in `src/questions/index.ts`. The Quarto demo keeps its own `.js` questions with their
-own numbering: `questions/sample/` (01-09, used by `sampleQuiz.js` and `quiz1.js`, including
-`09_essay_quadratic_equation.js`), `questions/quiz1/` and the plain multiple-choice questions in
-`questions/round2/`, all under `quarto-demo/assets/exercise-system/`.
+the imports in `src/questions/index.ts`. `quarto-demo/questions/` has the same 13 questions as
+plain `.js` files (same numbers and names, types removed), used by `quarto-demo/quiz1.js`; when you
+change a demo question, change its `.js` copy too.
 
 The sections below describe each element's options in full.
 
@@ -526,12 +562,12 @@ grade later while reviewing the exported results file.
   file. Its own font and sound loading is turned off: it uses the KaTeX fonts the page already has.
 - **Validation**: an empty answer, or one over `maxWords`/`maxChars` or under `minWords`, is
   **invalid**, so it doesn't use the submission.
-- **Submitting** closes the question (no second attempt, no "New variant"), whatever
+- **Grade** closes the question (no second attempt, no "New variant"; with `gradeButton: false`, Save doesn't), whatever
   `maxAttempts` says. The part's result is *pending*: it scores 0 and shows an "Awaiting teacher's
   grade" badge; the header and results page show how many points are awaiting a grade. The model
   answer appears under a "Model answer" heading; without one (omitted or `""`), nothing is
   revealed.
-- **Teacher grading**: the student exports their results file as usual. The teacher opens it in
+- **Teacher grading**: the teacher opens a student's results file in
   the review page (`#/import` in the app, or a `data-review` div in Quarto, see below). Each essay
   has a form to enter **points** (out of the part's share of the question's points) and an
   optional **comment** for the student. Saving recomputes the scores; **Download graded results**
@@ -550,7 +586,7 @@ See `src/questions/13_essay_quadratic_equation.ts`. Files: `src/elements/essay/`
 A JSXGraph drawing board with a toolbar (segments, lines, shapes, curves, ...). The board is a
 **component of this app** (`src/components/jsxgraphComponent/`, originally copied from
 `jsxgraph-library/`), not a separate bundle. It has no Grade button: the student draws and presses
-the app's normal **Submit**, and the drawing is graded then.
+the app's normal **Grade** (or Save), and the drawing is graded then.
 
 ```ts
 {
@@ -561,7 +597,7 @@ the app's normal **Submit**, and the drawing is graded then.
     xLabel: "Pizzas",
     yLabel: "Books",
     enabledTools: ["select", "segment", "eraser"],
-    expectedDrawing: [                       // required: what Submit grades against
+    expectedDrawing: [                       // required: what Grade grades against
       { type: "segment", yIntercept: 6, slope: -0.75, tolerance: 0.1 },
     ],
   },
@@ -574,7 +610,7 @@ the app's normal **Submit**, and the drawing is graded then.
 - **The value** of the part is the list of shapes the student drew (`UserDrawing[]`), updated on
   every change (draw, drag, erase, undo, redo, clear). It is saved, exported and restored like any
   other value: the board is rebuilt from it when saved progress is loaded.
-- **Grading** runs `gradeDrawing(expectedDrawing, drawings, boundingBox)` on Submit. Shapes are
+- **Grading** runs `gradeDrawing(expectedDrawing, drawings, boundingBox)` on Grade. Shapes are
   matched in order; a line or segment given as `slope`/`yIntercept` only has to lie on that line,
   within `tolerance` (default 10%); exact-points shapes get 5% of the board diagonal. The score is
   the share of expected shapes drawn correctly. The feedback names the wrong shapes but not the
@@ -608,7 +644,7 @@ instead of `jsxgraph` when you don't need anything JSXGraph-specific.
     xLabel: "Guns",
     yLabel: "Butter",
     enabledTools: ["select", "segment", "eraser"],
-    expectedDrawing: [                       // required: what Submit grades against
+    expectedDrawing: [                       // required: what Grade grades against
       { type: "segment", yIntercept: 8, slope: -1, tolerance: 0.1 },
     ],
   },
@@ -717,6 +753,8 @@ Add an entry to the `assessments` array in `src/assessments/index.ts`:
 ```
 
 - A question can appear in any number of assessments.
+- Optional `gradeButton: false` / `saveButton: true` change the question buttons; see
+  [Grade and Save buttons](#grade-and-save-buttons).
 - **Don't rename `id` or reorder `questions` once students have started.** Saved progress is keyed
   by the assessment id and checked against the question list. If they no longer match, the saved
   state is thrown away.
@@ -799,9 +837,11 @@ Since there's no backend, the browser and JSON files stand in for one.
   (private mode, quota exceeded), the app keeps working in memory.
 - **Reset:** each assessment has a "Reset assessment" button, with a confirmation, that clears
   its saved state.
-- **Export:** on the results page the student types their name and downloads a JSON file
-  (`<assessmentId>-<name>-<timestamp>.json`). It contains every question's seed, all
-  submissions and the scores.
+- **Results file:** `buildExport` and `downloadJson` (`engine/storage.ts`) produce a JSON file
+  (`<assessmentId>-<name>-<timestamp>.json`) with every question's seed, all submissions and the
+  scores. **No student-facing button calls them yet**, deliberately for now: in an exam students
+  shouldn't be prompted to export anything. Inside an LMS the answers go to the LMS instead (see
+  [SCORM packages](#scorm-packages-for-an-lms-blackboard-ultra)).
 - **Import (instructor review):** open `#/import` and load an export. Every variant is rebuilt
   from its seed, and the questions, the student's answers and the grades are shown read-only
   (except the teacher grade forms below). This is exactly what the student saw. Course questions
@@ -835,7 +875,7 @@ page's own navigation.
 
 ````markdown
 ```{=html}
-<div class="exercise-system-root" data-quiz="sampleQuiz.js"></div>
+<div class="exercise-system-root" data-quiz="quiz1.js"></div>
 ```
 ````
 
@@ -844,53 +884,63 @@ The stylesheet and the script that mounts the quiz are loaded once for the whole
 
 ### One-time setup of a book
 
-1. **Build and copy** the bundle into the book's assets folder. Repeat this whenever the library
+`quarto-demo/` is the smallest working setup:
+
+```
+quarto-demo/
+├── _quarto.yml      # stylesheet + quiz loader for every page
+├── index.qmd        # a page with <div class="exercise-system-root" data-quiz="quiz1.js">
+├── quiz1.js         # the quiz: exports `assessment` and `questions`
+├── questions/       # one .js file per question
+└── assets/          # exercise-system.js and exercise-system.css (the built bundle)
+```
+
+1. **Build and copy** the bundle into the book's `assets/` folder. Repeat this whenever the library
    changes:
 
    ```powershell
    npm run build:lib
-   Copy-Item dist-lib\exercise-system.js, dist-lib\exercise-system.css quarto-demo\assets\exercise-system\ -Force
+   Copy-Item dist-lib\exercise-system.js, dist-lib\exercise-system.css quarto-demo\assets\ -Force
    ```
 
-2. **Add the loader.** Create `assets/exercise-system/header.html` (the demo has a copy in
-   `quarto-demo/assets/exercise-system/`). It mounts every `<div data-quiz="...">` on the page,
-   and imports the library only on pages that have one:
-
-   ```html
-   <script type="module">
-     const roots = document.querySelectorAll("[data-quiz]:not([data-mounted])");
-     if (roots.length > 0) {
-       const { mount } = await import("./assets/exercise-system/exercise-system.js");
-       for (const el of roots) {
-         el.dataset.mounted = "";
-         try {
-           const { assessment, questions } = await import(`./assets/exercise-system/${el.dataset.quiz}`);
-           mount(el, { assessment, questions, review: "review" in el.dataset });
-         } catch (err) {
-           el.textContent = `Could not load the practice questions (${el.dataset.quiz}): ${err.message}`;
-           console.error(err);
-         }
-       }
-     }
-   </script>
-   ```
-
-3. **Register it in `_quarto.yml`**: the stylesheet and the loader for every page, and the assets
-   folder so Quarto copies it into the rendered book:
+2. **Register it in `_quarto.yml`**: the files Quarto must copy into the rendered site (the browser
+   loads them at run time, so Quarto can't find them on its own), the stylesheet, and the loader
+   script. The loader mounts every `<div data-quiz="...">` on the page and imports the library
+   only on pages that have one:
 
    ```yaml
    project:
+     type: website            # or book
      resources:
-       - assets/exercise-system/**
+       - quiz1.js             # every quiz file
+       - questions/**
+       - assets/**
 
    format:
      html:
-       css: assets/exercise-system/exercise-system.css
-       include-in-header: assets/exercise-system/header.html
+       css: assets/exercise-system.css
+       include-in-header:
+         text: |
+           <script type="module">
+             const roots = document.querySelectorAll("[data-quiz]:not([data-mounted])");
+             if (roots.length > 0) {
+               const { mount } = await import("./assets/exercise-system.js");
+               for (const el of roots) {
+                 el.dataset.mounted = "";
+                 try {
+                   const { assessment, questions } = await import(`./${el.dataset.quiz}`);
+                   mount(el, { assessment, questions, review: "review" in el.dataset });
+                 } catch (err) {
+                   el.textContent = `Could not load the quiz (${el.dataset.quiz}): ${err.message}`;
+                   console.error(err);
+                 }
+               }
+             }
+           </script>
    ```
 
-   The paths in `header.html` are relative to the page, so keep the chapters in the book's top
-   folder (or change them). The stylesheet is downloaded once and then cached for all pages.
+   The loader's paths are relative to the page, so keep the pages in the book's top folder (or
+   change them). The stylesheet is downloaded once and then cached for all pages.
 
 ### Teacher review page (grading essays)
 
@@ -901,7 +951,7 @@ only knows the demo questions).
 
 ````markdown
 ```{=html}
-<div class="exercise-system-root" data-quiz="sampleQuiz.js" data-review></div>
+<div class="exercise-system-root" data-quiz="quiz1.js" data-review></div>
 ```
 ````
 
@@ -910,20 +960,20 @@ Put it on a page students aren't pointed to (answers aren't hidden from the clie
 
 ### Adding a quiz
 
-1. **Write the questions as plain `.js` files** in `assets/exercise-system/questions/`, named
+1. **Write the questions as plain `.js` files** in `questions/`, named
    `NN_<type>_<description>.js`. They have the same shape as the `.ts` files in `src/questions/`,
    just without type annotations.
    If one import in a quiz fails, the whole quiz stays stuck on "Loading…". To find the missing
    file, look for a 404 in the browser console (F12).
 
-2. **Write an assessment module**, for example `assets/exercise-system/sampleQuiz.js`, that
-   exports `questions` and `assessment`:
+2. **Write an assessment module** next to `_quarto.yml`, for example `quiz2.js`, that exports
+   `questions` and `assessment`, and add it to `resources` in `_quarto.yml`:
 
    ```js
-   import { priceElasticity } from "./questions/sample/01_number_price_elasticity.js";
-   import { typesOfGoods } from "./questions/sample/02_mc_types_of_goods.js";
+   import { typesOfGoods } from "./questions/01_mc_types_of_goods.js";
+   import { firmProfit } from "./questions/03_integer_firm_profit.js";
 
-   export const questions = [priceElasticity, typesOfGoods];
+   export const questions = [typesOfGoods, firmProfit];
 
    export const assessment = {
      id: "ch02-practice",
@@ -934,13 +984,13 @@ Put it on a page students aren't pointed to (answers aren't hidden from the clie
    ```
 
 3. **Embed it** with the one line shown at the top of this section. The `data-quiz` value is the
-   quiz file name, relative to `assets/exercise-system/`.
+   quiz file name, relative to the book's top folder.
 
    - **To show a different quiz**, change only the `data-quiz="…"` value. There's no id or import
      line to keep in sync.
    - **For more quizzes on the same page**, add more divs. Each one names its own quiz file.
    - **If the file name is wrong or the file doesn't load**, the div shows "Could not load the
-     practice questions (sampleQuiz.js): …" instead of hanging on "Loading…".
+     quiz (quiz2.js): …" instead of hanging on "Loading…".
    - **Keep each `assessment.id` unique across the whole site**, and use each quiz once per page.
      Saved progress is stored in the browser under that id, so two quizzes with the same id
      (or the same quiz twice) share their answers, even in different books on the same site.
@@ -950,8 +1000,111 @@ Put it on a page students aren't pointed to (answers aren't hidden from the clie
 4. **Render** with `cd quarto-demo` and then `quarto render`. ES modules don't load from
    `file://`, so view the result through a local server (for example `quarto preview`).
 
-To use the bundle in another Quarto book, copy the same two files and `header.html` into that
-book's `assets/exercise-system/` folder and add the `_quarto.yml` settings from step 3.
+To use the bundle in another Quarto book, copy the two bundle files into that book's `assets/`
+folder and add the `_quarto.yml` settings from step 2.
+
+---
+
+## SCORM packages for an LMS (Blackboard Ultra)
+
+> Step-by-step guide (where the files are, what a quiz file must look like, uploading):
+> [`Readme_scorm.md`](Readme_scorm.md). This section has the technical details.
+
+`npm run scorm` turns a quiz module (the same `.js` file a Quarto page loads with `data-quiz`) into a
+**SCORM 2004 3rd edition** zip (the version Blackboard Ultra uses) that you upload to an LMS such as Blackboard Ultra. Inside the
+LMS the quiz reports the grade to the gradebook and keeps each student's progress, including
+their answers on the last attempt of each question, so they can leave and come back.
+
+```bash
+npm run scorm -- quarto-demo/quiz1.js                 # -> dist-scorm/quiz1-scorm.zip
+npm run scorm -- quarto-demo/quiz1.js --passing 0.7   # with a 70% passing score
+npm run scorm -- path/to/quiz.js --out my-quiz.zip
+```
+
+The command rebuilds the bundle (`build:lib`) and then runs `scripts/scorm-package.mjs`, which
+reads the quiz's `assessment` (its `id` and `title` name the package), follows the quiz's relative
+imports to collect every question file, and zips:
+
+- `imsmanifest.xml`: one SCO, SCORM 2004 3rd edition; `--passing` adds a primary objective with
+  that minimum normalized measure (the LMS passes it to the quiz as `cmi.scaled_passing_score`)
+- `index.html`: loads the bundle and the quiz and calls `mountScorm`
+- `exercise-system.js` / `.css` (from `dist-lib/`) and the quiz with its question files, in the
+  same folder layout as in the book
+
+The quiz file and every file it imports must be inside the quiz's folder (as they are in
+`quarto-demo/`).
+
+### What the LMS receives
+
+| SCORM element | Value |
+| --- | --- |
+| `cmi.score.raw` / `.min` / `.max` / `.scaled` | points earned / 0 / points possible / earned ÷ possible (best score per question, like the app) |
+| `cmi.completion_status` | `completed` once every question is finished (with `gradeButton: false`: saved), else `incomplete` |
+| `cmi.success_status` | `passed`/`failed` against the passing score; `unknown` without one, or while an essay awaits grading |
+| `cmi.progress_measure` | share of questions finished |
+| `cmi.interactions.n.*` | one per question (n = its position): `id`, `description` (title), `weighting` (points), and once answered `learner_response` (the latest answer: typed text as-is, e.g. the full essay; other answers as their review summary; drawings as each shape with its points, e.g. `Drew 1 shape: segment (0, 8.33) to (10, 0).`), `result` (`correct`, `incorrect`, a partial score, or `neutral` for an ungraded essay) and `timestamp` (SCORM `time(second,10,2)`, e.g. `2026-10-12T15:12:36.12Z`; a `Z` without fractional seconds is rejected with error 406) |
+| `cmi.suspend_data` | the saved state (see below) |
+| `cmi.exit` | `suspend`, so the next launch resumes the same attempt |
+| `cmi.session_time` | time spent, set when the page closes |
+
+The score and interactions are sent and committed right after each Grade (or, with
+`gradeButton: false`, each Save); while a student
+types, only the saved state changes, committed at most every 2 seconds and when the page closes.
+
+### Saved progress (`cmi.suspend_data`)
+
+The full assessment state (seeds, attempts, best scores, drafts, the current question) is saved to
+`cmi.suspend_data` instead of `localStorage`. To fit the 64,000-character limit (SCORM 2004 3rd and 4th edition) it's
+compacted and compressed (`lz-string`): prepared parts are dropped (they're rebuilt from each
+question's seed), and only the **latest submission of each question keeps its answers**; older
+submissions keep just their score and time, so attempt counts and best scores still work. A
+fully answered 13-question demo quiz (with two graphs and an essay) needs about 4,000 to 10,000
+characters; 40 shapes per graph and 30 attempts on every question still stay near 16,000. As with `localStorage`, saved
+progress is ignored if the quiz's id or question list changes, so don't edit a quiz that students
+have started.
+
+Inside an LMS the **Reset assessment** button is hidden (students can't wipe their attempts), and
+the student's name is filled in from the LMS (`cmi.learner_name`). Opened outside an LMS (for
+example unzipped and served by a local web server; ES modules don't load from a double-clicked
+`file://` page), the package runs as a preview: a banner says it isn't connected, progress goes to
+`localStorage`, and nothing is reported.
+
+### Essays in SCORM
+
+SCORM can't send a teacher's grade back into the package. A quiz with essays reports the
+auto-graded points (essays count 0 until graded) with `success_status` `unknown`, and the essay
+text in its interaction's `learner_response`. Grade the essay in the LMS's gradebook (override or
+adjust the attempt's score). The app's review page and graded results file are for quizzes used
+outside an LMS.
+
+### Uploading and testing
+
+1. **Test the zip first** on [SCORM Cloud](https://cloud.scorm.com/) (free account): upload it,
+   launch it, answer a few questions, close and relaunch (your answers should be back), and check
+   the registration report for the score and interactions.
+2. **In Blackboard Ultra**, add the zip to the course as a SCORM package (upload it from Course
+   Content; Blackboard detects the manifest) and turn on grading for it. Blackboard's own settings
+   (number of attempts, which attempt counts) apply on top of the quiz's `maxAttempts`.
+3. After changing questions, re-run `npm run scorm` and upload the new zip as a new item: an
+   updated package doesn't carry over students' saved progress from the old one.
+4. **Students' answers** are in Blackboard under the SCORM item's **Student submissions**: each
+   question's latest answer (full essay text, drawing coordinates) and result.
+
+### Troubleshooting
+
+If Blackboard rejects a value, the quiz shows "Your latest answers couldn't be saved to the course
+site..." and logs one line per rejected value in the browser console (F12, Console), for example:
+
+```
+SCORM SetValue(cmi.interactions.0.timestamp) failed: error 406 Data Model Element Type Mismatch (...) [value length 20: "..."]
+```
+
+It names the element, the LMS's error code, message and diagnostic, and the value's length and
+start. A long `cmi.suspend_data` value points to a size limit; anything else is usually a format
+the LMS's validator doesn't accept. The quiz retries everything on the next change.
+
+Files: `src/scorm/` (`api.ts` finds the LMS's `API_1484_11`, `suspend.ts`, `report.ts`,
+`scormPersistence.ts`), `mountScorm` in `src/lib/entry.tsx`, and `scripts/scorm-package.mjs`.
 
 ---
 
@@ -977,6 +1130,10 @@ The tests cover:
   `$...$` preview and equation editor (MathLive is mocked, since jsdom can't run it), plus the
   student flow from typing to "awaiting grade" (`elements/essay/`)
 - every question in the bank across many seeds (`questions/questions.test.ts`)
+- SCORM: finding the LMS API, suspend data round trips and size, the reported cmi values, commit
+  timing and resuming, against an in-memory fake LMS (`scorm/scorm.test.ts`,
+  `scorm/scormQuiz.test.tsx`), and the packager's manifest, file collection and zip
+  (`scripts/scorm-package.test.mjs`)
 - a component test that submits a wrong answer and then a right one
   (`components/QuestionView.test.tsx`), and the import page, including grading an essay
   (`pages/Import.test.tsx`)

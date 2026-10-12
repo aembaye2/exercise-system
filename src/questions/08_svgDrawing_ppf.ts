@@ -10,7 +10,7 @@ interface Params {
 
 /**
  * Graph question drawn with the SVG drawing component (src/components/svgDrawingComponent).
- * The student's segment is compared with `expectedDrawing` when they press Submit.
+ * The student's segment is compared with `expectedDrawing` when they press Grade or Save.
  */
 export const productionPossibilities: Question<Params> = {
   id: "ppf-svgdrawing",
@@ -23,7 +23,7 @@ export const productionPossibilities: Question<Params> = {
     `An economy can produce **guns** (x-axis) and **butter** (y-axis). Devoting all its resources to guns, ` +
     `it can produce **${maxGuns}** units; devoting all its resources to butter, it can produce **${maxButter}** units. ` +
     "The trade-off between them is a straight line.\n\n" +
-    "Use the segment tool to draw the economy's production possibilities frontier, then press **Submit**.",
+    "Use the segment tool to draw the economy's production possibilities frontier, then grade or save your answer.",
   parts: ({ maxGuns, maxButter }) => [
     {
       type: "svgDrawing",
@@ -39,7 +39,7 @@ export const productionPossibilities: Question<Params> = {
         showOutputButton: true,
         enabledTools: ["select", "point", "segment", "coordinate", "text", "eraser"],
         enabledActions: ["undo", "redo", "clear"],
-        // Graded on Submit, and drawn as the correct answer once the question is finished.
+        // Graded on Grade/Save, and drawn as the correct answer once the question is finished.
         // y = maxButter - (maxButter / maxGuns) * x
         expectedDrawing: [
           { type: "segment", yIntercept: maxButter, slope: -maxButter / maxGuns, tolerance: 0.1 },

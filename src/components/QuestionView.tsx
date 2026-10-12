@@ -1,4 +1,4 @@
-import { useMemo, type KeyboardEvent } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import {
   attemptsRemaining,
   attemptsUsed,
@@ -14,9 +14,14 @@ import { useAssessment } from "./AssessmentContext";
 import { QuestionBody } from "./QuestionBody";
 import { Button, formatPercent, formatPoints } from "./ui";
 
-/** One question of the running assessment: text, inputs, submit, feedback, attempts. */
+/**
+ * One question of the running assessment: text, inputs, Grade/Save buttons, feedback, attempts.
+ * With hidden grades (Save only) it shows no scores, feedback or correct answers.
+ */
 export function QuestionView({ index }: { index: number }) {
-  const { state, bank, actions } = useAssessment();
+  const { assessment, state, bank, actions, hideGrades } = useAssessment();
+  // Confirmation for the Save button shown next to Grade (answers are saved on every change anyway).
+  const [savedNote, setSavedNote] = useState(false);
   const q = state.questions[index];
   const question = bank(q.questionId);
   // The text is regenerated from the seed; the prepared parts come from state,
@@ -28,18 +33,21 @@ export function QuestionView({ index }: { index: number }) {
   }
 
   const last = lastSubmission(q);
-  const finished = isFinished(q);
+  const finished = !hideGrades && isFinished(q);
+  const showSave = hideGrades || assessment.saveButton === true;
   const remaining = attemptsRemaining(q);
   const variantAttempts = currentVariantSubmissions(q).length;
   const headingId = `q${index}-heading`;
 
   // Only show a part's grade while the input still holds the graded value.
+  const sameAsLast = (name: string) => JSON.stringify(q.draft[name]) === JSON.stringify(last?.values[name]);
   const visibleResults: Record<string, GradeResult> = {};
-  if (last) {
+  if (last && !hideGrades) {
     for (const [name, result] of Object.entries(last.results)) {
-      if (JSON.stringify(q.draft[name]) === JSON.stringify(last.values[name])) visibleResults[name] = result;
+      if (sameAsLast(name)) visibleResults[name] = result;
     }
   }
+  const unsaved = hideGrades && last !== undefined && !q.preparedParts.every((p) => sameAsLast(p.name));
 
   // Enter on a radio button or select submits too (text inputs do this natively).
   const onKeyDown = (e: KeyboardEvent<HTMLFormElement>) => {
@@ -58,7 +66,7 @@ export function QuestionView({ index }: { index: number }) {
           Question {index + 1}. {question.title}
         </h2>
         <span className="text-sm text-slate-600 dark:text-slate-400">
-          {formatPoints(q.bestScore * q.points)} / {q.points} points
+          {hideGrades ? `${q.points} points` : `${formatPoints(q.bestScore * q.points)} / ${q.points} points`}
         </span>
       </header>
 
@@ -67,7 +75,8 @@ export function QuestionView({ index }: { index: number }) {
         onKeyDown={onKeyDown}
         onSubmit={(e) => {
           e.preventDefault();
-          actions.submit(index);
+          if (hideGrades) actions.save(index);
+          else actions.submit(index);
         }}
         className="space-y-4"
       >
@@ -76,7 +85,10 @@ export function QuestionView({ index }: { index: number }) {
           text={text}
           parts={q.preparedParts}
           values={q.draft}
-          onChange={(part, value) => actions.setValue(index, part, value)}
+          onChange={(part, value) => {
+            setSavedNote(false);
+            actions.setValue(index, part, value);
+          }}
           disabled={finished}
           validation={q.validation}
           results={visibleResults}
@@ -84,10 +96,23 @@ export function QuestionView({ index }: { index: number }) {
         />
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="submit" variant="primary" disabled={finished}>
-            Submit
-          </Button>
-          {canNewVariant(q, state.mode) && (
+          {!hideGrades && (
+            <Button type="submit" variant="primary" disabled={finished}>
+              Grade
+            </Button>
+          )}
+          {hideGrades ? (
+            <Button type="submit" variant="primary">
+              Save
+            </Button>
+          ) : (
+            showSave && (
+              <Button onClick={() => setSavedNote(true)} disabled={finished}>
+                Save
+              </Button>
+            )
+          )}
+          {!hideGrades && canNewVariant(q, state.mode) && (
             <Button onClick={() => actions.newVariant(index)}>New variant</Button>
           )}
         </div>
@@ -96,8 +121,18 @@ export function QuestionView({ index }: { index: number }) {
       <div role="status" aria-live="polite" className="text-sm">
         {q.validation ? (
           <p className="text-red-700 dark:text-red-300">
-            Some answers are not in a valid format. Fix them and submit again; this did not use an attempt.
+            {hideGrades
+              ? "Some answers are not in a valid format. Fix them and save again."
+              : "Some answers are not in a valid format. Fix them and grade again; this did not use an attempt."}
           </p>
+        ) : hideGrades ? (
+          unsaved ? (
+            <p className="text-amber-800 dark:text-amber-200">You have unsaved changes. Click Save to keep them.</p>
+          ) : last ? (
+            <p>Answer saved ({new Date(last.timestamp).toLocaleString()}). You can change it and save again.</p>
+          ) : null
+        ) : savedNote ? (
+          <p>Your answers are saved.</p>
         ) : last && pendingPoints(q) > 0 ? (
           <p>Submitted. Your teacher will grade this answer later.</p>
         ) : last ? (
@@ -109,17 +144,23 @@ export function QuestionView({ index }: { index: number }) {
       </div>
 
       <footer className="flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-200 pt-3 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-400">
-        <span>
-          Attempts used: {attemptsUsed(q)}
-          {q.maxAttempts === null ? " (unlimited)" : ` of ${q.maxAttempts} · ${remaining} remaining`}
-        </span>
-        {state.mode === "exercise" && (
-          <span>
-            Variant {q.variant + 1}
-            {variantAttempts > 0 ? ` · ${variantAttempts} attempt${variantAttempts === 1 ? "" : "s"} on this variant` : ""}
-          </span>
+        {hideGrades ? (
+          <span>{last ? "Saved" : "Not saved yet"}</span>
+        ) : (
+          <>
+            <span>
+              Attempts used: {attemptsUsed(q)}
+              {q.maxAttempts === null ? " (unlimited)" : ` of ${q.maxAttempts} · ${remaining} remaining`}
+            </span>
+            {state.mode === "exercise" && (
+              <span>
+                Variant {q.variant + 1}
+                {variantAttempts > 0 ? ` · ${variantAttempts} attempt${variantAttempts === 1 ? "" : "s"} on this variant` : ""}
+              </span>
+            )}
+            <span>Best score: {formatPercent(q.bestScore)}</span>
+          </>
         )}
-        <span>Best score: {formatPercent(q.bestScore)}</span>
         <span className="font-mono">seed {q.seed}</span>
       </footer>
     </article>

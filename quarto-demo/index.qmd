@@ -1,21 +1,5 @@
-# Introduction {.unnumbered}
+---
+title: "Quiz 1"
+---
 
-📜 The begining is the most important part of a journey! 📜
-
-## Sample Exercise:
-
-```{=html}
-<div class="exercise-system-root" data-quiz="round2Quiz.js">Loading practice questions …</div>
-```
-
-## Round2 Exercise:
-
-```{=html}
-<div class="exercise-system-root" data-quiz="round2Quiz.js">Loading practice questions …</div>
-```
-
-## Quiz 1:
-
-```{=html}
-<div class="exercise-system-root" data-quiz="quiz1.js">Loading practice questions …</div>
-```
+<div class="exercise-system-root" data-quiz="quiz1.js">Loading the quiz …</div>

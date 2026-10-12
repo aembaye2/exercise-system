@@ -36,11 +36,23 @@ export function gradeSvgDrawing(part: SvgDrawingPart, value: JsonValue | undefin
   return { score, feedback };
 }
 
+/**
+ * Each shape with its points (2 decimals), e.g. "Drew 2 shapes: segment (0, 8.33) to (10, 0); point (3.2, 5)."
+ * Also the answer reported to an LMS, so a teacher can see where the student drew.
+ */
 export function formatSvgDrawingAnswer(_part: SvgDrawingPart, value: JsonValue | undefined): string {
   const drawings = readDrawings(value);
   if (drawings.length === 0) return "*(no drawing)*";
-  return `Drew ${drawings.length} shape${drawings.length === 1 ? "" : "s"}: ${drawings.map((d) => d.tool).join(", ")}.`;
+  const xy = ([x, y]: [number, number]) => `(${round2(x)}, ${round2(y)})`;
+  const shapes = drawings.map((d) => {
+    const points = d.points.map(xy).join(d.tool === "segment" ? " to " : ", ");
+    const extra = d.text ? ` "${d.text}"` : d.radius !== undefined ? ` radius ${round2(d.radius)}` : "";
+    return `${d.tool} ${points}${extra}`.trim();
+  });
+  return `Drew ${drawings.length} shape${drawings.length === 1 ? "" : "s"}: ${shapes.join("; ")}.`;
 }
+
+const round2 = (n: number) => String(Math.round(n * 100) / 100);
 
 /** A number for display: at most 3 decimals, no trailing zeros. */
 const round = (n: number) => String(Math.round(n * 1000) / 1000);
@@ -59,7 +71,7 @@ export function formatSvgDrawingCorrect(part: SvgDrawingPart): string {
 }
 
 export function svgDrawingHelpText(): string {
-  return "Draw on the graph, then press Submit. Your drawing is graded when you submit.";
+  return "Draw on the graph. Your drawing is checked when you press Grade (or Save).";
 }
 
 /** A drawing a perfect student would submit, for tests: exact points on each expected shape. */

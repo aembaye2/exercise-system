@@ -14,7 +14,8 @@ function term(coef: number, x: string): string {
   return ` ${coef < 0 ? "-" : "+"} ${abs === 1 && x ? "" : abs}${x}`;
 }
 
-const factor = (r: number) => `(x ${r < 0 ? "+" : "-"} ${Math.abs(r)})`;
+// Used by the commented-out modelAnswer below; restore both together.
+// const factor = (r: number) => `(x ${r < 0 ? "+" : "-"} ${Math.abs(r)})`;
 
 /** essay element demo: solve a quadratic with integer roots, graded later by the teacher. */
 export const quadraticEssay: Question<Params> = {
@@ -25,7 +26,7 @@ export const quadraticEssay: Question<Params> = {
     return { r1, r2 };
   },
   render: ({ r1, r2 }) => `Solve $x^2${term(-(r1 + r2), "x")}${term(r1 * r2, "")} = 0$. Show your steps.`,
-  parts: ({ r1, r2 }) => [
+  parts: () => [
     {
       type: "essay",
       name: "solution",

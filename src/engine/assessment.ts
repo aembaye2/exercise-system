@@ -55,6 +55,8 @@ export interface AssessmentState {
 export type AssessmentAction =
   | { type: "setValue"; index: number; part: string; value: JsonValue }
   | { type: "submit"; index: number; timestamp: string }
+  /** Grades silently and replaces the current variant's submission (hidden-grades mode). */
+  | { type: "save"; index: number; timestamp: string }
   | { type: "newVariant"; index: number; seed: number; preparedParts: Part[] }
   | { type: "goTo"; index: number }
   | { type: "setStudentName"; name: string }
@@ -134,6 +136,14 @@ export function canSubmit(q: QuestionState): boolean {
   return !isFinished(q);
 }
 
+/**
+ * Done for progress reporting: finished, or (when grades are hidden, so a question
+ * never closes) saved at least once.
+ */
+export function isDone(q: QuestionState, hideGrades: boolean): boolean {
+  return hideGrades ? q.submissions.length > 0 : isFinished(q);
+}
+
 export function canNewVariant(q: QuestionState, mode: Assessment["mode"]): boolean {
   return (
     mode === "exercise" &&
@@ -181,11 +191,25 @@ function updateQuestion(
   return { ...state, questions };
 }
 
+export interface ReducerOptions {
+  /** Grades are hidden (Save only): questions never close, so answers stay editable. */
+  hideGrades?: boolean;
+}
+
 export function assessmentReducer(state: AssessmentState, action: AssessmentAction): AssessmentState {
+  return reduce(state, action, {});
+}
+
+/** The reducer for an assessment with these options (`assessmentReducer` = no options). */
+export function createAssessmentReducer(options: ReducerOptions) {
+  return (state: AssessmentState, action: AssessmentAction) => reduce(state, action, options);
+}
+
+function reduce(state: AssessmentState, action: AssessmentAction, { hideGrades = false }: ReducerOptions): AssessmentState {
   switch (action.type) {
     case "setValue":
       return updateQuestion(state, action.index, (q) => {
-        if (isFinished(q)) return q;
+        if (!hideGrades && isFinished(q)) return q;
         const validation = q.validation ? { ...q.validation } : null;
         if (validation) delete validation[action.part];
         return { ...q, draft: { ...q.draft, [action.part]: action.value }, validation };
@@ -212,6 +236,29 @@ export function assessmentReducer(state: AssessmentState, action: AssessmentActi
           validation: null,
           submissions: [...q.submissions, submission],
           bestScore: Math.max(q.bestScore, grade.score),
+        };
+      });
+
+    case "save":
+      return updateQuestion(state, action.index, (q) => {
+        if (!hideGrades) return q;
+        const grade = gradeQuestion(q.preparedParts, q.draft);
+        if (!grade.valid) return { ...q, validation: grade.validation };
+        const submission: Submission = {
+          variant: q.variant,
+          seed: q.seed,
+          values: { ...q.draft },
+          results: grade.results,
+          score: grade.score,
+          timestamp: action.timestamp,
+        };
+        // The latest save counts: it replaces this variant's earlier one and uses no extra attempt.
+        const submissions = [...q.submissions.filter((s) => s.variant !== q.variant), submission];
+        return {
+          ...q,
+          validation: null,
+          submissions,
+          bestScore: Math.max(...submissions.map((s) => s.score)),
         };
       });
 

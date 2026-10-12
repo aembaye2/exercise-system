@@ -9,7 +9,7 @@ This runs tsc then Vite in library mode, producing dist-lib/exercise-system.js a
 2. Copy the two output files into the Quarto book's assets folder, overwriting the old ones:
 cp dist-lib/exercise-system.js dist-lib/exercise-system.css Econ30303-quarto-book/assets/exercise-system/
 # or on PowerShell: 
-Copy-Item dist-lib\exercise-system.js,dist-lib\exercise-system.css quarto-demo\assets\exercise-system\ -Force
+Copy-Item dist-lib\exercise-system.js,dist-lib\exercise-system.css quarto-demo\assets\ -Force
 
 
 3. Re-render the book

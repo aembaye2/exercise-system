@@ -11,7 +11,7 @@ interface Params {
 
 /**
  * Graph question drawn with the JSXGraph drawing component (src/components/jsxgraphComponent).
- * The student's segment is compared with `expectedDrawing` when they press Submit.
+ * The student's segment is compared with `expectedDrawing` when they press Grade or Save.
  */
 export const budgetLine: Question<Params> = {
   id: "budget-line-jsxgraph",
@@ -23,7 +23,7 @@ export const budgetLine: Question<Params> = {
   render: ({ pizzaPrice, bookPrice }) =>
     // "\\$" reaches the Markdown as "\$", a literal dollar sign; a bare "$" would start LaTeX.
     `Sara has **\\$${INCOME}** to spend on pizza (x-axis) and books (y-axis). A pizza costs **\\$${pizzaPrice}** and a book costs **\\$${bookPrice}**.\n\n` +
-    "Use the segment tool to draw her budget line, then press **Submit**.",
+    "Use the segment tool to draw her budget line, then grade or save your answer.",
   parts: ({ pizzaPrice, bookPrice }) => [
     {
       type: "jsxgraph",
@@ -40,7 +40,7 @@ export const budgetLine: Question<Params> = {
         //["select", "point", "line", "arrow", "doubleArrow", "rectangle", "circle", "curve", "polygon", "coordinate", "text", "eraser", "segment"]
         enabledTools: ["select", "point", "segment",  "scatter", "coordinate", "text", "eraser"],
         enabledActions: ["undo", "redo", "clear"],
-        // Graded on Submit, and drawn as the correct answer once the question is finished.
+        // Graded on Grade/Save, and drawn as the correct answer once the question is finished.
         // y = (income - pizzaPrice * x) / bookPrice
         expectedDrawing: [
           { type: "segment", yIntercept: INCOME / bookPrice, slope: -pizzaPrice / bookPrice, tolerance: 0.1 },

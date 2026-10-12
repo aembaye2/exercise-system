@@ -3,7 +3,9 @@ import {
   assessmentReducer,
   attemptsRemaining,
   canNewVariant,
+  createAssessmentReducer,
   createAssessmentState,
+  isDone,
   isFinished,
   totals,
   type AssessmentAction,
@@ -175,5 +177,36 @@ describe("navigation and misc", () => {
   it("stores the student name", () => {
     const s = createAssessmentState(exercise, testBank, seedCounter(), NOW);
     expect(run(s, { type: "setStudentName", name: "Ada" }).studentName).toBe("Ada");
+  });
+});
+
+describe("saving with hidden grades", () => {
+  const hidden = createAssessmentReducer({ hideGrades: true });
+  const save = (index = 0): AssessmentAction => ({ type: "save", index, timestamp: NOW });
+  const runHidden = (state: AssessmentState, ...actions: AssessmentAction[]) => actions.reduce(hidden, state);
+
+  it("keeps only the latest save, which sets the score, and never closes the question", () => {
+    let s = createAssessmentState(exam, testBank, seedCounter(), NOW);
+    s = runHidden(s, set(correctSum(s)), save());
+    expect(s.questions[0].bestScore).toBe(1);
+    // Still editable after a correct answer and after the exam's single attempt.
+    s = runHidden(s, set("999"), save());
+    expect(s.questions[0].draft.sum).toBe("999");
+    expect(s.questions[0].submissions).toHaveLength(1);
+    expect(s.questions[0].bestScore).toBe(0);
+    expect(isDone(s.questions[0], true)).toBe(true);
+    expect(isDone(s.questions[1], true)).toBe(false);
+  });
+
+  it("rejects invalid input without saving", () => {
+    let s = createAssessmentState(exam, testBank, seedCounter(), NOW);
+    s = runHidden(s, set("3.5"), save());
+    expect(s.questions[0].submissions).toHaveLength(0);
+    expect(s.questions[0].validation?.sum.valid).toBe(false);
+  });
+
+  it("ignores save when grades are shown", () => {
+    const s = createAssessmentState(exam, testBank, seedCounter(), NOW);
+    expect(run(s, set("4"), save()).questions[0].submissions).toHaveLength(0);
   });
 });

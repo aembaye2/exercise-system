@@ -4,7 +4,7 @@ export const assessments: Assessment[] = [
   {
     id: "ex1",
     title: "Exercise 1: Different type of questions",
-    description: "Practice every question type. Unlimited attempts, new variants on demand; your best score counts.",
+    description: "Practice every question type. ",
     mode: "exercise",
     questions: [
       { questionId: "types-of-goods", points: 10  },

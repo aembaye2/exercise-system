@@ -13,7 +13,8 @@ export interface ResultsProps {
 }
 
 export function Results({ onBack }: ResultsProps = {}) {
-  const { assessment, state, bank, actions } = useAssessment();
+  const { assessment, state, bank, actions, hideGrades } = useAssessment();
+  const savedCount = state.questions.filter((q) => attemptsUsed(q) > 0).length;
   const { earned, possible, pending } = totals(state);
   const backLinkClass = "text-sm text-indigo-700 hover:underline dark:text-indigo-300";
 
@@ -33,18 +34,30 @@ export function Results({ onBack }: ResultsProps = {}) {
           <h1 className="text-2xl font-bold">Results</h1>
           <ModeBadge mode={assessment.mode} />
         </div>
-        <p className="text-lg">
-          Total:{" "}
-          <strong>
-            {formatPoints(earned)} / {possible}
-          </strong>{" "}
-          <span className="text-slate-600 dark:text-slate-400">({formatPercent(possible ? earned / possible : 0)})</span>
-          {pending > 0 && (
+        {hideGrades ? (
+          <p className="text-lg">
+            Saved answers:{" "}
+            <strong>
+              {savedCount} of {state.questions.length}
+            </strong>
             <span className="block text-sm text-slate-600 dark:text-slate-400">
-              {formatPoints(pending)} points are awaiting your teacher's grade and are not counted yet.
+              Scores are not shown. Your teacher will release them later.
             </span>
-          )}
-        </p>
+          </p>
+        ) : (
+          <p className="text-lg">
+            Total:{" "}
+            <strong>
+              {formatPoints(earned)} / {possible}
+            </strong>{" "}
+            <span className="text-slate-600 dark:text-slate-400">({formatPercent(possible ? earned / possible : 0)})</span>
+            {pending > 0 && (
+              <span className="block text-sm text-slate-600 dark:text-slate-400">
+                {formatPoints(pending)} points are awaiting your teacher's grade and are not counted yet.
+              </span>
+            )}
+          </p>
+        )}
       </header>
 
       <Card className="overflow-x-auto p-0 sm:p-0">
@@ -53,8 +66,14 @@ export function Results({ onBack }: ResultsProps = {}) {
           <thead className="border-b border-slate-200 text-xs uppercase text-slate-500 dark:border-slate-800 dark:text-slate-400">
             <tr>
               <th scope="col" className="px-4 py-2">Question</th>
-              <th scope="col" className="px-4 py-2 text-right">Attempts</th>
-              <th scope="col" className="px-4 py-2 text-right">Best</th>
+              {hideGrades ? (
+                <th scope="col" className="px-4 py-2 text-right">Status</th>
+              ) : (
+                <>
+                  <th scope="col" className="px-4 py-2 text-right">Attempts</th>
+                  <th scope="col" className="px-4 py-2 text-right">Best</th>
+                </>
+              )}
               <th scope="col" className="px-4 py-2 text-right">Points</th>
             </tr>
           </thead>
@@ -83,15 +102,24 @@ export function Results({ onBack }: ResultsProps = {}) {
                     </a>
                   )}
                 </th>
-                <td className="px-4 py-2 text-right tabular-nums">
-                  {attemptsUsed(q)}
-                  {q.maxAttempts !== null && ` / ${q.maxAttempts}`}
-                </td>
-                <td className="px-4 py-2 text-right tabular-nums">{formatPercent(q.bestScore)}</td>
-                <td className="px-4 py-2 text-right tabular-nums">
-                  {formatPoints(q.bestScore * q.points)} / {q.points}
-                  {pendingPoints(q) > 0 && <span className="block text-xs text-sky-700 dark:text-sky-300">awaiting grade</span>}
-                </td>
+                {hideGrades ? (
+                  <>
+                    <td className="px-4 py-2 text-right">{attemptsUsed(q) > 0 ? "Saved" : "Not saved"}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">{q.points}</td>
+                  </>
+                ) : (
+                  <>
+                    <td className="px-4 py-2 text-right tabular-nums">
+                      {attemptsUsed(q)}
+                      {q.maxAttempts !== null && ` / ${q.maxAttempts}`}
+                    </td>
+                    <td className="px-4 py-2 text-right tabular-nums">{formatPercent(q.bestScore)}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">
+                      {formatPoints(q.bestScore * q.points)} / {q.points}
+                      {pendingPoints(q) > 0 && <span className="block text-xs text-sky-700 dark:text-sky-300">awaiting grade</span>}
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>

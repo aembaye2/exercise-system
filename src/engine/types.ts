@@ -88,6 +88,19 @@ export interface Assessment {
   description?: string;
   mode: "exercise" | "exam";
   questions: AssessmentQuestionRef[];
+  /** Show the "Grade" button (grades and shows feedback right away). Default true. */
+  gradeButton?: boolean;
+  /**
+   * Show the "Save" button. Default false. With `gradeButton: false` it is the only
+   * button: answers are graded silently (for the LMS/export) and students see no
+   * scores, feedback or correct answers, and can change and re-save their answers.
+   */
+  saveButton?: boolean;
+}
+
+/** Students don't see grades: there is no Grade button, only Save. */
+export function hidesGrades(assessment: Pick<Assessment, "gradeButton">): boolean {
+  return assessment.gradeButton === false;
 }
 
 /** Thrown for mistakes in question definitions (not student mistakes). */

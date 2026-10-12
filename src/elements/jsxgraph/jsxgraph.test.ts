@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AuthoringError, type JsonValue } from "../../engine/types";
-import { checkJsxGraph, exampleJsxGraph, gradeJsxGraph, readDrawings, validateJsxGraph } from "./gradeJsxGraph";
+import { checkJsxGraph, exampleJsxGraph, formatJsxGraphAnswer, gradeJsxGraph, readDrawings, validateJsxGraph } from "./gradeJsxGraph";
 import type { JsxGraphPart } from "./types";
 
 const part: JsxGraphPart = {
@@ -43,5 +43,17 @@ describe("jsxgraph element", () => {
 
   it("scores 0 when nothing was drawn", () => {
     expect(gradeJsxGraph(part, undefined).score).toBe(0);
+  });
+});
+
+describe("formatJsxGraphAnswer", () => {
+  it("lists each shape with its points rounded to 2 decimals", () => {
+    const value = [
+      { tool: "segment", points: [[0, 8.33333], [10.004, 0]], color: "#111827" },
+      { tool: "point", points: [[3.2, 5]], color: "#111827" },
+      { tool: "text", points: [[1, 2]], color: "#111827", text: "PPF" },
+    ] as unknown as JsonValue;
+    expect(formatJsxGraphAnswer(part, value)).toBe('Drew 3 shapes: segment (0, 8.33) to (10, 0); point (3.2, 5); text (1, 2) "PPF".');
+    expect(formatJsxGraphAnswer(part, [])).toBe("*(no drawing)*");
   });
 });
