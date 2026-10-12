@@ -1,4 +1,4 @@
-import { attemptsUsed, totals } from "../engine/assessment";
+import { attemptsUsed, pendingPoints, totals } from "../engine/assessment";
 import { useAssessment } from "../components/AssessmentContext";
 import { Card, ModeBadge, formatPercent, formatPoints } from "../components/ui";
 
@@ -14,7 +14,7 @@ export interface ResultsProps {
 
 export function Results({ onBack }: ResultsProps = {}) {
   const { assessment, state, bank, actions } = useAssessment();
-  const { earned, possible } = totals(state);
+  const { earned, possible, pending } = totals(state);
   const backLinkClass = "text-sm text-indigo-700 hover:underline dark:text-indigo-300";
 
   return (
@@ -39,6 +39,11 @@ export function Results({ onBack }: ResultsProps = {}) {
             {formatPoints(earned)} / {possible}
           </strong>{" "}
           <span className="text-slate-600 dark:text-slate-400">({formatPercent(possible ? earned / possible : 0)})</span>
+          {pending > 0 && (
+            <span className="block text-sm text-slate-600 dark:text-slate-400">
+              {formatPoints(pending)} points are awaiting your teacher's grade and are not counted yet.
+            </span>
+          )}
         </p>
       </header>
 
@@ -85,6 +90,7 @@ export function Results({ onBack }: ResultsProps = {}) {
                 <td className="px-4 py-2 text-right tabular-nums">{formatPercent(q.bestScore)}</td>
                 <td className="px-4 py-2 text-right tabular-nums">
                   {formatPoints(q.bestScore * q.points)} / {q.points}
+                  {pendingPoints(q) > 0 && <span className="block text-xs text-sky-700 dark:text-sky-300">awaiting grade</span>}
                 </td>
               </tr>
             ))}

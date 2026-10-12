@@ -55,7 +55,17 @@ export type AnyQuestion = Question<unknown>;
 export interface GradeResult {
   score: number; // 0..1
   feedback?: string;
+  /** Hand-graded part not graded yet: `score` is 0 until a teacher enters a grade. */
+  pending?: boolean;
 }
+
+/** A teacher's grade for a hand-graded part, stored on the submission. */
+export interface ManualGrade {
+  score: number; // 0..1
+  comment?: string;
+}
+
+export type ManualGrades = Record<string, ManualGrade>;
 
 // validate() runs before grade(). An invalid-format submission returns a
 // message and does NOT consume an attempt.

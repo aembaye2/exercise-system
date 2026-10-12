@@ -1,7 +1,7 @@
 import { getElement } from "../engine/registry";
 import type { AnswerValues, GradeResult, JsonValue, Part, ValidationResult } from "../engine/types";
 import { Markdown } from "./Markdown";
-import { ScoreBadge } from "./ui";
+import { GradeBadge } from "./ui";
 
 export interface QuestionBodyProps {
   /** Unique prefix for DOM ids (so several questions can share a page). */
@@ -99,7 +99,7 @@ function PartView({ idPrefix, index, total, part, value, onChange, disabled, val
           showCorrect={showCorrect}
         />
         {part.suffix && <Markdown inline>{part.suffix}</Markdown>}
-        {result && <ScoreBadge score={result.score} />}
+        {result && <GradeBadge result={result} />}
       </div>
       {help && (
         <p id={helpId} className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
@@ -118,11 +118,17 @@ function PartView({ idPrefix, index, total, part, value, onChange, disabled, val
             <Markdown inline>{result.feedback}</Markdown>
           </div>
         )}
-        {showCorrect && (
-          <p className="text-slate-700 dark:text-slate-300">
-            Correct answer: <Markdown inline className="font-semibold">{el.formatCorrectAnswer(part)}</Markdown>
-          </p>
-        )}
+        {showCorrect &&
+          (el.correctAnswerHeading ? (
+            <div className="rounded-md border-l-4 border-emerald-500 bg-emerald-50 px-3 py-2 text-slate-800 dark:bg-emerald-950/40 dark:text-slate-200">
+              <p className="font-semibold">{el.correctAnswerHeading}</p>
+              <Markdown>{el.formatCorrectAnswer(part)}</Markdown>
+            </div>
+          ) : (
+            <p className="text-slate-700 dark:text-slate-300">
+              Correct answer: <Markdown inline className="font-semibold">{el.formatCorrectAnswer(part)}</Markdown>
+            </p>
+          ))}
       </div>
     </div>
   );

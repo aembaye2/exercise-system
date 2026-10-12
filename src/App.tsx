@@ -6,6 +6,7 @@ import { useHashRoute } from "./components/useHashRoute";
 import { Home } from "./pages/Home";
 import { Import } from "./pages/Import";
 import { Results } from "./pages/Results";
+import { getQuestion } from "./questions";
 
 export function App() {
   const route = useHashRoute();
@@ -14,7 +15,7 @@ export function App() {
   if (route.page === "home") {
     content = <Home />;
   } else if (route.page === "import") {
-    content = <Import />;
+    content = <Import bank={getQuestion} />;
   } else if (route.page === "assessment" || route.page === "results") {
     const assessment = getAssessment(route.id);
     content = assessment ? (

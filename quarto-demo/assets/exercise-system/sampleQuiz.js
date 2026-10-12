@@ -7,8 +7,9 @@ import { marketEquilibrium } from "./questions/sample/03_number-mc_market_equili
 import { firmProfit } from "./questions/sample/04_integer_firm_profit.js";
 import { presentValue } from "./questions/sample/05_number_present_value.js";
 import { economicTerms } from "./questions/sample/06_mc_economic_terms.js";
-import { gdpDeflator } from "./questions/sample/10_number_gdp_deflator.js";
-import { budgetLine } from "./questions/sample/13_jsxgraph_budget_line.js";
+import { gdpDeflator } from "./questions/sample/07_number_gdp_deflator.js";
+import { budgetLine } from "./questions/sample/08_jsxgraph_budget_line.js";
+import { quadraticEssay } from "./questions/sample/09_essay_quadratic_equation.js";
 
 export const questions = [
   priceElasticity,
@@ -19,6 +20,7 @@ export const questions = [
   economicTerms,
   gdpDeflator,
   budgetLine,
+  quadraticEssay,
 ];
 
 export const assessment = {

@@ -14,6 +14,8 @@ export type { AnyQuestion, Assessment, AssessmentQuestionRef, Part, Question, Rn
 export interface MountOptions {
   assessment: Assessment;
   questions: AnyQuestion[];
+  /** Teacher view instead of the quiz: review and grade a student's exported results file. */
+  review?: boolean;
 }
 
 /**
@@ -24,12 +26,12 @@ export interface MountOptions {
  * — just as plain `.js` instead of `.ts`. Returns a function that unmounts
  * and cleans up.
  */
-export function mount(container: Element, { assessment, questions }: MountOptions): () => void {
+export function mount(container: Element, { assessment, questions, review }: MountOptions): () => void {
   const root = createRoot(container);
   root.render(
     <StrictMode>
       <div className="exercise-system-widget">
-        <QuizWidget assessment={assessment} questions={questions} />
+        <QuizWidget assessment={assessment} questions={questions} review={review} />
       </div>
     </StrictMode>,
   );

@@ -35,6 +35,13 @@ export interface ElementDefinition<P extends Part = Part> {
   formatAnswer(part: P, value: JsonValue | undefined): string;
   /** Markdown describing the correct answer (shown once the question is finished). */
   formatCorrectAnswer(part: P): string;
+  /**
+   * Graded by a teacher after submission: grade() returns `pending: true`, and a
+   * ManualGrade stored on the submission replaces it. Submitting closes the question.
+   */
+  manualGrading?: boolean;
+  /** Show the correct answer as a block under this heading instead of inline after "Correct answer:". */
+  correctAnswerHeading?: string;
   /** Optional help text shown under the input. */
   helpText?(part: P): string | undefined;
   Input: ComponentType<ElementInputProps<P>>;

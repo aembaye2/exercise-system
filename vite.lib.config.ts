@@ -22,6 +22,8 @@ export default defineConfig({
     emptyOutDir: true,
     cssCodeSplit: false,
     chunkSizeWarningLimit: 1600,
+    // Keep the lazily imported MathLive inside the single exercise-system.js file.
+    rolldownOptions: { output: { inlineDynamicImports: true } },
     lib: {
       entry: resolve(import.meta.dirname, "src/lib/entry.tsx"),
       formats: ["es"],

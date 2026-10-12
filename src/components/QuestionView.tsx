@@ -6,6 +6,7 @@ import {
   currentVariantSubmissions,
   isFinished,
   lastSubmission,
+  pendingPoints,
 } from "../engine/assessment";
 import type { GradeResult } from "../engine/types";
 import { createVariant } from "../engine/variant";
@@ -97,6 +98,8 @@ export function QuestionView({ index }: { index: number }) {
           <p className="text-red-700 dark:text-red-300">
             Some answers are not in a valid format. Fix them and submit again; this did not use an attempt.
           </p>
+        ) : last && pendingPoints(q) > 0 ? (
+          <p>Submitted. Your teacher will grade this answer later.</p>
         ) : last ? (
           <p>
             Submission score: <strong>{formatPercent(last.score)}</strong>

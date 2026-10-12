@@ -1,17 +1,30 @@
-import { useMemo } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import type { QuestionBank, Submission } from "../engine/assessment";
-import { gradeQuestion } from "../engine/gradeQuestion";
+import { gradeQuestion, hasPending } from "../engine/gradeQuestion";
 import { getElement } from "../engine/registry";
-import type { ExportedQuestion, ResultsExport } from "../engine/storage";
+import { downloadJson, exportFileName, setManualGrade, type ExportedQuestion, type ResultsExport } from "../engine/storage";
+import type { ManualGrade, Part } from "../engine/types";
 import { createVariant, type Variant } from "../engine/variant";
 import { Markdown } from "./Markdown";
 import { QuestionBody } from "./QuestionBody";
-import { Card, ModeBadge, ScoreBadge, formatPercent, formatPoints } from "./ui";
+import { Button, Card, GradeBadge, ModeBadge, formatPercent, formatPoints } from "./ui";
 
-/** Read-only instructor review of an exported results file. */
-export function ReviewView({ data, bank }: { data: ResultsExport; bank: QuestionBank }) {
+type OnGrade = (questionIndex: number, submissionIndex: number, parts: Part[], partName: string, grade: ManualGrade | null) => void;
+
+/** Instructor review of an exported results file; hand-graded parts can be graded here. */
+export function ReviewView({ data: initialData, bank }: { data: ResultsExport; bank: QuestionBank }) {
+  const [data, setData] = useState(initialData);
+  const [edited, setEdited] = useState(false);
+  const onGrade: OnGrade = (qi, si, parts, partName, grade) => {
+    setData((d) => setManualGrade(d, qi, si, parts, partName, grade));
+    setEdited(true);
+  };
+
+  let pendingCount = 0;
   const regradedTotal = data.questions.reduce((sum, q) => {
-    const best = Math.max(0, ...q.submissions.map((s) => regrade(bank, q.questionId, s)?.score ?? 0));
+    const grades = q.submissions.map((s) => regrade(bank, q.questionId, s));
+    pendingCount += grades.filter((g) => g && hasPending(g.results)).length;
+    const best = Math.max(0, ...grades.map((g) => g?.score ?? 0));
     return sum + best * q.points;
   }, 0);
   const mismatch = Math.abs(regradedTotal - data.earned) > 1e-9;
@@ -44,10 +57,22 @@ export function ReviewView({ data, bank }: { data: ResultsExport; bank: Question
             )}
           </dd>
         </dl>
+        <div className="flex flex-wrap items-center gap-3 pt-2">
+          {pendingCount > 0 && (
+            <span className="text-sm font-medium text-sky-800 dark:text-sky-200">
+              {pendingCount} answer{pendingCount === 1 ? "" : "s"} awaiting your grade
+            </span>
+          )}
+          {edited && (
+            <Button variant="primary" onClick={() => downloadJson(exportFileName(data).replace(/\.json$/, "-graded.json"), data)}>
+              Download graded results
+            </Button>
+          )}
+        </div>
       </Card>
 
       {data.questions.map((q, i) => (
-        <QuestionReview key={i} index={i} q={q} bank={bank} />
+        <QuestionReview key={i} index={i} q={q} bank={bank} onGrade={onGrade} />
       ))}
     </div>
   );
@@ -57,7 +82,7 @@ function regrade(bank: QuestionBank, questionId: string, s: Submission) {
   const question = bank(questionId);
   if (!question) return null;
   try {
-    return gradeQuestion(createVariant(question, s.seed).parts, s.values);
+    return gradeQuestion(createVariant(question, s.seed).parts, s.values, s.manualGrades);
   } catch {
     return null;
   }
@@ -82,7 +107,7 @@ function groupByVariant(q: ExportedQuestion): VariantGroup[] {
   return [...groups.values()].sort((a, b) => a.variant - b.variant);
 }
 
-function QuestionReview({ index, q, bank }: { index: number; q: ExportedQuestion; bank: QuestionBank }) {
+function QuestionReview({ index, q, bank, onGrade }: { index: number; q: ExportedQuestion; bank: QuestionBank; onGrade: OnGrade }) {
   const question = bank(q.questionId);
   const groups = useMemo(() => groupByVariant(q), [q]);
 
@@ -103,7 +128,21 @@ function QuestionReview({ index, q, bank }: { index: number; q: ExportedQuestion
           Question “{q.questionId}” is not in this app’s question bank, so it cannot be regenerated.
         </p>
       ) : (
-        groups.map((g) => <VariantReview key={g.variant} group={g} variant={safeVariant(question, g.seed)} idPrefix={`r${index}-v${g.variant}`} />)
+        groups.map((g) => {
+          const variant = safeVariant(question, g.seed);
+          return (
+            <VariantReview
+              key={g.variant}
+              group={g}
+              variant={variant}
+              idPrefix={`r${index}-v${g.variant}`}
+              points={q.points}
+              onGrade={(s, partName, grade) => {
+                if (!(variant instanceof Error)) onGrade(index, q.submissions.indexOf(s), variant.parts, partName, grade);
+              }}
+            />
+          );
+        })
       )}
     </Card>
   );
@@ -117,12 +156,22 @@ function safeVariant(question: Parameters<typeof createVariant>[0], seed: number
   }
 }
 
-function VariantReview({ group, variant, idPrefix }: { group: VariantGroup; variant: Variant | Error; idPrefix: string }) {
+interface VariantReviewProps {
+  group: VariantGroup;
+  variant: Variant | Error;
+  idPrefix: string;
+  points: number;
+  onGrade: (s: Submission, partName: string, grade: ManualGrade | null) => void;
+}
+
+function VariantReview({ group, variant, idPrefix, points, onGrade }: VariantReviewProps) {
   if (variant instanceof Error) {
     return <p role="alert">Could not regenerate variant (seed {group.seed}): {variant.message}</p>;
   }
   const last = group.submissions[group.submissions.length - 1];
-  const lastGrade = last ? gradeQuestion(variant.parts, last.values) : null;
+  const lastGrade = last ? gradeQuestion(variant.parts, last.values, last.manualGrades) : null;
+  const totalWeight = variant.parts.reduce((sum, p) => sum + (p.weight ?? 1), 0);
+  const manualParts = variant.parts.filter((p) => getElement(p.type).manualGrading);
 
   return (
     <section aria-label={`Variant ${group.variant + 1}`} className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800">
@@ -139,6 +188,17 @@ function VariantReview({ group, variant, idPrefix }: { group: VariantGroup; vari
         disabled
         showCorrect
       />
+      {last &&
+        manualParts.map((p) => (
+          <ManualGradeForm
+            key={`${p.name}:${last.timestamp}`}
+            idPrefix={`${idPrefix}-${p.name}`}
+            label={manualParts.length > 1 ? p.name : undefined}
+            maxPoints={(points * (p.weight ?? 1)) / totalWeight}
+            current={last.manualGrades?.[p.name]}
+            onSave={(grade) => onGrade(last, p.name, grade)}
+          />
+        ))}
       {group.submissions.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[28rem] text-left text-sm">
@@ -153,7 +213,7 @@ function VariantReview({ group, variant, idPrefix }: { group: VariantGroup; vari
             </thead>
             <tbody>
               {group.submissions.map((s, i) => {
-                const g = gradeQuestion(variant.parts, s.values);
+                const g = gradeQuestion(variant.parts, s.values, s.manualGrades);
                 const agrees = Math.abs(g.score - s.score) < 1e-9;
                 return (
                   <tr key={i} className="border-t border-slate-100 align-top dark:border-slate-800/60">
@@ -165,7 +225,7 @@ function VariantReview({ group, variant, idPrefix }: { group: VariantGroup; vari
                           <li key={p.name} className="flex flex-wrap items-center gap-2">
                             <span className="text-slate-500 dark:text-slate-400">{p.name}:</span>
                             <Markdown inline>{getElement(p.type).formatAnswer(p, s.values[p.name])}</Markdown>
-                            {g.results[p.name] && <ScoreBadge score={g.results[p.name].score} />}
+                            {g.results[p.name] && <GradeBadge result={g.results[p.name]} />}
                           </li>
                         ))}
                       </ul>
@@ -184,5 +244,84 @@ function VariantReview({ group, variant, idPrefix }: { group: VariantGroup; vari
         </div>
       )}
     </section>
+  );
+}
+
+interface ManualGradeFormProps {
+  idPrefix: string;
+  label?: string;
+  maxPoints: number;
+  current?: ManualGrade;
+  onSave: (grade: ManualGrade | null) => void;
+}
+
+/** Teacher's points + comment for one hand-graded part of the latest submission. */
+function ManualGradeForm({ idPrefix, label, maxPoints, current, onSave }: ManualGradeFormProps) {
+  const id = idPrefix.replace(/[^A-Za-z0-9_-]/g, "_");
+  const [pointsText, setPointsText] = useState(current ? formatPoints(current.score * maxPoints) : "");
+  const [comment, setComment] = useState(current?.comment ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  const save = (e: FormEvent) => {
+    e.preventDefault();
+    const pts = Number(pointsText.trim());
+    if (pointsText.trim() === "" || !Number.isFinite(pts) || pts < 0 || pts > maxPoints + 1e-9) {
+      setError(`Enter points between 0 and ${formatPoints(maxPoints)}.`);
+      return;
+    }
+    setError(null);
+    onSave({ score: maxPoints > 0 ? Math.min(1, pts / maxPoints) : 0, ...(comment.trim() ? { comment: comment.trim() } : {}) });
+  };
+
+  return (
+    <form
+      onSubmit={save}
+      aria-label={`Teacher grade${label ? ` for ${label}` : ""}`}
+      className="space-y-2 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm dark:border-sky-900 dark:bg-sky-950/40"
+    >
+      <p className="font-semibold">
+        Teacher grade{label ? ` (${label})` : ""}
+        {current ? (
+          <span className="ml-2 font-normal text-emerald-700 dark:text-emerald-300">
+            graded: {formatPoints(current.score * maxPoints)} / {formatPoints(maxPoints)}
+          </span>
+        ) : (
+          <span className="ml-2 font-normal text-sky-800 dark:text-sky-200">not graded yet</span>
+        )}
+      </p>
+      <label className="flex flex-wrap items-center gap-2" htmlFor={`${id}-points`}>
+        Points
+        <input
+          id={`${id}-points`}
+          type="text"
+          inputMode="decimal"
+          value={pointsText}
+          onChange={(e) => setPointsText(e.target.value)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={`${id}-error`}
+          className="w-24 rounded-md border border-slate-300 bg-white px-2 py-1 font-mono dark:border-slate-600 dark:bg-slate-900"
+        />
+        <span>/ {formatPoints(maxPoints)}</span>
+      </label>
+      <label className="flex flex-col gap-1" htmlFor={`${id}-comment`}>
+        Comment for the student (optional)
+        <textarea
+          id={`${id}-comment`}
+          rows={3}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 dark:border-slate-600 dark:bg-slate-900"
+        />
+      </label>
+      <p id={`${id}-error`} role="alert" className="text-red-700 dark:text-red-300 [&:empty]:hidden">
+        {error}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" variant="primary">
+          Save grade
+        </Button>
+        {current && <Button onClick={() => onSave(null)}>Clear grade</Button>}
+      </div>
+    </form>
   );
 }

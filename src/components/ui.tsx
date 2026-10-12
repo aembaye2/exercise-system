@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { GradeResult } from "../engine/types";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 
@@ -64,6 +65,18 @@ export function ScoreBadge({ score }: { score: number }) {
       <span aria-hidden="true">✗</span> Incorrect
     </span>
   );
+}
+
+export function PendingBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800 dark:bg-sky-900/60 dark:text-sky-200">
+      <span aria-hidden="true">⏳</span> Awaiting teacher's grade
+    </span>
+  );
+}
+
+export function GradeBadge({ result }: { result: GradeResult }) {
+  return result.pending ? <PendingBadge /> : <ScoreBadge score={result.score} />;
 }
 
 export function ModeBadge({ mode }: { mode: "exercise" | "exam" }) {

@@ -3,10 +3,11 @@ import { ImportError, parseExport, type ResultsExport } from "../engine/storage"
 import type { QuestionBank } from "../engine/assessment";
 import { ReviewView } from "../components/ReviewView";
 import { Card } from "../components/ui";
-import { getQuestion } from "../questions";
 
-export function Import({ bank = getQuestion }: { bank?: QuestionBank }) {
+/** `showBackLink` is off when embedded outside the hash-routed app. */
+export function Import({ bank, showBackLink = true }: { bank: QuestionBank; showBackLink?: boolean }) {
   const [data, setData] = useState<ResultsExport | null>(null);
+  const [loads, setLoads] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const onFile = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -14,6 +15,7 @@ export function Import({ bank = getQuestion }: { bank?: QuestionBank }) {
     if (!file) return;
     try {
       setData(parseExport(await file.text()));
+      setLoads((n) => n + 1);
       setError(null);
     } catch (err) {
       setData(null);
@@ -24,12 +26,15 @@ export function Import({ bank = getQuestion }: { bank?: QuestionBank }) {
   return (
     <div className="space-y-4">
       <header className="space-y-1">
-        <a href="#/" className="text-sm text-indigo-700 hover:underline dark:text-indigo-300">
-          ← All assessments
-        </a>
+        {showBackLink && (
+          <a href="#/" className="text-sm text-indigo-700 hover:underline dark:text-indigo-300">
+            ← All assessments
+          </a>
+        )}
         <h1 className="text-2xl font-bold">Review exported results</h1>
         <p className="text-slate-600 dark:text-slate-400">
           Load a student’s results file. Each variant is rebuilt from its seed and every submission is regraded.
+          Hand-graded answers (essays) can be graded here; then download the graded file.
         </p>
       </header>
 
@@ -49,7 +54,7 @@ export function Import({ bank = getQuestion }: { bank?: QuestionBank }) {
         </p>
       </Card>
 
-      {data && <ReviewView data={data} bank={bank} />}
+      {data && <ReviewView key={loads} data={data} bank={bank} />}
     </div>
   );
 }

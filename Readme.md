@@ -47,17 +47,19 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | Seeded RNG, question engine, element registry | Done |
 | Multiple choice (radio + dropdown), number, integer elements | Done |
 | **Table element** (fillable table with fixed and blank cells, partial credit) | Done. Added beyond phase 1 |
-| **JSXGraph element** (drawing component built into the app; graded on Submit) | Done. Added beyond phase 1. Demo: `13_jsxgraph_budget_line.ts` in Exercise 1 |
-| **svgDrawing element** (plain-SVG twin of the JSXGraph board; same tools, graded on Submit) | Done. Added beyond phase 1. Demo: `14_svgDrawing_ppf.ts` in Exercise 1 |
-| **matching element** (drag-and-drop reordering to match a lettered column to a numbered one) | Done. Added beyond phase 1. Demo: `15_matching_econ_vocabulary.ts` in Exercise 1 |
-| **true-false element** (a table of statements, each marked True/False independently) | Done. Added beyond phase 1. Demo: `16_true-false_elasticity_statements.ts` in Exercise 1 |
-| **ordering element** (drag-and-drop a single sequence of boxes into the correct order) | Done. Added beyond phase 1. Demo: `17_ordering_income_demand_price.ts` in Exercise 1 |
-| **expression element** (symbolic math input, checked by evaluating at random points, with a live KaTeX preview) | Done. Added beyond phase 1. Demo: `18_expression_marginal_cost.ts` in Exercise 1 |
+| **JSXGraph element** (drawing component built into the app; graded on Submit) | Done. Added beyond phase 1. Demo: `07_jsxgraph_budget_line.ts` in Exercise 1 |
+| **svgDrawing element** (plain-SVG twin of the JSXGraph board; same tools, graded on Submit) | Done. Added beyond phase 1. Demo: `08_svgDrawing_ppf.ts` in Exercise 1 |
+| **matching element** (drag-and-drop reordering to match a lettered column to a numbered one) | Done. Added beyond phase 1. Demo: `09_matching_econ_vocabulary.ts` in Exercise 1 |
+| **true-false element** (a table of statements, each marked True/False independently) | Done. Added beyond phase 1. Demo: `10_true-false_elasticity_statements.ts` in Exercise 1 |
+| **ordering element** (drag-and-drop a single sequence of boxes into the correct order) | Done. Added beyond phase 1. Demo: `11_ordering_income_demand_price.ts` in Exercise 1 |
+| **expression element** (symbolic math input, checked by evaluating at random points, with a live KaTeX preview) | Done. Added beyond phase 1. Demo: `12_expression_marginal_cost.ts` in Exercise 1 |
+| **essay element** (hand-graded written answer with word/character limits, MathLive equation editor, model answer shown after submitting) | Done. Added beyond phase 1. Demo: `13_essay_quadratic_equation.ts` in Exercise 1 |
+| **Manual (teacher) grading** (pending results, points + comment in the review page, graded results file; Quarto `data-review` page) | Done. Added beyond phase 1 |
 | Exercise and exam modes, attempts, best score | Done |
 | localStorage persistence, reset, JSON export, import/review page | Done |
 | Accessibility, mobile layout, dark mode | Done |
 | Embeddable library build + Quarto demo | Done. Added beyond phase 1 |
-| Checkbox, units, manual grading | Not started (see [Roadmap](#roadmap)) |
+| Checkbox, units, file upload | Not started (see [Roadmap](#roadmap)) |
 
 ---
 
@@ -83,7 +85,9 @@ with `file://`.
 - Vite, React 18 and TypeScript in strict mode
 - Tailwind CSS v4, with light and dark themes that follow `prefers-color-scheme`
 - `react-markdown` + `remark-math` + `remark-gfm` + `rehype-katex` for question text:
-  `$...$` for inline math and `$$...$$` for display math
+  `$...$` for inline math and `$$...$$` for display math (the same syntax students use in essays)
+- Element libraries: `jsxgraph` (drawing board), `mathjs/number` (expression grading),
+  `mathlive` (essay equation editor, loaded on demand), `lucide-react` (icons)
 - Vitest + React Testing Library + jsdom
 - State lives in `useReducer` + context. There's no state library, and the RNG (mulberry32) is
   written in-house.
@@ -106,8 +110,8 @@ exercise_system/
 │   │   ├── registry.ts       # element type -> { check, prepare, validate, grade, Input, ... }
 │   │   ├── variant.ts        # { question, seed } -> Variant (text + prepared parts)
 │   │   ├── gradeQuestion.ts  # validate every part, then grade, then weighted average
-│   │   ├── assessment.ts     # reducer: attempts, variants, best score, exam lockout
-│   │   └── storage.ts        # localStorage save/load + JSON export/import
+│   │   ├── assessment.ts     # reducer: attempts, variants, best score, exam lockout, pending points
+│   │   └── storage.ts        # localStorage save/load, JSON export/import, setManualGrade
 │   ├── elements/             # one folder per element type
 │   │   ├── index.ts          # registers every element with the engine
 │   │   ├── multipleChoice/
@@ -116,8 +120,13 @@ exercise_system/
 │   │   ├── table/            # fillable table (e.g. gains-from-trade worksheets)
 │   │   ├── jsxgraph/         # element around the JSXGraph drawing component (input + grading)
 │   │   ├── svgDrawing/       # element around the plain-SVG drawing component (input + grading)
+│   │   ├── matching/         # drag-and-drop matching of two columns
+│   │   ├── trueFalse/        # table of True/False statements
+│   │   ├── ordering/         # drag-and-drop a sequence into order
+│   │   ├── expression/       # symbolic math input (mathjs)
+│   │   ├── essay/            # hand-graded text answer + MathLive equation editor
 │   │   └── TextInput.tsx     # shared text box used by number/integer
-│   ├── questions/            # question bank: one file per question + index.ts
+│   ├── questions/            # demo question bank (01-13, one per element type) + index.ts
 │   ├── assessments/index.ts  # assessment definitions (exercises, quizzes)
 │   ├── components/           # QuestionView, AssessmentView, ReviewView, Markdown, ...
 │   │   ├── jsxgraphComponent/   # JSXGraph drawing board + toolbar + grading (copied from jsxgraph-library)
@@ -174,7 +183,9 @@ the **weighted average** of the part scores.
 | Score | Best score across all variants | Best score across attempts |
 | Correct answers | Shown once the question is finished | Shown after the last attempt |
 
-You can override `maxAttempts` for each question in the assessment definition.
+You can override `maxAttempts` for each question in the assessment definition. A question with a
+hand-graded part (`essay`) is the exception in both modes: one submission closes it, and its score
+waits for the teacher (see [`essay`](#essay)).
 
 ---
 
@@ -182,7 +193,7 @@ You can override `maxAttempts` for each question in the assessment definition.
 
 ### Question types at a glance
 
-There are **10 element types**. A question is made of one or more **parts**, and each part uses
+There are **11 element types**. A question is made of one or more **parts**, and each part uses
 one element, so a single question can mix them. For example, you could combine a number box with
 a multiple-choice part, or a drawing with a follow-up number.
 
@@ -198,9 +209,10 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `true-false` | marks each statement in a table True or False, independently | a list of statements, each with its own `correct` boolean | fraction of statements marked correctly; partial credit (default) or all-or-nothing |
 | `ordering` | drag-and-drop arranges a single sequence of boxes into the correct order | a list of items (authored in correct order), shuffled at prepare time; `layout: "vertical" \| "horizontal"` and an optional arrow between boxes | fraction of boxes in their correct position; partial credit (default) or all-or-nothing |
 | `expression` | types a math expression, with a live KaTeX preview of it as they type | variables and the range to sample them from (`variables`), number of test points (`samples`) | evaluates the student's and the correct expression at the same random points (via mathjs) and compares within `tolerance` — so algebraically equivalent forms (`x^2 + .5 x + 1` vs `x^2 + 1/2 x + 1`) both grade as correct |
+| `essay` | writes a short text answer (math via an equation editor or `$...$`), submitted once | word/character limits (`maxWords`, `maxChars`, `minWords`); a `modelAnswer` shown after submitting | **by the teacher**, later, in the review page (points + comment); pending until then |
 
 `multiple-choice`, `number` and `integer` come from the phase 1 plan. `table`, `jsxgraph`, `svgDrawing`,
-`matching`, `true-false`, `ordering` and `expression` were added later. All ten are included in the
+`matching`, `true-false`, `ordering`, `expression` and `essay` were added later. All eleven are included in the
 embeddable library.
 
 **Which questions use which elements.** The question bank in `src/questions/` has an example of
@@ -208,24 +220,25 @@ each element type:
 
 | File | Question | Parts |
 | --- | --- | --- |
-| `01_number_price_elasticity.ts` | Price elasticity of demand (midpoint method) | number (`relabs`) |
-| `02_mc_types_of_goods.ts` | Types of goods | multiple choice (4 random options from a pool) |
-| `03_number-mc_market_equilibrium.ts` | Market equilibrium and price controls | number + multiple choice (weighted) |
-| `04_integer_firm_profit.ts` | Profit of a firm | integer |
-| `05_number_present_value.ts` | Present value | number (`sigfig`) |
-| `06_mc_economic_terms.ts` | Economic terms | multiple choice (dropdown inside a sentence) |
-| `10_number_gdp_deflator.ts` | Nominal GDP, real GDP, and the GDP deflator | 3 numbers |
-| `11_mc-number_comparative_advantage.ts` | Opportunity cost, absolute and comparative advantage | 4 numbers + 4 dropdowns, with a Markdown table in the question text |
-| `12_table_gains_from_trade.ts` | Gains from trade | table (16 blanks) |
-| `13_jsxgraph_budget_line.ts` | Budget line | `jsxgraph` (draw a segment on the JSXGraph board; graded on Submit) |
-| `14_svgDrawing_ppf.ts` | Production possibilities frontier | `svgDrawing` (draw a segment on the plain-SVG board; graded on Submit) |
-| `15_matching_econ_vocabulary.ts` | Economic vocabulary | `matching` (5 terms sampled from a pool, matched to their definitions) |
-| `16_true-false_elasticity_statements.ts` | Price elasticity of demand | `true-false` (3 fixed statements) |
-| `17_ordering_income_demand_price.ts` | Order the causal chain | `ordering` (3 fixed items, horizontal layout) |
-| `18_expression_marginal_cost.ts` | Find the marginal cost function | `expression` (derivative of a cubic; 1 variable) |
+| `01_mc_types_of_goods.ts` | Types of goods | multiple choice (4 random options from a pool) |
+| `02_number-mc_market_equilibrium.ts` | Market equilibrium and price controls | number + multiple choice (weighted) |
+| `03_integer_firm_profit.ts` | Profit of a firm | integer |
+| `04_mc_economic_terms.ts` | Economic terms | multiple choice (dropdown inside a sentence) |
+| `05_mc-number_comparative_advantage.ts` | Opportunity cost, absolute and comparative advantage | 4 numbers + 4 dropdowns, with a Markdown table in the question text |
+| `06_table_gains_from_trade.ts` | Gains from trade | table (16 blanks) |
+| `07_jsxgraph_budget_line.ts` | Budget line | `jsxgraph` (draw a segment on the JSXGraph board; graded on Submit) |
+| `08_svgDrawing_ppf.ts` | Production possibilities frontier | `svgDrawing` (draw a segment on the plain-SVG board; graded on Submit) |
+| `09_matching_econ_vocabulary.ts` | Economic vocabulary | `matching` (5 terms sampled from a pool, matched to their definitions) |
+| `10_true-false_elasticity_statements.ts` | Price elasticity of demand | `true-false` (3 fixed statements) |
+| `11_ordering_income_demand_price.ts` | Order the causal chain | `ordering` (3 fixed items, horizontal layout) |
+| `12_expression_marginal_cost.ts` | Find the marginal cost function | `expression` (derivative of a cubic; 1 variable) |
+| `13_essay_quadratic_equation.ts` | Solve a quadratic equation | `essay` (hand-graded, up to 80 words; random integer roots) |
 
-The Quarto demo also has plain multiple-choice questions written as `.js` files, in
-`quarto-demo/assets/exercise-system/questions/round2/`.
+The demo files are numbered consecutively (01-13); if you delete one, renumber the rest and update
+the imports in `src/questions/index.ts`. The Quarto demo keeps its own `.js` questions with their
+own numbering: `questions/sample/` (01-09, used by `sampleQuiz.js` and `quiz1.js`, including
+`09_essay_quadratic_equation.js`), `questions/quiz1/` and the plain multiple-choice questions in
+`questions/round2/`, all under `quarto-demo/assets/exercise-system/`.
 
 The sections below describe each element's options in full.
 
@@ -314,7 +327,7 @@ parts, each with its own `comparison`/`rtol`/`digits` if needed.
   "With Trade – Consumption, Saudi Arabia, Corn (bushels)", without revealing their values.
 - Once the question is finished, each wrong cell shows its correct value in green, in place.
 
-See `src/questions/12_table_gains_from_trade.ts`. It computes every cell from the production
+See `src/questions/06_table_gains_from_trade.ts`. It computes every cell from the production
 possibilities rather than hard-coding the answers.
 
 ### `matching`
@@ -348,7 +361,7 @@ until each right item lines up with its correct left item.
 - Once the question is finished, each row is marked right or wrong in place, and a wrong row shows
   its correct right-hand text underneath, in green.
 
-See `src/questions/15_matching_econ_vocabulary.ts`. Files: `src/elements/matching/`
+See `src/questions/09_matching_econ_vocabulary.ts`. Files: `src/elements/matching/`
 (`MatchingInput.tsx`, `gradeMatching.ts`, `prepareMatching.ts`, `types.ts`).
 
 ### `ordering`
@@ -382,7 +395,7 @@ correct order, with an optional arrow between boxes showing the direction of the
 - Once the question is finished, each box is marked right or wrong in place, and a wrong box shows
   the item that belongs there underneath, in green.
 
-See `src/questions/17_ordering_income_demand_price.ts`. Files: `src/elements/ordering/`
+See `src/questions/11_ordering_income_demand_price.ts`. Files: `src/elements/ordering/`
 (`OrderingInput.tsx`, `gradeOrdering.ts`, `prepareOrdering.ts`, `types.ts`).
 
 ### `true-false`
@@ -413,7 +426,7 @@ row), styled after Perseus/Khan-Academy-style "which of the following are true" 
 - Once the question is finished, each statement's row is marked right or wrong in place, and a
   wrong row shows its correct answer underneath, in green.
 
-See `src/questions/16_true-false_elasticity_statements.ts`. Files: `src/elements/trueFalse/`
+See `src/questions/10_true-false_elasticity_statements.ts`. Files: `src/elements/trueFalse/`
 (`TrueFalseInput.tsx`, `gradeTrueFalse.ts`, `types.ts`).
 
 ### `expression`
@@ -453,8 +466,59 @@ any algebraically equivalent form is accepted.
   BigNumber/Fraction/Complex/Matrix/Unit support — and the bundle — out; this element doesn't need
   them). This adds a few hundred KB to the embeddable bundle, similar in scale to JSXGraph's cost.
 
-See `src/questions/18_expression_marginal_cost.ts`. Files: `src/elements/expression/`
+See `src/questions/12_expression_marginal_cost.ts`. Files: `src/elements/expression/`
 (`ExpressionInput.tsx`, `gradeExpression.ts`, `prepareExpression.ts`, `mathUtils.ts`, `types.ts`).
+
+### `essay`
+
+A hand-graded written answer: one text box with optional word/character limits. The student
+submits **once**; the model answer is shown right away as feedback, and the teacher enters the
+grade later while reviewing the exported results file.
+
+```ts
+{
+  type: "essay",
+  name: "explanation",
+  label: "Your answer:",                     // optional, like any part
+  modelAnswer: "$(x - 2)(x - 3) = 0$, so $x = 2$ or $x = 3$.",  // required; Markdown + KaTeX
+  maxWords: 150,                             // optional upper limit on words
+  maxChars: 1000,                            // optional upper limit on characters (spaces included)
+  minWords: 20,                              // optional lower limit on words
+  rows: 8,                                   // optional text box height; default 8
+}
+```
+
+- **Math in answers**: the **Insert equation** button opens a [MathLive](https://mathlive.io/)
+  equation editor (WYSIWYG, with an on-screen math keyboard behind its keyboard icon, handy on
+  phones). **Insert** (or Enter) puts the equation into the essay at the cursor as LaTeX between
+  dollar signs, e.g. `$x^2 + 5$`; Esc or **Cancel** closes it. Students can also type `$...$` (or
+  `$$...$$`) by hand, same as question text. A live preview under the box typesets the math as they
+  type. Because `$` starts math, a plain dollar sign is written `\$` (e.g. `\$5`); the help text
+  under the box says so. A live counter shows words and characters against the limits and turns
+  red when over.
+- **Extra dependency**: `mathlive` (MIT, about 800 KB). It's loaded with a dynamic `import()` the
+  first time the editor opens, so in the app it's a separate chunk fetched on demand; the
+  embeddable bundle inlines it (`inlineDynamicImports` in `vite.lib.config.ts`) to stay a single
+  file. Its own font and sound loading is turned off: it uses the KaTeX fonts the page already has.
+- **Validation**: an empty answer, or one over `maxWords`/`maxChars` or under `minWords`, is
+  **invalid**, so it doesn't use the submission.
+- **Submitting** closes the question (no second attempt, no "New variant"), whatever
+  `maxAttempts` says. The part's result is *pending*: it scores 0 and shows an "Awaiting teacher's
+  grade" badge; the header and results page show how many points are awaiting a grade. The model
+  answer appears under a "Model answer" heading.
+- **Teacher grading**: the student exports their results file as usual. The teacher opens it in
+  the review page (`#/import` in the app, or a `data-review` div in Quarto, see below). Each essay
+  has a form to enter **points** (out of the part's share of the question's points) and an
+  optional **comment** for the student. Saving recomputes the scores; **Download graded results**
+  saves the file with the grades (`...-graded.json`). The grades are stored on the submission as
+  `manualGrades: { [partName]: { score: 0..1, comment? } }`, and opening the graded file again
+  shows them (and the comment as the part's feedback).
+- An essay can share a question with auto-graded parts; only the essay's weight waits for the
+  teacher.
+
+See `src/questions/13_essay_quadratic_equation.ts`. Files: `src/elements/essay/` (`EssayInput.tsx`,
+`gradeEssay.ts`, `MathEditor.tsx`, `types.ts`). Engine support: `ElementDefinition.manualGrading`,
+`GradeResult.pending`, `Submission.manualGrades`, `setManualGrade()` in `engine/storage.ts`.
 
 ### `jsxgraph`
 
@@ -495,7 +559,7 @@ the app's normal **Submit**, and the drawing is graded then.
 - **Dependencies:** `jsxgraph` and `lucide-react` (both bundled, including into `exercise-system.js`
   for Quarto).
 
-See `src/questions/13_jsxgraph_budget_line.ts`. Files: `src/elements/jsxgraph/` (`JsxGraphInput.tsx`,
+See `src/questions/07_jsxgraph_budget_line.ts`. Files: `src/elements/jsxgraph/` (`JsxGraphInput.tsx`,
 `gradeJsxGraph.ts`, `types.ts`) and `src/components/jsxgraphComponent/` (`DrawingApp.tsx`,
 `canvas/drawingLogic.tsx` for the board, `canvas/drawingTools.tsx`, `canvas/grading.ts`,
 `canvas/DrawingCanvas.css`).
@@ -531,7 +595,7 @@ the `jsxgraph` section above applies unchanged. The only real difference: the er
 toggle button here rather than a toolbar tool (everything else in `enabledTools` lives in the
 toolbar grid).
 
-See `src/questions/14_svgDrawing_ppf.ts`. Files: `src/elements/svgDrawing/` (`SvgDrawingInput.tsx`,
+See `src/questions/08_svgDrawing_ppf.ts`. Files: `src/elements/svgDrawing/` (`SvgDrawingInput.tsx`,
 `gradeSvgDrawing.ts`, `types.ts`) and `src/components/svgDrawingComponent/` (`DrawingApp.tsx`,
 `canvas/DrawingBoard.tsx`, `canvas/DrawingToolbar.tsx`, `canvas/grading.ts`, `canvas/DrawingCanvas.css`).
 
@@ -539,10 +603,10 @@ See `src/questions/14_svgDrawing_ppf.ts`. Files: `src/elements/svgDrawing/` (`Sv
 
 ## How to add a new question
 
-**File names** are `NN_<type>_<description>`, for example `01_number_price_elasticity.ts` or
+**File names** are `NN_<type>_<description>`, for example `01_mc_types_of_goods.ts` or
 `07_mc_microeconomics_defined.js`. `<type>` is the element type of the question's parts, shortened to
 `mc` for `multiple-choice`; a question that mixes types lists them in order, joined by `-`
-(`03_number-mc_market_equilibrium.ts`). `NN` is the number in that folder.
+(`02_number-mc_market_equilibrium.ts`). `NN` is the number in that folder.
 
 1. **Create a file** in `src/questions/`, for example `src/questions/14_number_opportunity_cost.ts`:
 
@@ -621,7 +685,7 @@ Add an entry to the `assessments` array in `src/assessments/index.ts`:
   description: "Shown to students before they start.",
   mode: "exam",                    // "exercise" or "exam"
   questions: [
-    { questionId: "price-elasticity-midpoint", points: 10, maxAttempts: 2 },
+    { questionId: "types-of-goods", points: 10, maxAttempts: 2 },
     { questionId: "opportunity-cost", points: 10 },
   ],
 }
@@ -637,8 +701,8 @@ Add an entry to the `assessments` array in `src/assessments/index.ts`:
 
 ## How to add a new element type
 
-The engine never needs to change. An element type is a folder under `src/elements/` plus one line
-of registration.
+The engine doesn't need to change. An element type is a folder under `src/elements/` plus one
+line of registration.
 
 1. **Declare the part type** in `src/elements/<name>/types.ts` and add it to the engine's
    `PartTypeMap` through module augmentation. `Part` then includes it everywhere:
@@ -667,6 +731,12 @@ of registration.
    - `formatAnswer(part, value)` / `formatCorrectAnswer(part)`: Markdown for reviews and for
      revealing the answer.
    - `helpText(part)`: short text shown under the input (optional).
+   - `manualGrading: true` (optional): a teacher grades the part. `grade()` then returns
+     `{ score: 0, pending: true, feedback? }`; one submission closes the question, and a grade
+     entered on the review page (`Submission.manualGrades`) replaces the pending result. See
+     `essay`.
+   - `correctAnswerHeading` (optional): show `formatCorrectAnswer` as a block under this heading
+     (e.g. "Model answer") instead of inline after "Correct answer:".
 
 3. **Write the input component** `StringInput.tsx`. It receives `ElementInputProps`
    (`part`, `id`, `labelId`, `describedBy`, `value`, `onChange`, `disabled`, `invalid`,
@@ -689,8 +759,9 @@ shuffle an order (like `multipleChoice`) and grade a student-reordered array (`o
 simpler of the two: one column instead of matching two). `src/elements/expression/` uses
 `prepare()` differently: to freeze random *test points* rather than shuffle anything, and pulls in
 an external parsing/evaluation library (`mathjs`) rather than parsing the value itself like every
-other element. `src/elements/jsxgraph/` / `src/elements/svgDrawing/` are the most complex (a thin
-adapter around a drawing board that lives under `src/components/`).
+other element. `src/elements/essay/` is the hand-graded one (`manualGrading`) and lazy-loads an
+external editor component (MathLive). `src/elements/jsxgraph/` / `src/elements/svgDrawing/` are the
+most complex (a thin adapter around a drawing board that lives under `src/components/`).
 
 ---
 
@@ -707,8 +778,15 @@ Since there's no backend, the browser and JSON files stand in for one.
   (`<assessmentId>-<name>-<timestamp>.json`). It contains every question's seed, all
   submissions and the scores.
 - **Import (instructor review):** open `#/import` and load an export. Every variant is rebuilt
-  from its seed, and the questions, the student's answers and the grades are shown read-only.
-  This is exactly what the student saw.
+  from its seed, and the questions, the student's answers and the grades are shown read-only
+  (except the teacher grade forms below). This is exactly what the student saw. Course questions
+  that live only in a Quarto book are reviewed on a Quarto `data-review` page instead (see
+  [Teacher review page](#teacher-review-page-grading-essays)).
+- **Teacher grading of essays:** on the same page, each hand-graded answer has a points + comment
+  form. After grading, **Download graded results** saves `<original name>-graded.json` with the
+  grades (`manualGrades` on each submission) and the updated totals. Opening the graded file again
+  shows the grades and comments; this is how a student can see their essay grade (the quiz itself
+  never receives it, since there's no backend).
 
 > Answers aren't hidden from the client. This is by design: the tool is for practice and
 > low-stakes quizzes, not proctored exams.
@@ -719,11 +797,12 @@ Since there's no backend, the browser and JSON files stand in for one.
 
 `npm run build:lib` produces a self-contained bundle in `dist-lib/`:
 
-- `exercise-system.js`: an ES module with React, all 10 element types, JSXGraph, mathjs and KaTeX
-  (about 2.8 MB)
+- `exercise-system.js`: an ES module with React, all 11 element types, JSXGraph, mathjs, MathLive
+  and KaTeX (about 3.9 MB)
 - `exercise-system.css`: Tailwind styles plus the KaTeX fonts, inlined (about 1.5 MB)
 
-The bundle exports `mount(element, { assessment, questions })`, which returns an unmount function.
+The bundle exports `mount(element, { assessment, questions, review? })`, which returns an unmount
+function (`review: true` shows the teacher review page for that quiz instead of the quiz).
 The embedded widget shows one assessment and doesn't use the URL hash, so it won't clash with the
 page's own navigation.
 
@@ -761,7 +840,7 @@ The stylesheet and the script that mounts the quiz are loaded once for the whole
          el.dataset.mounted = "";
          try {
            const { assessment, questions } = await import(`./assets/exercise-system/${el.dataset.quiz}`);
-           mount(el, { assessment, questions });
+           mount(el, { assessment, questions, review: "review" in el.dataset });
          } catch (err) {
            el.textContent = `Could not load the practice questions (${el.dataset.quiz}): ${err.message}`;
            console.error(err);
@@ -787,6 +866,22 @@ The stylesheet and the script that mounts the quiz are loaded once for the whole
 
    The paths in `header.html` are relative to the page, so keep the chapters in the book's top
    folder (or change them). The stylesheet is downloaded once and then cached for all pages.
+
+### Teacher review page (grading essays)
+
+Add `data-review` to a quiz div to get the teacher view for that quiz instead of the quiz itself:
+load a student's results file, review every answer, grade the essays and download the graded file.
+It uses the quiz's own questions, so course questions can be regenerated (the app's `#/import` page
+only knows the demo questions).
+
+````markdown
+```{=html}
+<div class="exercise-system-root" data-quiz="sampleQuiz.js" data-review></div>
+```
+````
+
+Put it on a page students aren't pointed to (answers aren't hidden from the client anyway). In code:
+`mount(element, { assessment, questions, review: true })`.
 
 ### Adding a quiz
 
@@ -849,12 +944,17 @@ The tests cover:
 - the assessment reducer: attempts, best score, new variants, exam lockout
   (`engine/assessment.test.ts`)
 - storage and export round-trips (`engine/storage.test.ts`)
+- hand-graded parts: pending results, one-submission close, pending points, teacher grades on an
+  exported file and their import validation (`engine/manualGrading.test.ts`)
 - each element: preparation, parsing edge cases, every comparison mode including negative and
   near-zero values, table validation and partial credit, the jsxgraph/svgDrawing grading and input
-  syncing (`elements/jsxgraph/`, `elements/svgDrawing/`), and input components
+  syncing (`elements/jsxgraph/`, `elements/svgDrawing/`), and input components; the essay's limits,
+  `$...$` preview and equation editor (MathLive is mocked, since jsdom can't run it), plus the
+  student flow from typing to "awaiting grade" (`elements/essay/`)
 - every question in the bank across many seeds (`questions/questions.test.ts`)
 - a component test that submits a wrong answer and then a right one
-  (`components/QuestionView.test.tsx`), and the import page (`pages/Import.test.tsx`)
+  (`components/QuestionView.test.tsx`), and the import page, including grading an essay
+  (`pages/Import.test.tsx`)
 
 ---
 
@@ -867,6 +967,7 @@ The registry is designed so these can be added later without touching the engine
 - Matrix input with symbolic entries (numeric grids are already covered by the `table` element)
 - String input (`expression`, added beyond phase 1, covers symbolic math; plain non-numeric string matching is still open)
 - Big-O input
-- Manually graded parts: essay, file upload, image capture
+- More manually graded parts: file upload, image capture (`essay` is done; it uses the same
+  `manualGrading` hook these would)
 
 Code questions are out of scope.

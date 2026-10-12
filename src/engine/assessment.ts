@@ -1,4 +1,5 @@
-import { gradeQuestion } from "./gradeQuestion";
+import { gradeQuestion, pendingShare } from "./gradeQuestion";
+import { getElement } from "./registry";
 import { createVariant } from "./variant";
 import type {
   AnswerValues,
@@ -6,6 +7,7 @@ import type {
   Assessment,
   GradeResult,
   JsonValue,
+  ManualGrades,
   Part,
   ValidationResult,
 } from "./types";
@@ -20,6 +22,8 @@ export interface Submission {
   results: Record<string, GradeResult>;
   score: number; // 0..1
   timestamp: string; // ISO
+  /** Teacher-entered grades for hand-graded parts (added later, during review). */
+  manualGrades?: ManualGrades;
 }
 
 export interface QuestionState {
@@ -113,9 +117,17 @@ export function lastSubmission(q: QuestionState): Submission | undefined {
   return subs[subs.length - 1];
 }
 
-/** Finished = the current variant was answered fully correctly, or no attempts remain. */
+export function hasManualParts(parts: Part[]): boolean {
+  return parts.some((p) => getElement(p.type).manualGrading);
+}
+
+/**
+ * Finished = the current variant was answered fully correctly, no attempts remain,
+ * or it has a hand-graded part and was submitted (one submission per variant).
+ */
 export function isFinished(q: QuestionState): boolean {
-  return lastSubmission(q)?.score === 1 || attemptsRemaining(q) === 0;
+  const last = lastSubmission(q);
+  return last?.score === 1 || attemptsRemaining(q) === 0 || (last !== undefined && hasManualParts(q.preparedParts));
 }
 
 export function canSubmit(q: QuestionState): boolean {
@@ -123,21 +135,34 @@ export function canSubmit(q: QuestionState): boolean {
 }
 
 export function canNewVariant(q: QuestionState, mode: Assessment["mode"]): boolean {
-  return mode === "exercise" && currentVariantSubmissions(q).length > 0 && attemptsRemaining(q) !== 0;
+  return (
+    mode === "exercise" &&
+    currentVariantSubmissions(q).length > 0 &&
+    attemptsRemaining(q) !== 0 &&
+    !hasManualParts(q.preparedParts)
+  );
 }
 
 export function questionPoints(q: QuestionState): number {
   return q.bestScore * q.points;
 }
 
-export function totals(state: AssessmentState): { earned: number; possible: number } {
+/** Points of the latest submission still awaiting a teacher's grade. */
+export function pendingPoints(q: QuestionState): number {
+  const last = lastSubmission(q);
+  return last ? pendingShare(q.preparedParts, last.results) * q.points : 0;
+}
+
+export function totals(state: AssessmentState): { earned: number; possible: number; pending: number } {
   let earned = 0;
   let possible = 0;
+  let pending = 0;
   for (const q of state.questions) {
     earned += questionPoints(q);
     possible += q.points;
+    pending += pendingPoints(q);
   }
-  return { earned, possible };
+  return { earned, possible, pending };
 }
 
 // ---------- reducer ----------

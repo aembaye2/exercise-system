@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { Import } from "./Import";
 import { assessmentReducer, createAssessmentState } from "../engine/assessment";
 import { buildExport, type ResultsExport } from "../engine/storage";
+import type { Assessment, Question } from "../engine/types";
 import { exercise, seedCounter, testBank } from "../test/fixtures";
 
 const NOW = "2026-01-01T00:00:00.000Z";
@@ -54,5 +55,55 @@ describe("Import page", () => {
     render(<Import bank={testBank} />);
     await upload("not json");
     expect(await screen.findByText("This file is not valid JSON.")).toBeInTheDocument();
+  });
+
+  it("lets the teacher grade an essay and updates the score", async () => {
+    const essay: Question<Record<string, never>> = {
+      id: "essay",
+      title: "Essay",
+      generate: () => ({}),
+      render: () => "Explain.",
+      parts: () => [{ type: "essay", name: "why", modelAnswer: "Because **shortage**." }],
+    };
+    const bank = (id: string) => (id === "essay" ? (essay as Question<unknown>) : undefined);
+    const hw: Assessment = { id: "e", title: "E", mode: "exam", questions: [{ questionId: "essay", points: 10 }] };
+    let s = createAssessmentState(hw, bank, seedCounter(), NOW);
+    s = assessmentReducer(s, { type: "setValue", index: 0, part: "why", value: "Prices are capped." });
+    s = assessmentReducer(s, { type: "submit", index: 0, timestamp: NOW });
+
+    render(<Import bank={bank} />);
+    await upload(JSON.stringify(buildExport(s, hw, NOW)));
+
+    expect(await screen.findByText(/1 answer awaiting your grade/)).toBeInTheDocument();
+    expect(screen.getByText("Model answer")).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText(/^Points/), "7");
+    await userEvent.type(screen.getByLabelText(/Comment for the student/), "Mention the shortage.");
+    await userEvent.click(screen.getByRole("button", { name: "Save grade" }));
+
+    expect(screen.getByText(/graded: 7 \/ 10/)).toBeInTheDocument();
+    expect(screen.getByText("Mention the shortage.", { selector: ":not(textarea)" })).toBeInTheDocument();
+    expect(screen.getByText(/verified by regrading/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Download graded results" })).toBeInTheDocument();
+    expect(screen.queryByText(/awaiting your grade/)).toBeNull();
+  });
+
+  it("rejects points above the part's maximum", async () => {
+    const essay: Question<Record<string, never>> = {
+      id: "essay",
+      title: "Essay",
+      generate: () => ({}),
+      render: () => "Explain.",
+      parts: () => [{ type: "essay", name: "why", modelAnswer: "m" }],
+    };
+    const bank = (id: string) => (id === "essay" ? (essay as Question<unknown>) : undefined);
+    const hw: Assessment = { id: "e", title: "E", mode: "exam", questions: [{ questionId: "essay", points: 5 }] };
+    let s = createAssessmentState(hw, bank, seedCounter(), NOW);
+    s = assessmentReducer(s, { type: "setValue", index: 0, part: "why", value: "text" });
+    s = assessmentReducer(s, { type: "submit", index: 0, timestamp: NOW });
+    render(<Import bank={bank} />);
+    await upload(JSON.stringify(buildExport(s, hw, NOW)));
+    await userEvent.type(await screen.findByLabelText(/^Points/), "6");
+    await userEvent.click(screen.getByRole("button", { name: "Save grade" }));
+    expect(screen.getByText("Enter points between 0 and 5.")).toBeInTheDocument();
   });
 });

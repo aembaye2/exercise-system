@@ -1,5 +1,6 @@
 import { questionPoints, totals, type AssessmentState, type Submission } from "./assessment";
-import type { Assessment } from "./types";
+import { gradeQuestion } from "./gradeQuestion";
+import type { Assessment, ManualGrade, Part } from "./types";
 
 // ---------- localStorage persistence ----------
 
@@ -157,9 +158,50 @@ export function parseExport(text: string): ResultsExport {
       if (!isRecord(s) || typeof s.seed !== "number" || typeof s.variant !== "number" || !isRecord(s.values)) {
         throw new ImportError(`Invalid submission ${j + 1} in ${where}.`);
       }
+      if (s.manualGrades !== undefined && !isValidManualGrades(s.manualGrades)) {
+        throw new ImportError(`Invalid teacher grades in submission ${j + 1} of ${where}.`);
+      }
     });
   });
   return data as unknown as ResultsExport;
+}
+
+function isValidManualGrades(x: unknown): boolean {
+  return (
+    isRecord(x) &&
+    Object.values(x).every(
+      (g) => isRecord(g) && typeof g.score === "number" && g.score >= 0 && g.score <= 1 && (g.comment === undefined || typeof g.comment === "string"),
+    )
+  );
+}
+
+/**
+ * Record (or with `grade: null`, clear) a teacher's grade for one hand-graded part of
+ * one submission, then recompute that submission's score, the question's best score
+ * and the file's total. `parts` are the submission's variant parts.
+ */
+export function setManualGrade(
+  data: ResultsExport,
+  questionIndex: number,
+  submissionIndex: number,
+  parts: Part[],
+  partName: string,
+  grade: ManualGrade | null,
+): ResultsExport {
+  const questions = data.questions.map((q, qi) => {
+    if (qi !== questionIndex) return q;
+    const submissions = q.submissions.map((s, si) => {
+      if (si !== submissionIndex) return s;
+      const manualGrades = { ...s.manualGrades };
+      if (grade) manualGrades[partName] = grade;
+      else delete manualGrades[partName];
+      const g = gradeQuestion(parts, s.values, manualGrades);
+      return { ...s, manualGrades, results: g.results, score: g.score };
+    });
+    const bestScore = Math.max(0, ...submissions.map((s) => s.score));
+    return { ...q, submissions, bestScore, earned: bestScore * q.points };
+  });
+  return { ...data, questions, earned: questions.reduce((sum, q) => sum + q.earned, 0) };
 }
 
 /** Trigger a browser download of `data` as a JSON file. */

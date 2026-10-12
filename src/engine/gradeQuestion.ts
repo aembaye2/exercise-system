@@ -1,5 +1,5 @@
 import { getElement } from "./registry";
-import type { AnswerValues, GradeResult, Part, ValidationResult } from "./types";
+import type { AnswerValues, GradeResult, ManualGrades, Part, ValidationResult } from "./types";
 
 export interface QuestionGrade {
   /** True if every part passed validation (and was therefore graded). */
@@ -22,8 +22,11 @@ export function weightedScore(parts: Part[], results: Record<string, GradeResult
   return total > 0 ? sum / total : 0;
 }
 
-/** Validate every part, then grade only if all parts are valid. Pure. */
-export function gradeQuestion(parts: Part[], values: AnswerValues): QuestionGrade {
+/**
+ * Validate every part, then grade only if all parts are valid. Pure.
+ * `manualGrades` (teacher-entered) replace the pending result of hand-graded parts.
+ */
+export function gradeQuestion(parts: Part[], values: AnswerValues, manualGrades?: ManualGrades): QuestionGrade {
   const validation: Record<string, ValidationResult> = {};
   let valid = true;
   for (const part of parts) {
@@ -35,10 +38,28 @@ export function gradeQuestion(parts: Part[], values: AnswerValues): QuestionGrad
 
   const results: Record<string, GradeResult> = {};
   for (const part of parts) {
-    const r = getElement(part.type).grade(part, values[part.name]);
+    const el = getElement(part.type);
+    const manual = el.manualGrading ? manualGrades?.[part.name] : undefined;
+    const r: GradeResult = manual ? { score: manual.score, feedback: manual.comment || undefined } : el.grade(part, values[part.name]);
     results[part.name] = { ...r, score: clamp01(r.score) };
   }
   return { valid, validation, results, score: weightedScore(parts, results) };
+}
+
+export function hasPending(results: Record<string, GradeResult>): boolean {
+  return Object.values(results).some((r) => r.pending);
+}
+
+/** Share of the question's points held by parts still awaiting a teacher's grade, 0..1. */
+export function pendingShare(parts: Part[], results: Record<string, GradeResult>): number {
+  let total = 0;
+  let pending = 0;
+  for (const part of parts) {
+    const w = part.weight ?? 1;
+    total += w;
+    if (results[part.name]?.pending) pending += w;
+  }
+  return total > 0 ? pending / total : 0;
 }
 
 function clamp01(x: number): number {

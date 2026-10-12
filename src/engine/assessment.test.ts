@@ -75,7 +75,7 @@ describe("submitting", () => {
     s = run(s, set(correctSum(s)), submit());
     expect(s.questions[0].submissions).toHaveLength(2);
     expect(s.questions[0].bestScore).toBe(1);
-    expect(totals(s)).toEqual({ earned: 10, possible: 14 });
+    expect(totals(s)).toEqual({ earned: 10, possible: 14, pending: 0 });
   });
 
   it("computes weighted partial credit", () => {

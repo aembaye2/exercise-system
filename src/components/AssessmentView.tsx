@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { attemptsUsed, isFinished, totals, type QuestionState } from "../engine/assessment";
+import { attemptsUsed, isFinished, pendingPoints, totals, type QuestionState } from "../engine/assessment";
 import { useAssessment } from "./AssessmentContext";
 import { QuestionView } from "./QuestionView";
 import { Button, Card, ConfirmButton, ModeBadge, formatPoints } from "./ui";
@@ -7,6 +7,7 @@ import { Button, Card, ConfirmButton, ModeBadge, formatPoints } from "./ui";
 /** Announced to screen readers in each question button's label. */
 function statusOf(q: QuestionState): string {
   if (q.bestScore >= 1) return "complete";
+  if (pendingPoints(q) > 0) return "awaiting teacher's grade";
   if (isFinished(q)) return "closed";
   if (attemptsUsed(q) > 0) return "in progress";
   return "not started";
@@ -25,7 +26,7 @@ export interface AssessmentViewProps {
 export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
   const { assessment, state, bank, actions, saved } = useAssessment();
   const [confirmingReset, setConfirmingReset] = useState(false);
-  const { earned, possible } = totals(state);
+  const { earned, possible, pending } = totals(state);
   const index = state.currentIndex;
   const last = state.questions.length - 1;
 
@@ -43,6 +44,9 @@ export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
             <strong>
               {formatPoints(earned)} / {possible}
             </strong>
+            {pending > 0 && (
+              <span className="text-slate-600 dark:text-slate-400"> ({formatPoints(pending)} awaiting teacher's grade)</span>
+            )}
           </p>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {onShowResults ? (

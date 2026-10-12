@@ -7,7 +7,8 @@ import { exampleSvgDrawing } from "../elements/svgDrawing/gradeSvgDrawing";
 import { exampleTable } from "../elements/table/gradeTable";
 import { exampleTrueFalse } from "../elements/trueFalse/gradeTrueFalse";
 import { gradeQuestion } from "../engine/gradeQuestion";
-import type { AnswerValues, JsonValue, Part } from "../engine/types";
+import { getElement } from "../engine/registry";
+import type { AnswerValues, JsonValue, ManualGrades, Part } from "../engine/types";
 import { createVariant } from "../engine/variant";
 import { assessments } from "../assessments";
 import { getQuestion, questions } from ".";
@@ -24,9 +25,15 @@ function perfectAnswers(parts: Part[]): AnswerValues {
     else if (p.type === "true-false") values[p.name] = exampleTrueFalse(p);
     else if (p.type === "ordering") values[p.name] = exampleOrdering(p);
     else if (p.type === "expression") values[p.name] = exampleExpression(p);
+    else if (p.type === "essay") values[p.name] = p.modelAnswer;
     else values[p.name] = String(p.correct);
   }
   return values;
+}
+
+/** Full marks from the teacher for every hand-graded part. */
+function fullManualGrades(parts: Part[]): ManualGrades {
+  return Object.fromEntries(parts.filter((p) => getElement(p.type).manualGrading).map((p) => [p.name, { score: 1 }]));
 }
 
 describe("question bank", () => {
@@ -35,7 +42,7 @@ describe("question bank", () => {
       const v = createVariant(q, seed);
       expect(createVariant(q, seed)).toEqual(v);
       expect(v.text.length).toBeGreaterThan(0);
-      expect(gradeQuestion(v.parts, perfectAnswers(v.parts)).score).toBe(1);
+      expect(gradeQuestion(v.parts, perfectAnswers(v.parts), fullManualGrades(v.parts)).score).toBe(1);
     }
   });
 
@@ -50,15 +57,6 @@ describe("question bank", () => {
     const v = createVariant(getQuestion("types-of-goods")!, 1);
     const p = v.parts[0];
     expect(p.type === "multiple-choice" && p.options.length).toBe(4);
-  });
-
-  it("the sig-fig question accepts a 3 s.f. answer", () => {
-    const v = createVariant(getQuestion("present-value-sigfig")!, 7);
-    const p = v.parts[0];
-    if (p.type !== "number") throw new Error();
-    const answer = p.correct.toPrecision(3);
-    expect(gradeQuestion(v.parts, { PV: answer }).score).toBe(1);
-    expect(gradeQuestion(v.parts, { PV: (p.correct * 1.02).toPrecision(3) }).score).toBe(0);
   });
 
   it("the market-equilibrium question covers every price-control outcome", () => {
@@ -115,9 +113,8 @@ describe("assessments", () => {
     }
   });
 
-  it("the exercises together include every question; the first exam has 3", () => {
+  it("the exercises together include every question", () => {
     const inExercise = assessments.filter((a) => a.mode === "exercise").flatMap((a) => a.questions.map((q) => q.questionId));
     expect(new Set(inExercise)).toEqual(new Set(questions.map((q) => q.id)));
-    expect(assessments.find((a) => a.mode === "exam")!.questions).toHaveLength(3);
   });
 });

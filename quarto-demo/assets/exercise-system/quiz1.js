@@ -7,7 +7,7 @@ import { typesOfGoods } from "./questions/sample/02_mc_types_of_goods.js";
 import { economicTerms } from "./questions/sample/06_mc_economic_terms.js";
 import { priceElasticity } from "./questions/sample/01_number_price_elasticity.js";
 import { firmProfit } from "./questions/sample/04_integer_firm_profit.js";
-import { budgetLine } from "./questions/sample/13_jsxgraph_budget_line.js";
+import { budgetLine } from "./questions/sample/08_jsxgraph_budget_line.js";
 import { econTermsMatching } from "./questions/quiz1/01_matching_econ_terms.js";
 import { revenueTable } from "./questions/quiz1/02_table_revenue.js";
 import { productionPossibilities } from "./questions/quiz1/03_svgDrawing_ppf.js";
