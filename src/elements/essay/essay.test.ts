@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AuthoringError } from "../../engine/types";
-import { checkEssay, countChars, countWords, formatEssayAnswer, formatEssayCorrect, gradeEssay, validateEssay } from "./gradeEssay";
+import { checkEssay, countChars, essayHelpText, countWords, formatEssayAnswer, formatEssayCorrect, gradeEssay, validateEssay } from "./gradeEssay";
 import type { EssayPart } from "./types";
 
 const part: EssayPart = {
@@ -18,8 +18,15 @@ describe("essay element", () => {
     expect(() => checkEssay({ type: "essay", name: "e", modelAnswer: "x" })).not.toThrow();
   });
 
+  it("accepts a missing or empty model answer (nothing is revealed)", () => {
+    expect(() => checkEssay({ type: "essay", name: "e" })).not.toThrow();
+    expect(() => checkEssay({ ...part, modelAnswer: "" })).not.toThrow();
+    expect(formatEssayCorrect({ type: "essay", name: "e" })).toBe("");
+    expect(formatEssayCorrect({ ...part, modelAnswer: "  " })).toBe("");
+  });
+
   it.each<[string, Partial<EssayPart>]>([
-    ["an empty model answer", { modelAnswer: " " }],
+    ["a non-string model answer", { modelAnswer: 5 as unknown as string }],
     ["a non-integer word limit", { maxWords: 2.5 }],
     ["a zero character limit", { maxChars: 0 }],
     ["minWords above maxWords", { minWords: 9 }],
@@ -46,7 +53,14 @@ describe("essay element", () => {
   });
 
   it("grades as pending until the teacher grades it", () => {
-    expect(gradeEssay()).toEqual({ score: 0, pending: true, feedback: expect.any(String) });
+    expect(gradeEssay(part)).toEqual({ score: 0, pending: true, feedback: expect.stringMatching(/model answer below/) });
+    expect(gradeEssay({ type: "essay", name: "e" }).feedback).not.toMatch(/model answer/);
+  });
+
+  it("mentions the equation button only when it is shown", () => {
+    expect(essayHelpText(part)).toMatch(/Insert equation/);
+    expect(essayHelpText({ ...part, equationEditor: false })).not.toMatch(/Insert equation/);
+    expect(essayHelpText({ ...part, equationEditor: false })).toMatch(/^Type math between dollar signs/);
   });
 
   it("summarizes the answer by word count and reveals the model answer", () => {

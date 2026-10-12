@@ -58,6 +58,26 @@ describe("EssayInput", () => {
     expect(screen.getByLabelText("Preview").querySelector("annotation")?.textContent).toBe("x^2");
   });
 
+  it("starts a new line in the preview at each Enter", () => {
+    setup("Step 1: $x^2 - 5x + 6 = 0$\nStep 2: $(x-2)(x-3) = 0$");
+    const preview = screen.getByLabelText("Preview");
+    expect(preview.querySelectorAll("br")).toHaveLength(1);
+    expect(preview.querySelectorAll(".katex")).toHaveLength(2);
+  });
+
+  it("typesets a multi-line aligned equation", () => {
+    setup("$$\n\\begin{aligned}\nx^2 - 5x + 6 &= 0 \\\\\n(x-2)(x-3) &= 0\n\\end{aligned}\n$$");
+    const preview = screen.getByLabelText("Preview");
+    expect(preview.querySelector(".katex-display")).not.toBeNull();
+    expect(preview.querySelector(".katex-error")).toBeNull();
+    expect(preview.querySelectorAll(".katex-html .vlist-t").length).toBeGreaterThan(0);
+  });
+
+  it("hides the equation button when the question turns the editor off", () => {
+    render(<EssayInput part={{ ...part, equationEditor: false }} id="q-e2" labelId="lbl" value="" onChange={vi.fn()} />);
+    expect(screen.queryByRole("button", { name: "Insert equation" })).toBeNull();
+  });
+
   it("shows no preview when there is no math", () => {
     setup("plain text");
     expect(screen.queryByLabelText("Preview")).toBeNull();

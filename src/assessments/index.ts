@@ -3,7 +3,7 @@ import type { Assessment } from "../engine/types";
 export const assessments: Assessment[] = [
   {
     id: "ex1",
-    title: "Exercise 1: Economics fundamentals",
+    title: "Exercise 1: Different type of questions",
     description: "Practice every question type. Unlimited attempts, new variants on demand; your best score counts.",
     mode: "exercise",
     questions: [

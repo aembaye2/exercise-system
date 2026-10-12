@@ -63,7 +63,7 @@ export function EssayInput({ part, id, labelId, describedBy, value, onChange, di
             {part.maxChars !== undefined && ` / ${part.maxChars}`} characters
           </span>
         </p>
-        {!disabled && !editingMath && (
+        {part.equationEditor !== false && !disabled && !editingMath && (
           <Button onClick={() => setEditingMath(true)}>
             <Sigma aria-hidden="true" className="h-4 w-4" /> Insert equation
           </Button>
@@ -75,7 +75,7 @@ export function EssayInput({ part, id, labelId, describedBy, value, onChange, di
           aria-label="Preview"
           className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900/40"
         >
-          <Markdown>{text}</Markdown>
+          <Markdown breaks>{text}</Markdown>
         </div>
       )}
     </div>

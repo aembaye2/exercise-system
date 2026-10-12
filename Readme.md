@@ -209,7 +209,7 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `true-false` | marks each statement in a table True or False, independently | a list of statements, each with its own `correct` boolean | fraction of statements marked correctly; partial credit (default) or all-or-nothing |
 | `ordering` | drag-and-drop arranges a single sequence of boxes into the correct order | a list of items (authored in correct order), shuffled at prepare time; `layout: "vertical" \| "horizontal"` and an optional arrow between boxes | fraction of boxes in their correct position; partial credit (default) or all-or-nothing |
 | `expression` | types a math expression, with a live KaTeX preview of it as they type | variables and the range to sample them from (`variables`), number of test points (`samples`) | evaluates the student's and the correct expression at the same random points (via mathjs) and compares within `tolerance` — so algebraically equivalent forms (`x^2 + .5 x + 1` vs `x^2 + 1/2 x + 1`) both grade as correct |
-| `essay` | writes a short text answer (math via an equation editor or `$...$`), submitted once | word/character limits (`maxWords`, `maxChars`, `minWords`); a `modelAnswer` shown after submitting | **by the teacher**, later, in the review page (points + comment); pending until then |
+| `essay` | writes a short text answer (math via an equation editor or `$...$`), submitted once | word/character limits (`maxWords`, `maxChars`, `minWords`); an optional `modelAnswer` shown after submitting | **by the teacher**, later, in the review page (points + comment); pending until then |
 
 `multiple-choice`, `number` and `integer` come from the phase 1 plan. `table`, `jsxgraph`, `svgDrawing`,
 `matching`, `true-false`, `ordering`, `expression` and `essay` were added later. All eleven are included in the
@@ -480,11 +480,12 @@ grade later while reviewing the exported results file.
   type: "essay",
   name: "explanation",
   label: "Your answer:",                     // optional, like any part
-  modelAnswer: "$(x - 2)(x - 3) = 0$, so $x = 2$ or $x = 3$.",  // required; Markdown + KaTeX
+  modelAnswer: "$(x - 2)(x - 3) = 0$, so $x = 2$ or $x = 3$.",  // optional; Markdown + KaTeX; omit or "" to show none
   maxWords: 150,                             // optional upper limit on words
   maxChars: 1000,                            // optional upper limit on characters (spaces included)
   minWords: 20,                              // optional lower limit on words
   rows: 8,                                   // optional text box height; default 8
+  equationEditor: false,                     // optional: hide the "Insert equation" button; default true
 }
 ```
 
@@ -496,6 +497,29 @@ grade later while reviewing the exported results file.
   type. Because `$` starts math, a plain dollar sign is written `\$` (e.g. `\$5`); the help text
   under the box says so. A live counter shows words and characters against the limits and turns
   red when over.
+- **Hiding the equation editor**: set `equationEditor: false` on the part to hide the **Insert
+  equation** button (and its mention in the help text) when students should just type LaTeX.
+  `$...$` and `$$...$$` work the same either way.
+- **Line breaks**: each Enter in the essay starts a new line in the preview (`remark-breaks`; normal
+  Markdown would join single lines), so a solution can be written step by step:
+
+  ```
+  Step 1: $x^2 - 5x + 6 = 0$
+  Step 2: $(x - 2)(x - 3) = 0$
+  ```
+
+  A blank line starts a new paragraph. For line breaks *inside* one equation, use a display block
+  with `aligned`: `\\` ends a line and `&` marks where the lines line up:
+
+  ```
+  $$
+  \begin{aligned}
+  x^2 - 5x + 6 &= 0 \\
+  (x - 2)(x - 3) &= 0 \\
+  x &= 2 \text{ or } x = 3
+  \end{aligned}
+  $$
+  ```
 - **Extra dependency**: `mathlive` (MIT, about 800 KB). It's loaded with a dynamic `import()` the
   first time the editor opens, so in the app it's a separate chunk fetched on demand; the
   embeddable bundle inlines it (`inlineDynamicImports` in `vite.lib.config.ts`) to stay a single
@@ -505,7 +529,8 @@ grade later while reviewing the exported results file.
 - **Submitting** closes the question (no second attempt, no "New variant"), whatever
   `maxAttempts` says. The part's result is *pending*: it scores 0 and shows an "Awaiting teacher's
   grade" badge; the header and results page show how many points are awaiting a grade. The model
-  answer appears under a "Model answer" heading.
+  answer appears under a "Model answer" heading; without one (omitted or `""`), nothing is
+  revealed.
 - **Teacher grading**: the student exports their results file as usual. The teacher opens it in
   the review page (`#/import` in the app, or a `data-review` div in Quarto, see below). Each essay
   has a form to enter **points** (out of the part's share of the question's points) and an

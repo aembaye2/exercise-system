@@ -1,22 +1,52 @@
 import type { Question } from "../engine/types";
 
+interface Params {
+  denomA: number; // TC's x^3 coefficient is 1/denomA
+  denomB: number; // TC's x^2 coefficient is 1/denomB
+  c: number; // TC's x coefficient (integer)
+}
+
+function gcd(a: number, b: number): number {
+  a = Math.abs(a);
+  b = Math.abs(b);
+  while (b) [a, b] = [b, a % b];
+  return a || 1;
+}
+
+/** Formats `num/den * varPart` for a mathjs expression string, simplifying the fraction. */
+function term(num: number, den: number, varPart: string): string {
+  const g = gcd(num, den);
+  num /= g;
+  den /= g;
+  const coefStr = den === 1 ? `${num}` : `${num}/${den}`;
+  if (!varPart) return coefStr;
+  return num === 1 && den === 1 ? varPart : `${coefStr} ${varPart}`;
+}
+
 /**
  * expression element demo: a symbolic-equivalence check, not a text match —
- * "x^2 + .5 x + 1" and "x^2 + 1/2 x + 1" both grade as correct. Fixed
- * (nothing randomized beyond the prepared random test points).
+ * "x^2 + .5 x + 1" and "x^2 + 1/2 x + 1" both grade as correct. The cost
+ * function's coefficients are randomized per variant, and the correct
+ * marginal-cost expression is derived from them (rather than hardcoded), so
+ * grading always matches whatever TC the student was actually shown.
  */
-export const marginalCostExpression: Question<Record<string, never>> = {
+export const marginalCostExpression: Question<Params> = {
   id: "marginal-cost-expression",
   title: "Find the marginal cost function",
-  generate: () => ({}),
-  render: () =>
-    "A firm's total cost function is $$TC(x) = \\frac{1}{3} x^3 + \\frac{1}{4} x^2 + x$$\n\n" +
-    "Find the marginal cost function, $MC(x) = TC'(x)$.",
-  parts: () => [
+  generate: (rng) => ({
+    denomA: rng.pick([2, 3, 4, 5]),
+    denomB: rng.pick([2, 3, 4, 5]),
+    c: rng.int(1, 5),
+  }),
+  render: ({ denomA, denomB, c }) =>
+    `A firm's total cost function is $$TC(x) = \\frac{1}{${denomA}} x^3 + \\frac{1}{${denomB}} x^2 + ${
+      c === 1 ? "x" : `${c} x`
+    }$$\n\n` + "Find the marginal cost function, $MC(x) = TC'(x)$.",
+  parts: ({ denomA, denomB, c }) => [
     {
       type: "expression",
       name: "mc",
-      correct: "x^2 + 1/2 x + 1",
+      correct: `${term(3, denomA, "x^2")} + ${term(2, denomB, "x")} + ${c}`,
     },
   ],
 };

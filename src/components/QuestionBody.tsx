@@ -74,6 +74,8 @@ function PartView({ idPrefix, index, total, part, value, onChange, disabled, val
   const feedbackId = `${base}-feedback`;
   const help = !disabled ? el.helpText?.(part) : undefined;
   const invalid = validation !== undefined && !validation.valid;
+  // Empty means there's nothing to reveal (e.g. an essay without a model answer).
+  const correctAnswer = showCorrect ? el.formatCorrectAnswer(part) : "";
 
   return (
     <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
@@ -118,15 +120,15 @@ function PartView({ idPrefix, index, total, part, value, onChange, disabled, val
             <Markdown inline>{result.feedback}</Markdown>
           </div>
         )}
-        {showCorrect &&
+        {correctAnswer &&
           (el.correctAnswerHeading ? (
             <div className="rounded-md border-l-4 border-emerald-500 bg-emerald-50 px-3 py-2 text-slate-800 dark:bg-emerald-950/40 dark:text-slate-200">
               <p className="font-semibold">{el.correctAnswerHeading}</p>
-              <Markdown>{el.formatCorrectAnswer(part)}</Markdown>
+              <Markdown>{correctAnswer}</Markdown>
             </div>
           ) : (
             <p className="text-slate-700 dark:text-slate-300">
-              Correct answer: <Markdown inline className="font-semibold">{el.formatCorrectAnswer(part)}</Markdown>
+              Correct answer: <Markdown inline className="font-semibold">{correctAnswer}</Markdown>
             </p>
           ))}
       </div>

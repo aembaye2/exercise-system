@@ -25,7 +25,7 @@ function perfectAnswers(parts: Part[]): AnswerValues {
     else if (p.type === "true-false") values[p.name] = exampleTrueFalse(p);
     else if (p.type === "ordering") values[p.name] = exampleOrdering(p);
     else if (p.type === "expression") values[p.name] = exampleExpression(p);
-    else if (p.type === "essay") values[p.name] = p.modelAnswer;
+    else if (p.type === "essay") values[p.name] = p.modelAnswer || "An answer.";
     else values[p.name] = String(p.correct);
   }
   return values;

@@ -1,4 +1,5 @@
 import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -9,6 +10,8 @@ interface MarkdownProps {
   /** Render inline (no wrapping <p>), e.g. for option labels or part labels. */
   inline?: boolean;
   className?: string;
+  /** Every Enter starts a new line, as typed (for student text); by default Markdown joins single line breaks. */
+  breaks?: boolean;
 }
 
 const inlineComponents = {
@@ -23,10 +26,13 @@ const blockComponents = {
   ),
 };
 
-export function Markdown({ children, inline = false, className }: MarkdownProps) {
+const plugins = [remarkGfm, remarkMath];
+const pluginsWithBreaks = [remarkGfm, remarkMath, remarkBreaks];
+
+export function Markdown({ children, inline = false, className, breaks = false }: MarkdownProps) {
   const content = (
     <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkMath]}
+      remarkPlugins={breaks ? pluginsWithBreaks : plugins}
       rehypePlugins={[rehypeKatex]}
       components={inline ? inlineComponents : blockComponents}
     >

@@ -44,4 +44,20 @@ describe("essay question (student flow)", () => {
     expect(screen.getByRole("button", { name: "Submit" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "New variant" })).toBeNull();
   });
+
+  it("shows no model answer box when the teacher left it out", async () => {
+    const quiet: Question<Record<string, never>> = { ...essay, parts: () => [{ type: "essay", name: "why", label: "Your answer:" }] };
+    const user = userEvent.setup();
+    render(
+      <AssessmentProvider assessment={hw} bank={(id) => (id === "essay" ? (quiet as Question<unknown>) : undefined)} nextSeed={seedCounter()}>
+        <QuestionView index={0} />
+      </AssessmentProvider>,
+    );
+    await user.type(screen.getByRole("textbox", { name: "Your answer:" }), "Prices are capped.");
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+    expect(screen.getByText(/Awaiting teacher's grade/)).toBeInTheDocument();
+    expect(screen.queryByText("Model answer")).toBeNull();
+    expect(screen.queryByText(/model answer below/)).toBeNull();
+    expect(screen.queryByText(/Correct answer:/)).toBeNull();
+  });
 });

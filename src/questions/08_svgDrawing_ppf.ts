@@ -37,7 +37,7 @@ export const productionPossibilities: Question<Params> = {
         showColorPicker: false,
         showDownloadButton: true,
         showOutputButton: true,
-        enabledTools: ["select", "point", "segment", "line", "arrow", "doubleArrow", "rectangle", "circle", "curve", "polygon", "coordinate", "text", "eraser", "scatter"],
+        enabledTools: ["select", "point", "segment", "coordinate", "text", "eraser"],
         enabledActions: ["undo", "redo", "clear"],
         // Graded on Submit, and drawn as the correct answer once the question is finished.
         // y = maxButter - (maxButter / maxGuns) * x

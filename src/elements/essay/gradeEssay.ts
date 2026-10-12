@@ -1,7 +1,7 @@
 import { AuthoringError, type GradeResult, type JsonValue, type ValidationResult } from "../../engine/types";
 import type { EssayPart } from "./types";
 
-export const PENDING_FEEDBACK = "Submitted. Your teacher will grade this answer later; compare it with the model answer below.";
+const PENDING = "Submitted. Your teacher will grade this answer later.";
 
 function toText(raw: JsonValue | undefined): string {
   return typeof raw === "string" ? raw : "";
@@ -23,8 +23,8 @@ function checkLimit(name: string, value: number | undefined): void {
 }
 
 export function checkEssay(part: EssayPart): void {
-  if (typeof part.modelAnswer !== "string" || !part.modelAnswer.trim()) {
-    throw new AuthoringError('essay part needs a non-empty "modelAnswer" (shown to the student after submitting).');
+  if (part.modelAnswer !== undefined && typeof part.modelAnswer !== "string") {
+    throw new AuthoringError('"modelAnswer" must be a string (omit it to show none).');
   }
   checkLimit("maxWords", part.maxWords);
   checkLimit("maxChars", part.maxChars);
@@ -54,8 +54,9 @@ export function validateEssay(part: EssayPart, value: JsonValue | undefined): Va
 }
 
 /** Hand-graded: always pending until the teacher enters a grade. */
-export function gradeEssay(): GradeResult {
-  return { score: 0, pending: true, feedback: PENDING_FEEDBACK };
+export function gradeEssay(part: EssayPart): GradeResult {
+  const feedback = formatEssayCorrect(part) ? `${PENDING} Compare it with the model answer below.` : PENDING;
+  return { score: 0, pending: true, feedback };
 }
 
 /** Review summary only; the full essay is shown in the text box above it. */
@@ -64,11 +65,13 @@ export function formatEssayAnswer(_part: EssayPart, value: JsonValue | undefined
   return words === 0 ? "_(no answer)_" : `_essay, ${words} word${words === 1 ? "" : "s"}_`;
 }
 
+/** Empty when the teacher chose not to show a model answer. */
 export function formatEssayCorrect(part: EssayPart): string {
-  return part.modelAnswer;
+  return part.modelAnswer?.trim() ?? "";
 }
 
 export function essayHelpText(part: EssayPart): string | undefined {
   if (part.showHelpText === false) return undefined;
-  return "Use “Insert equation” for math, or type it between dollar signs, e.g. $x^2 + 5$. Write a plain dollar sign as \\$ (e.g. \\$5). You can submit once; your teacher grades the answer later.";
+  const math = part.equationEditor === false ? "Type math" : "Use “Insert equation” for math, or type it";
+  return `${math} between dollar signs, e.g. $x^2 + 5$. Write a plain dollar sign as \\$ (e.g. \\$5). You can submit once; your teacher grades the answer later.`;
 }

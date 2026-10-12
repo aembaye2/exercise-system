@@ -30,8 +30,10 @@ export const quadraticEssay: Question<Params> = {
       type: "essay",
       name: "solution",
       maxWords: 80,
+      equationEditor: false,
       rows: 5,
-      modelAnswer: `$x^2${term(-(r1 + r2), "x")}${term(r1 * r2, "")} = ${factor(r1)}${factor(r2)} = 0$, so $x = ${r1}$ or $x = ${r2}$.`,
+      modelAnswer: ``,
+      //modelAnswer: `$x^2${term(-(r1 + r2), "x")}${term(r1 * r2, "")} = ${factor(r1)}${factor(r2+1)} = 0$, so $x = ${r1}$ or $x = ${r2}$.`,
     },
   ],
 };

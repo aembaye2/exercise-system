@@ -11962,15 +11962,6 @@ function defaultUrlTransform(t) {
 	return n === -1 || o !== -1 && n > o || r !== -1 && n > r || a !== -1 && n > a || safeProtocol.test(t.slice(0, n)) ? t : "";
 }
 //#endregion
-//#region node_modules/ccount/index.js
-function ccount(t, n) {
-	let r = String(t);
-	if (typeof n != "string") throw TypeError("Expected character");
-	let a = 0, o = r.indexOf(n);
-	for (; o !== -1;) a++, o = r.indexOf(n, o + n.length);
-	return a;
-}
-//#endregion
 //#region node_modules/escape-string-regexp/index.js
 function escapeStringRegexp(t) {
 	if (typeof t != "string") throw TypeError("Expected a string");
@@ -12032,6 +12023,30 @@ function toFunction(t) {
 	return typeof t == "function" ? t : function() {
 		return t;
 	};
+}
+//#endregion
+//#region node_modules/mdast-util-newline-to-break/lib/index.js
+function newlineToBreak(t) {
+	findAndReplace(t, [/\r?\n|\r/g, replace$1]);
+}
+function replace$1() {
+	return { type: "break" };
+}
+//#endregion
+//#region node_modules/remark-breaks/lib/index.js
+function remarkBreaks() {
+	return function(t) {
+		newlineToBreak(t);
+	};
+}
+//#endregion
+//#region node_modules/ccount/index.js
+function ccount(t, n) {
+	let r = String(t);
+	if (typeof n != "string") throw TypeError("Expected character");
+	let a = 0, o = r.indexOf(n);
+	for (; o !== -1;) a++, o = r.indexOf(n, o + n.length);
+	return a;
 }
 //#endregion
 //#region node_modules/mdast-util-gfm-autolink-literal/lib/index.js
@@ -36492,20 +36507,24 @@ function rehypeKatex(t) {
 var inlineComponents = { p: ({ children: t }) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: t }) }, blockComponents = { table: ({ children: t }) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 	className: "overflow-x-auto",
 	children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("table", { children: t })
-}) };
-function Markdown({ children: t, inline: n = !1, className: r }) {
-	let a = /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown$1, {
-		remarkPlugins: [remarkGfm, remarkMath],
+}) }, plugins = [remarkGfm, remarkMath], pluginsWithBreaks = [
+	remarkGfm,
+	remarkMath,
+	remarkBreaks
+];
+function Markdown({ children: t, inline: n = !1, className: r, breaks: a = !1 }) {
+	let o = /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown$1, {
+		remarkPlugins: a ? pluginsWithBreaks : plugins,
 		rehypePlugins: [rehypeKatex],
 		components: n ? inlineComponents : blockComponents,
 		children: t
 	});
 	return n ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 		className: `markdown ${r ?? ""}`,
-		children: a
+		children: o
 	}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: `markdown ${r ?? ""}`,
-		children: a
+		children: o
 	});
 }
 //#endregion
@@ -36613,7 +36632,7 @@ var AuthoringError = class extends Error {
 	constructor(t) {
 		super(t), this.name = "AuthoringError";
 	}
-}, PENDING_FEEDBACK = "Submitted. Your teacher will grade this answer later; compare it with the model answer below.";
+}, PENDING = "Submitted. Your teacher will grade this answer later.";
 function toText(t) {
 	return typeof t == "string" ? t : "";
 }
@@ -36628,7 +36647,7 @@ function checkLimit(t, n) {
 	if (n !== void 0 && (!Number.isInteger(n) || n < 1)) throw new AuthoringError(`${t} must be a positive integer.`);
 }
 function checkEssay(t) {
-	if (typeof t.modelAnswer != "string" || !t.modelAnswer.trim()) throw new AuthoringError("essay part needs a non-empty \"modelAnswer\" (shown to the student after submitting).");
+	if (t.modelAnswer !== void 0 && typeof t.modelAnswer != "string") throw new AuthoringError("\"modelAnswer\" must be a string (omit it to show none).");
 	if (checkLimit("maxWords", t.maxWords), checkLimit("maxChars", t.maxChars), checkLimit("minWords", t.minWords), checkLimit("rows", t.rows), t.minWords !== void 0 && t.maxWords !== void 0 && t.minWords > t.maxWords) throw new AuthoringError("minWords must be <= maxWords.");
 }
 function validateEssay(t, n) {
@@ -36650,11 +36669,11 @@ function validateEssay(t, n) {
 		message: `Too short: ${a} words (at least ${t.minWords}).`
 	} : { valid: !0 };
 }
-function gradeEssay() {
+function gradeEssay(t) {
 	return {
 		score: 0,
 		pending: !0,
-		feedback: PENDING_FEEDBACK
+		feedback: formatEssayCorrect(t) ? `${PENDING} Compare it with the model answer below.` : PENDING
 	};
 }
 function formatEssayAnswer(t, n) {
@@ -36662,10 +36681,10 @@ function formatEssayAnswer(t, n) {
 	return r === 0 ? "_(no answer)_" : `_essay, ${r} word${r === 1 ? "" : "s"}_`;
 }
 function formatEssayCorrect(t) {
-	return t.modelAnswer;
+	return t.modelAnswer?.trim() ?? "";
 }
 function essayHelpText(t) {
-	if (t.showHelpText !== !1) return "Use “Insert equation” for math, or type it between dollar signs, e.g. $x^2 + 5$. Write a plain dollar sign as \\$ (e.g. \\$5). You can submit once; your teacher grades the answer later.";
+	if (t.showHelpText !== !1) return `${t.equationEditor === !1 ? "Type math" : "Use “Insert equation” for math, or type it"} between dollar signs, e.g. $x^2 + 5$. Write a plain dollar sign as \\$ (e.g. \\$5). You can submit once; your teacher grades the answer later.`;
 }
 //#endregion
 //#region node_modules/mathlive/mathlive.min.mjs
@@ -76116,7 +76135,7 @@ function EssayInput({ part: t, id: n, labelId: r, describedBy: a, value: o, onCh
 							" characters"
 						]
 					})]
-				}), !l && !m && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+				}), t.equationEditor !== !1 && !l && !m && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
 					onClick: () => _(!0),
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sigma, {
 						"aria-hidden": "true",
@@ -76138,7 +76157,10 @@ function EssayInput({ part: t, id: n, labelId: r, describedBy: a, value: o, onCh
 			d.includes("$") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				"aria-label": "Preview",
 				className: "rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900/40",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, { children: d })
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, {
+					breaks: !0,
+					children: d
+				})
 			})
 		]
 	});
@@ -123275,7 +123297,7 @@ function QuestionBody({ idPrefix: t, text: n, parts: r, values: a, onChange: o, 
 	});
 }
 function PartView({ idPrefix: t, index: n, total: r, part: a, value: o, onChange: c, disabled: l, validation: u, result: d, showCorrect: f }) {
-	let m = getElement(a.type), _ = `${t}-${a.name}`.replace(/[^A-Za-z0-9_-]/g, "_"), v = `${_}-input`, y = `${_}-label`, b = `${_}-help`, C = `${_}-feedback`, E = l ? void 0 : m.helpText?.(a), O = u !== void 0 && !u.valid;
+	let m = getElement(a.type), _ = `${t}-${a.name}`.replace(/[^A-Za-z0-9_-]/g, "_"), v = `${_}-input`, y = `${_}-label`, b = `${_}-help`, C = `${_}-feedback`, E = l ? void 0 : m.helpText?.(a), O = u !== void 0 && !u.valid, k = f ? m.formatCorrectAnswer(a) : "";
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "rounded-lg border border-slate-200 p-3 dark:border-slate-800",
 		children: [
@@ -123336,18 +123358,18 @@ function PartView({ idPrefix: t, index: n, total: r, part: a, value: o, onChange
 							children: d.feedback
 						})
 					}),
-					f && (m.correctAnswerHeading ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					k && (m.correctAnswerHeading ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "rounded-md border-l-4 border-emerald-500 bg-emerald-50 px-3 py-2 text-slate-800 dark:bg-emerald-950/40 dark:text-slate-200",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 							className: "font-semibold",
 							children: m.correctAnswerHeading
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, { children: m.formatCorrectAnswer(a) })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, { children: k })]
 					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 						className: "text-slate-700 dark:text-slate-300",
 						children: ["Correct answer: ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, {
 							inline: !0,
 							className: "font-semibold",
-							children: m.formatCorrectAnswer(a)
+							children: k
 						})]
 					}))
 				]

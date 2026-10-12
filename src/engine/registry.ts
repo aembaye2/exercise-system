@@ -33,7 +33,7 @@ export interface ElementDefinition<P extends Part = Part> {
   grade(part: P, value: JsonValue | undefined): GradeResult;
   /** Markdown describing a submitted value (for reviews). */
   formatAnswer(part: P, value: JsonValue | undefined): string;
-  /** Markdown describing the correct answer (shown once the question is finished). */
+  /** Markdown describing the correct answer (shown once the question is finished); empty shows nothing. */
   formatCorrectAnswer(part: P): string;
   /**
    * Graded by a teacher after submission: grade() returns `pending: true`, and a
