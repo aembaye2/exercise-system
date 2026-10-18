@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { exampleConditional } from "../elements/conditionalGrading/gradeConditional";
 import { exampleExpression } from "../elements/expression/gradeExpression";
 import { exampleJsxGraph } from "../elements/jsxgraph/gradeJsxGraph";
 import { exampleMatching } from "../elements/matching/gradeMatching";
@@ -11,7 +12,7 @@ import { getElement } from "../engine/registry";
 import type { AnswerValues, JsonValue, ManualGrades, Part } from "../engine/types";
 import { createVariant } from "../engine/variant";
 import { assessments } from "../assessments";
-import { getQuestion, questions } from ".";
+import { courseQuestions, getQuestion, questions } from ".";
 
 /** Build the answer a perfect student would type for each part. */
 function perfectAnswers(parts: Part[]): AnswerValues {
@@ -25,6 +26,7 @@ function perfectAnswers(parts: Part[]): AnswerValues {
     else if (p.type === "true-false") values[p.name] = exampleTrueFalse(p);
     else if (p.type === "ordering") values[p.name] = exampleOrdering(p);
     else if (p.type === "expression") values[p.name] = exampleExpression(p);
+    else if (p.type === "conditional-grading") values[p.name] = exampleConditional(p);
     else if (p.type === "essay") values[p.name] = p.modelAnswer || "An answer.";
     else values[p.name] = String(p.correct);
   }
@@ -103,6 +105,16 @@ describe("question bank", () => {
       ["Gains from Trade", undefined],
       ["Increase in Consumption", [5, 27.5, 20, 10]],
     ]);
+  });
+});
+
+describe("course questions (exams/)", () => {
+  it.each(courseQuestions.map((q) => [q.id, q] as const))("%s: valid and solvable", (_id, q) => {
+    for (let seed = 0; seed < 20; seed++) {
+      const v = createVariant(q, seed);
+      expect(v.text.length).toBeGreaterThan(0);
+      expect(gradeQuestion(v.parts, perfectAnswers(v.parts), fullManualGrades(v.parts)).score).toBe(1);
+    }
   });
 });
 

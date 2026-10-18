@@ -23,11 +23,22 @@ export function detectVariables(node: MathNode): string[] {
   node
     .filter((n) => n.type === "SymbolNode")
     .forEach((n) => names.add((n as MathNode & { name: string }).name));
-  return [...names].filter((name) => !(name in math));
+  return [...names].filter((name) => !isMathName(name));
 }
 
-/** Evaluate a node at a scope, returning a finite number or an error message. */
-export function evaluateAt(node: MathNode, scope: Record<string, number>): { ok: true; value: number } | { ok: false; message: string } {
+/** True if `name` is a mathjs constant or function (`e`, `pi`, `sqrt`, ...), so it can't be a variable. */
+export function isMathName(name: string): boolean {
+  return name in math;
+}
+
+/**
+ * Evaluate a node at a scope, returning a finite number or an error message. Scope values are
+ * numbers, or functions of numbers (the conditional-grading element passes earlier steps that way).
+ */
+export function evaluateAt(
+  node: MathNode,
+  scope: Record<string, number | ((...args: number[]) => number)>,
+): { ok: true; value: number } | { ok: false; message: string } {
   try {
     const value: unknown = node.evaluate({ ...scope });
     if (typeof value !== "number" || !Number.isFinite(value)) {

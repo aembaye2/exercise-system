@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { attemptsUsed, isFinished, pendingPoints, totals, type QuestionState } from "../engine/assessment";
+import {
+  attemptsUsed,
+  isDraftComplete,
+  isDraftSaved,
+  isFinished,
+  pendingPoints,
+  totals,
+  type QuestionState,
+} from "../engine/assessment";
 import { useAssessment } from "./AssessmentContext";
 import { QuestionView } from "./QuestionView";
 import { Button, Card, ConfirmButton, ModeBadge, formatPoints } from "./ui";
@@ -27,9 +35,37 @@ export interface AssessmentViewProps {
 export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
   const { assessment, state, bank, actions, saved, persistence, hideGrades } = useAssessment();
   const [confirmingReset, setConfirmingReset] = useState(false);
+  // Hidden grades: the question whose Next/Finish press was stopped because it isn't answered.
+  const [warnedIndex, setWarnedIndex] = useState<number | null>(null);
   const { earned, possible, pending } = totals(state);
   const index = state.currentIndex;
   const last = state.questions.length - 1;
+  const current = state.questions[index];
+
+  /**
+   * Leave the current question. With hidden grades this is where answers are saved: a
+   * complete, changed answer is saved first. With `requireAnswer` (Next, Finish) an
+   * unanswered or incomplete question stops the first press with a warning (and marks the
+   * missing parts); pressing again moves on without saving. Previous and the question
+   * buttons save a complete answer but never stop.
+   */
+  const leave = (go: () => void, requireAnswer: boolean) => {
+    if (hideGrades && current && !isDraftSaved(current)) {
+      if (isDraftComplete(current)) {
+        actions.save(index);
+      } else if (requireAnswer && warnedIndex !== index) {
+        actions.save(index); // invalid: shows which parts are missing, saves nothing
+        setWarnedIndex(index);
+        return;
+      }
+    }
+    setWarnedIndex(null);
+    go();
+  };
+  const showResults = () => {
+    if (onShowResults) onShowResults();
+    else window.location.hash = `#/assessment/${assessment.id}/results`;
+  };
 
   return (
     <div className="space-y-4">
@@ -43,7 +79,7 @@ export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
           {hideGrades ? (
             <p className="text-sm">
               Total points: <strong>{possible}</strong>
-              <span className="text-slate-600 dark:text-slate-400"> · Save each answer; scores are not shown here.</span>
+              <span className="text-slate-600 dark:text-slate-400"> · Answers are saved when you press Save &amp; next; scores are not shown here.</span>
             </p>
           ) : (
             <p className="text-sm">
@@ -60,7 +96,7 @@ export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
             {onShowResults ? (
               <button
                 type="button"
-                onClick={onShowResults}
+                onClick={() => leave(onShowResults, false)}
                 className="rounded-md px-3 py-1.5 text-sm font-medium text-indigo-700 underline-offset-2 hover:underline dark:text-indigo-300"
               >
                 Results
@@ -68,12 +104,13 @@ export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
             ) : (
               <a
                 href={`#/assessment/${assessment.id}/results`}
+                onClick={() => leave(() => {}, false)}
                 className="rounded-md px-3 py-1.5 text-sm font-medium text-indigo-700 underline-offset-2 hover:underline dark:text-indigo-300"
               >
-                Results &amp; export
+                Results
               </a>
             )}
-            {persistence.canReset && (
+            {persistence.canReset && assessment.resetButton !== false && (
               <ConfirmButton
                 label="Reset assessment"
                 confirmLabel="Yes, reset"
@@ -102,7 +139,7 @@ export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
               <li key={i}>
                 <button
                   type="button"
-                  onClick={() => actions.goTo(i)}
+                  onClick={() => leave(() => actions.goTo(i), false)}
                   aria-current={i === index ? "step" : undefined}
                   aria-label={`Question ${i + 1}: ${title}, ${status}, ${points}`}
                   className={`rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
@@ -124,23 +161,25 @@ export function AssessmentView({ onShowResults }: AssessmentViewProps = {}) {
         <QuestionView key={`${index}`} index={index} />
       </Card>
 
+      {hideGrades && warnedIndex === index && (
+        <p role="alert" className="rounded-md bg-amber-100 px-3 py-2 text-sm text-amber-900 dark:bg-amber-900/50 dark:text-amber-100">
+          You haven&apos;t answered this question completely, so it wasn&apos;t saved. Answer it, or press{" "}
+          {index < last ? "Save & next" : "Save & finish"} again to skip it for now.
+        </p>
+      )}
+
       <div className="flex justify-between gap-2">
-        <Button onClick={() => actions.goTo(index - 1)} disabled={index === 0}>
+        <Button onClick={() => leave(() => actions.goTo(index - 1), false)} disabled={index === 0}>
           ← Previous
         </Button>
         {index < last ? (
-          <Button onClick={() => actions.goTo(index + 1)}>Next →</Button>
-        ) : onShowResults ? (
-          <Button variant="primary" onClick={onShowResults}>
-            Finish &amp; see results →
+          <Button variant={hideGrades ? "primary" : undefined} onClick={() => leave(() => actions.goTo(index + 1), true)}>
+            {hideGrades ? "Save & next →" : "Next →"}
           </Button>
         ) : (
-          <a
-            href={`#/assessment/${assessment.id}/results`}
-            className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-          >
-            Finish &amp; see results →
-          </a>
+          <Button variant="primary" onClick={() => leave(showResults, true)}>
+            {hideGrades ? "Save & finish →" : "Finish & see results →"}
+          </Button>
         )}
       </div>
     </div>

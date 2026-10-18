@@ -14,6 +14,7 @@ import { elasticityStatements } from "./questions/10_true-false_elasticity_state
 import { incomeDemandPriceChain } from "./questions/11_ordering_income_demand_price.js";
 import { marginalCostExpression } from "./questions/12_expression_marginal_cost.js";
 import { quadraticEssay } from "./questions/13_essay_quadratic_equation.js";
+import { profitMaximum } from "./questions/14_conditional-grading_profit_maximum.js";
 
 export const questions = [
   typesOfGoods,
@@ -29,6 +30,7 @@ export const questions = [
   incomeDemandPriceChain,
   marginalCostExpression,
   quadraticEssay,
+  profitMaximum,
 ];
 
 export const assessment = {
@@ -36,6 +38,6 @@ export const assessment = {
   title: "Quiz 1: (for instructor use only)",
   description: "One question of every type.",
   mode: "exercise",
-  gradeButton: false,   // uncomment to hide grades: students only see Save
+  gradeButton: false,   // false: no Grade button, Save & next saves; grades are hidden
   questions: questions.map((q) => ({ questionId: q.id, points: 10 })),
 };

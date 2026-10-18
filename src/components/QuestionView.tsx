@@ -1,9 +1,10 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, type KeyboardEvent } from "react";
 import {
   attemptsRemaining,
   attemptsUsed,
   canNewVariant,
   currentVariantSubmissions,
+  isDraftSaved,
   isFinished,
   lastSubmission,
   pendingPoints,
@@ -15,13 +16,12 @@ import { QuestionBody } from "./QuestionBody";
 import { Button, formatPercent, formatPoints } from "./ui";
 
 /**
- * One question of the running assessment: text, inputs, Grade/Save buttons, feedback, attempts.
- * With hidden grades (Save only) it shows no scores, feedback or correct answers.
+ * One question of the running assessment: text, inputs, Grade button, feedback, attempts.
+ * With hidden grades there is no button: the answer is saved (graded silently) when the student
+ * moves on with Next (see AssessmentView), and no scores, feedback or correct answers are shown.
  */
 export function QuestionView({ index }: { index: number }) {
-  const { assessment, state, bank, actions, hideGrades } = useAssessment();
-  // Confirmation for the Save button shown next to Grade (answers are saved on every change anyway).
-  const [savedNote, setSavedNote] = useState(false);
+  const { state, bank, actions, hideGrades } = useAssessment();
   const q = state.questions[index];
   const question = bank(q.questionId);
   // The text is regenerated from the seed; the prepared parts come from state,
@@ -34,7 +34,6 @@ export function QuestionView({ index }: { index: number }) {
 
   const last = lastSubmission(q);
   const finished = !hideGrades && isFinished(q);
-  const showSave = hideGrades || assessment.saveButton === true;
   const remaining = attemptsRemaining(q);
   const variantAttempts = currentVariantSubmissions(q).length;
   const headingId = `q${index}-heading`;
@@ -47,7 +46,7 @@ export function QuestionView({ index }: { index: number }) {
       if (sameAsLast(name)) visibleResults[name] = result;
     }
   }
-  const unsaved = hideGrades && last !== undefined && !q.preparedParts.every((p) => sameAsLast(p.name));
+  const unsaved = hideGrades && last !== undefined && !isDraftSaved(q);
 
   // Enter on a radio button or select submits too (text inputs do this natively).
   const onKeyDown = (e: KeyboardEvent<HTMLFormElement>) => {
@@ -85,54 +84,36 @@ export function QuestionView({ index }: { index: number }) {
           text={text}
           parts={q.preparedParts}
           values={q.draft}
-          onChange={(part, value) => {
-            setSavedNote(false);
-            actions.setValue(index, part, value);
-          }}
+          onChange={(part, value) => actions.setValue(index, part, value)}
           disabled={finished}
           validation={q.validation}
           results={visibleResults}
           showCorrect={finished}
         />
 
-        <div className="flex flex-wrap items-center gap-2">
-          {!hideGrades && (
+        {!hideGrades && (
+          <div className="flex flex-wrap items-center gap-2">
             <Button type="submit" variant="primary" disabled={finished}>
               Grade
             </Button>
-          )}
-          {hideGrades ? (
-            <Button type="submit" variant="primary">
-              Save
-            </Button>
-          ) : (
-            showSave && (
-              <Button onClick={() => setSavedNote(true)} disabled={finished}>
-                Save
-              </Button>
-            )
-          )}
-          {!hideGrades && canNewVariant(q, state.mode) && (
-            <Button onClick={() => actions.newVariant(index)}>New variant</Button>
-          )}
-        </div>
+            {canNewVariant(q, state.mode) && <Button onClick={() => actions.newVariant(index)}>New variant</Button>}
+          </div>
+        )}
       </form>
 
       <div role="status" aria-live="polite" className="text-sm">
         {q.validation ? (
           <p className="text-red-700 dark:text-red-300">
             {hideGrades
-              ? "Some answers are not in a valid format. Fix them and save again."
+              ? "Some answers are missing or not in a valid format. Fix them, then press Save & next (or Save & finish)."
               : "Some answers are not in a valid format. Fix them and grade again; this did not use an attempt."}
           </p>
         ) : hideGrades ? (
           unsaved ? (
-            <p className="text-amber-800 dark:text-amber-200">You have unsaved changes. Click Save to keep them.</p>
+            <p className="text-amber-800 dark:text-amber-200">You have unsaved changes. Press Save &amp; next (or Save &amp; finish) to save them.</p>
           ) : last ? (
-            <p>Answer saved ({new Date(last.timestamp).toLocaleString()}). You can change it and save again.</p>
+            <p>Answer saved ({new Date(last.timestamp).toLocaleString()}). You can change it and save it again.</p>
           ) : null
-        ) : savedNote ? (
-          <p>Your answers are saved.</p>
         ) : last && pendingPoints(q) > 0 ? (
           <p>Submitted. Your teacher will grade this answer later.</p>
         ) : last ? (

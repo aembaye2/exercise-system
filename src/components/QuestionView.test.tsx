@@ -128,13 +128,33 @@ describe("QuestionView", () => {
     expect(screen.getByText(/Attempts used: 0/)).toBeInTheDocument();
     expect(screen.getByText("seed 102")).toBeInTheDocument();
   });
+
+  it("resetButton: false hides the Reset button", () => {
+    render(
+      <AssessmentProvider assessment={{ ...exercise, resetButton: false }} bank={testBank} nextSeed={seedCounter(100)}>
+        <AssessmentView />
+      </AssessmentProvider>,
+    );
+    expect(screen.queryByRole("button", { name: "Reset assessment" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Results" })).toBeInTheDocument();
+  });
 });
 
-describe("QuestionView: Save button", () => {
-  it("with hidden grades: Save records the answer without any score, feedback or lock", async () => {
+describe("hidden grades: Next saves", () => {
+  const hidden = { ...exam, gradeButton: false };
+  function renderHidden() {
+    render(
+      <AssessmentProvider assessment={hidden} bank={testBank} nextSeed={seedCounter(100)}>
+        <AssessmentView />
+      </AssessmentProvider>,
+    );
+  }
+
+  it("has no Grade or Save button; Enter saves without any score, feedback or lock", async () => {
     const user = userEvent.setup();
-    renderQuestion({ ...exam, gradeButton: false });
+    renderQuestion(hidden);
     expect(screen.queryByRole("button", { name: "Grade" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
     expect(screen.getByText("10 points")).toBeInTheDocument();
     const input = screen.getByRole("textbox", { name: "Sum:" });
 
@@ -147,20 +167,39 @@ describe("QuestionView: Save button", () => {
     await user.clear(input);
     await user.type(input, String(correctSum(100)));
     expect(screen.getByRole("status")).toHaveTextContent(/unsaved changes/);
-    await user.click(screen.getByRole("button", { name: "Save" }));
-    expect(screen.getByRole("status")).toHaveTextContent(/Answer saved/);
     expect(screen.queryByText("Correct")).toBeNull();
     expect(input).toBeEnabled();
   });
 
-  it("next to Grade: Save confirms without grading or using an attempt", async () => {
+  it("Save & next saves the answer and moves on", async () => {
     const user = userEvent.setup();
-    renderQuestion({ ...exercise, saveButton: true });
+    renderHidden();
     await user.type(screen.getByRole("textbox", { name: "Sum:" }), "999");
-    await user.click(screen.getByRole("button", { name: "Save" }));
-    expect(screen.getByRole("status")).toHaveTextContent("Your answers are saved.");
-    expect(screen.getByText(/Attempts used: 0/)).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Grade" }));
-    expect(screen.getByText("Incorrect")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save & next →" }));
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("button", { name: /^Question 1: .*, saved/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /^Question 2\./ })).toBeInTheDocument();
+  });
+
+  it("warns once when the question isn't answered; a second press skips it unsaved", async () => {
+    const user = userEvent.setup();
+    renderHidden();
+    await user.click(screen.getByRole("button", { name: "Save & next →" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(/haven't answered this question/);
+    expect(screen.getByRole("heading", { name: /^Question 1\./ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save & next →" }));
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("heading", { name: /^Question 2\./ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Question 1: .*, not started/ })).toBeInTheDocument();
+  });
+
+  it("Previous and the question buttons save a complete answer without warning", async () => {
+    const user = userEvent.setup();
+    renderHidden();
+    await user.type(screen.getByRole("textbox", { name: "Sum:" }), "999");
+    await user.click(screen.getByRole("button", { name: /^Question 2:/ }));
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("button", { name: /^Question 1: .*, saved/ })).toBeInTheDocument();
   });
 });

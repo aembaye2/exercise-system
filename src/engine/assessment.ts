@@ -132,6 +132,21 @@ export function isFinished(q: QuestionState): boolean {
   return last?.score === 1 || attemptsRemaining(q) === 0 || (last !== undefined && hasManualParts(q.preparedParts));
 }
 
+/** The current draft is exactly what was last submitted/saved for this variant. */
+export function isDraftSaved(q: QuestionState): boolean {
+  const last = lastSubmission(q);
+  return (
+    last !== undefined &&
+    last.variant === q.variant &&
+    q.preparedParts.every((p) => JSON.stringify(q.draft[p.name]) === JSON.stringify(last.values[p.name]))
+  );
+}
+
+/** Every part of the draft has a valid answer, i.e. it could be graded or saved. */
+export function isDraftComplete(q: QuestionState): boolean {
+  return gradeQuestion(q.preparedParts, q.draft).valid;
+}
+
 export function canSubmit(q: QuestionState): boolean {
   return !isFinished(q);
 }

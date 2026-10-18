@@ -44,11 +44,13 @@ describe("quiz with hidden grades inside an LMS", () => {
     const user = userEvent.setup();
     const { lms } = renderQuiz({}, { ...exam, gradeButton: false });
     await user.type(screen.getByRole("textbox", { name: "Sum:" }), "999");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Save & next →" }));
     expect(lms.data["cmi.interactions.0.result"]).toBe("incorrect");
     expect(lms.data["cmi.score.raw"]).toBe("0");
     expect(lms.data["cmi.progress_measure"]).toBe("0.5");
     expect(screen.queryByText(/Total score/)).toBeNull();
+    // Moved on to question 2; question 1 stays open to change and re-save.
+    await user.click(screen.getByRole("button", { name: "← Previous" }));
     expect(screen.getByRole("textbox", { name: "Sum:" })).toBeEnabled();
   });
 });

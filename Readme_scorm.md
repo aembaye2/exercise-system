@@ -64,9 +64,30 @@ More examples:
 npm run scorm -- quarto-demo/quiz1.js                              # -> dist-scorm/quiz1-scorm.zip
 npm run scorm -- quarto-demo/quiz1.js --passing 0.7 --out quiz1.zip
 npm run scorm -- path/to/another/quiz.js --out quiz2.zip
+npm run scorm -- exams/sample-exam2/exam2.js                       # -> dist-scorm/sample-exam2-scorm.zip
 ```
 
 The `--` after `npm run scorm` is required: it passes the rest of the line to the script.
+
+### Example: Sample Exam 2
+
+The exam is in its own folder, `exams/sample-exam2/` (`exam2.js` plus its 32 files in
+`questions/`). To package it:
+
+1. Open PowerShell or Git Bash in the project root:
+   ```bash
+   cd C:\Users\aembaye\Documents\exercise-system
+   ```
+2. If you want, set `gradeButton` and `resetButton` in `exams/sample-exam2/exam2.js` first (see
+   section 5).
+3. Build the zip:
+   ```bash
+   npm run scorm -- exams/sample-exam2/exam2.js
+   ```
+4. Upload `dist-scorm\sample-exam2-scorm.zip` to Blackboard (section 4).
+
+After **any** change to the exam or its questions, or to the library in `src/`, run step 3 again
+and upload the new zip. The zip is not updated by itself.
 
 ---
 
@@ -86,20 +107,20 @@ the Quarto book can be packaged as is. It must:
    - `mode`: `"exercise"` (unlimited attempts, new variants) or `"exam"` (1 attempt by default),
    - `questions`: one `{ questionId, points }` entry per question (optionally `maxAttempts`).
 
-Here is `quiz1.js` (the same 13 questions as the app's demo assessment), which follows all of
+Here is `quiz1.js` (the same 14 questions as the app's demo assessment), which follows all of
 these rules:
 
 ```js
 import { typesOfGoods } from "./questions/01_mc_types_of_goods.js";
 import { marketEquilibrium } from "./questions/02_number-mc_market_equilibrium.js";
-// ... one import per question file, 03 to 12 ...
-import { quadraticEssay } from "./questions/13_essay_quadratic_equation.js";
+// ... one import per question file, 03 to 13 ...
+import { profitMaximum } from "./questions/14_conditional-grading_profit_maximum.js";
 
 export const questions = [
   typesOfGoods,
   marketEquilibrium,
   // ...
-  quadraticEssay,
+  profitMaximum,
 ];
 
 export const assessment = {
@@ -107,7 +128,7 @@ export const assessment = {
   title: "Quiz 1: Different types of questions",
   description: "One question of every type.",
   mode: "exercise",
-  // gradeButton: false,   // uncomment to hide grades: students only see Save
+  // gradeButton: false,   // uncomment to hide grades: no Grade button, Save & next saves
   questions: questions.map((q) => ({ questionId: q.id, points: 10 })),
 };
 ```
@@ -224,10 +245,15 @@ Say you want a graded exam with two existing questions and a new essay:
   in). They count 0 until you grade them, the pass/fail status stays "unknown", and the essay text
   is sent as the student's answer. Grade the essay in Blackboard's gradebook.
 - **Hiding grades until the due date**: add `gradeButton: false` to the quiz's `assessment`.
-  Students then only see a **Save** button and no scores, feedback or correct answers; they can
-  change and re-save answers, and the latest save counts. The grade still goes to the Blackboard
-  gradebook on every Save, so hide that grade column from students until the due date (or until
+  There is then no Grade button, and students see no scores, feedback or correct answers.
+  **Save & next** (on the last question, **Save & finish**) saves the answer and moves on. If the
+  question isn't fully answered, the first press shows a warning and a second press skips it.
+  Previous and the question-number buttons also save a complete answer. Students can come back,
+  change an answer and save it again; the latest save counts. The grade goes to the Blackboard
+  gradebook on every save, so hide that grade column from students until the due date (or until
   you release it). Details: "Grade and Save buttons" in `Readme.md`.
+- **Hiding the Reset button**: inside Blackboard the **Reset assessment** button never shows. In
+  the standalone app or a Quarto page, `resetButton: false` in the `assessment` hides it.
 - **Changing a quiz after students started**: if you change the quiz's `id` or its list of
   questions, saved progress no longer matches and is dropped. Re-run `npm run scorm` and upload
   the new zip as a **new** item rather than replacing the old one mid-term.

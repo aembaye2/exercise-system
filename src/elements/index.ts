@@ -1,6 +1,7 @@
 // Registers every element type with the engine. To add a new element type,
 // create its folder under src/elements/ and register it here.
 import { registerElement } from "../engine/registry";
+import { conditionalGradingElement } from "./conditionalGrading";
 import { essayElement } from "./essay";
 import { expressionElement } from "./expression";
 import { integerElement } from "./integer";
@@ -24,3 +25,4 @@ registerElement<"true-false">(trueFalseElement);
 registerElement<"ordering">(orderingElement);
 registerElement<"expression">(expressionElement);
 registerElement<"essay">(essayElement);
+registerElement<"conditional-grading">(conditionalGradingElement);

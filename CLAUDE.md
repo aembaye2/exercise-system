@@ -4,7 +4,7 @@ Guidance for working in this repo. User-facing documentation (element types, how
 
 ## What this is
 
-A React + TypeScript + Vite exercise/quiz system for economics: seeded question variants, graded parts (multiple-choice, number, integer, table, jsxgraph, svgDrawing, matching, true-false, ordering, expression, essay), exercise and exam modes, localStorage persistence. It ships as a standalone app and as an embeddable bundle (`exercise-system.js/.css`) used by Quarto books.
+A React + TypeScript + Vite exercise/quiz system for economics: seeded question variants, graded parts (multiple-choice, number, integer, table, jsxgraph, svgDrawing, matching, true-false, ordering, expression, essay, conditional-grading), exercise and exam modes, localStorage persistence. It ships as a standalone app and as an embeddable bundle (`exercise-system.js/.css`) used by Quarto books.
 
 Sibling projects in this folder, each with its own package.json:
 - `jsxgraph-library/`: the JSXGraph drawing widget (has its own `CLAUDE.md` and `README.md`).
@@ -39,8 +39,9 @@ The environment is Windows (PowerShell/Git Bash). Verify changes with `npm run t
 
 ## Content lives in two places (important)
 
-- `src/questions/` is the **demo** set only: one question per element type, numbered consecutively `01`-`13` (`ex1` in `src/assessments/index.ts` is the only assessment and must include every bank question; a test checks that). Don't add course questions there. When a demo question is deleted, renumber the remaining files and update `src/questions/index.ts`, the Readme tables and the demo paths in this file.
-- `quarto-demo/` is kept as slim as possible: `_quarto.yml` (website; the quiz loader script is inlined under `include-in-header: text:`), `index.qmd` (one `<div class="exercise-system-root" data-quiz="quiz1.js">`), `quiz1.js` (= assessment `ex1`), `questions/01`-`13` and `assets/exercise-system.js/.css`. Don't add template/book files back.
+- `src/questions/` is the **demo** set only: one question per element type, numbered consecutively `01`-`14` (`ex1` in `src/assessments/index.ts` is the demo assessment and must include every bank question; a test checks that).
+- Exception, at the user's request: `exams/sample-exam2/` (`exam2.js` + `questions/`, plain JS, from the Sample Exam 2 PDF; SCORM-packaged with `npm run scorm -- exams/sample-exam2/exam2.js`) is also shown in the app as assessment `ex2` (exam mode, grades hidden). `exam2.d.ts` types it for TS; its questions go in `courseQuestions` in `src/questions/index.ts` (found by `getQuestion`, not in the demo `questions` list), and `questions.test.ts` checks them. Don't add course questions there. When a demo question is deleted, renumber the remaining files and update `src/questions/index.ts`, the Readme tables and the demo paths in this file.
+- `quarto-demo/` is kept as slim as possible: `_quarto.yml` (website; the quiz loader script is inlined under `include-in-header: text:`), `index.qmd` (one `<div class="exercise-system-root" data-quiz="quiz1.js">`), `quiz1.js` (= assessment `ex1`), `questions/01`-`14` and `assets/exercise-system.js/.css`. Don't add template/book files back.
 - `quarto-demo/questions/NN_*.js` are plain-JS copies of `src/questions/NN_*.ts` with only the types removed (same numbers, names, ids, text). When a demo question changes, update its `.js` twin too; `quiz1.js` lists the same questions as `ex1`.
 - Real course quizzes live in the user's own Quarto books outside this repo (same structure: quiz `.js` + `questions/` + the bundle).
 - Library code changes go in `src/` first, get tested, then `npm run build:lib` and copy `dist-lib/exercise-system.js/.css` into `quarto-demo/assets/`. Never hand-edit the bundle.
@@ -102,10 +103,18 @@ The environment is Windows (PowerShell/Git Bash). Verify changes with `npm run t
 - Quarto teacher view: `<div class="exercise-system-root" data-quiz="quizN.js" data-review>` mounts `Import` with that quiz's questions (`mount(..., { review: true })`).
 - Demo: `src/questions/13_essay_quadratic_equation.ts` (in assessment `ex1`).
 
+## conditional-grading element (multi-step, errors carried forward)
+
+- `src/elements/conditionalGrading/`: one part with ordered `steps` (`kind: "number" | "expression"`), one box per step (`ConditionalGradingInput.tsx`, `gradeConditional.ts`, `types.ts`). Value = `{ [stepName]: text }`.
+- Each step's `correct` is a mathjs formula that may use earlier steps by name (number step = number, expression step = function of its variables, e.g. `a(0)`). `gradeSteps` evaluates it with the correct earlier answers and with the student's own; matching only the latter is "carried-forward" (`carryForwardCredit`, default 1). An undefined carried-forward value (e.g. division by zero) just doesn't match.
+- Everything stays JSON (formulas are strings, `prepare` stores `testPoints`), so review regrading is deterministic. Reuses `expression/mathUtils.ts` (`evaluateAt` accepts function-valued scope entries for this) and `number/gradeNumber.ts`.
+- Demo: `src/questions/14_conditional-grading_profit_maximum.ts` (in assessment `ex1`).
+
 ## Grade and Save buttons
 
-- The question button is **Grade** (formerly Submit). `Assessment.saveButton: true` adds a Save button next to it that only confirms (drafts are always persisted) and uses no attempt.
-- `Assessment.gradeButton: false` (`hidesGrades()` in `engine/types.ts`) = hidden-grades mode: only Save, which dispatches the `save` action (`createAssessmentReducer({ hideGrades: true })`; the plain `assessmentReducer` ignores it). It validates, grades silently, and replaces the current variant's submission (latest save counts, `bestScore` recomputed, never closes the question). `setValue` stays allowed after `isFinished`. The context exposes `hideGrades`; `QuestionView`, `AssessmentView` and `Results` hide scores/feedback/correct answers/attempts with it.
+- The question button is **Grade** (formerly Submit). There is no Save button any more (the old `saveButton` option was removed at the user's request).
+- `Assessment.resetButton: false` hides "Reset assessment" (`AssessmentView` shows it only when `persistence.canReset` and `resetButton !== false`). The header link is "Results" (it was "Results & export"; there is no student-facing export).
+- `Assessment.gradeButton: false` (`hidesGrades()` in `engine/types.ts`) = hidden-grades mode: no button on the question; `AssessmentView`'s `leave()` saves on navigation. "Save & next"/"Save & finish" save a complete changed answer (`isDraftComplete`/`isDraftSaved` in `engine/assessment.ts`), and on an incomplete one the first press warns (role=alert, marks missing parts) and a second press skips; Previous, the Q buttons and the Results link save a complete answer silently; Enter in the form saves too. Saving dispatches the `save` action (`createAssessmentReducer({ hideGrades: true })`; the plain `assessmentReducer` ignores it). It validates, grades silently, and replaces the current variant's submission (latest save counts, `bestScore` recomputed, never closes the question). `setValue` stays allowed after `isFinished`. The context exposes `hideGrades`; `QuestionView`, `AssessmentView` and `Results` hide scores/feedback/correct answers/attempts with it.
 - SCORM: `connectScorm(api, bank, { hideGrades })`; `scormReport` counts a question done via `isDone(q, hideGrades)` (saved once). Scores still go to the LMS, which hides them until release.
 
 ## SCORM packages (Blackboard Ultra)
@@ -123,7 +132,7 @@ The environment is Windows (PowerShell/Git Bash). Verify changes with `npm run t
 ## Conventions
 
 - Question files are named `NN_<type>_<description>` (`mc` = multiple-choice; mixed types joined with `-`), in `src/questions/` and in the Quarto `questions/` folders.
-- Element types: `multiple-choice`, `number`, `integer`, `table`, `jsxgraph` (`src/elements/jsxgraph/`), `svgDrawing` (`src/elements/svgDrawing/`), `matching` (`src/elements/matching/`), `true-false` (`src/elements/trueFalse/`), `ordering` (`src/elements/ordering/`), `expression` (`src/elements/expression/`), `essay` (`src/elements/essay/`).
+- Element types: `multiple-choice`, `number`, `integer`, `table`, `jsxgraph` (`src/elements/jsxgraph/`), `svgDrawing` (`src/elements/svgDrawing/`), `matching` (`src/elements/matching/`), `true-false` (`src/elements/trueFalse/`), `ordering` (`src/elements/ordering/`), `expression` (`src/elements/expression/`), `essay` (`src/elements/essay/`), `conditional-grading` (`src/elements/conditionalGrading/`).
 - Randomness only through the seeded `rng` passed to `generate`; `engine/seed.ts` is the only non-seeded source.
 - An invalid part value must return `{ valid: false }` from `validate`, not a wrong grade, so no attempt is used.
 - Question text is Markdown with KaTeX: write a literal dollar sign as `\$` inside TS template strings.

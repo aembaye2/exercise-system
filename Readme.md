@@ -55,6 +55,7 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | **ordering element** (drag-and-drop a single sequence of boxes into the correct order) | Done. Added beyond phase 1. Demo: `11_ordering_income_demand_price.ts` in Exercise 1 |
 | **expression element** (symbolic math input, checked by evaluating at random points, with a live KaTeX preview) | Done. Added beyond phase 1. Demo: `12_expression_marginal_cost.ts` in Exercise 1 |
 | **essay element** (hand-graded written answer with word/character limits, MathLive equation editor, model answer shown after submitting) | Done. Added beyond phase 1. Demo: `13_essay_quadratic_equation.ts` in Exercise 1 |
+| **conditional-grading element** (multi-step calculation; later steps graded from the student's own earlier answers, so an early error is carried forward) | Done. Added beyond phase 1. Demo: `14_conditional-grading_profit_maximum.ts` in Exercise 1 |
 | **Manual (teacher) grading** (pending results, points + comment in the review page, graded results file; Quarto `data-review` page) | Done. Added beyond phase 1 |
 | Exercise and exam modes, attempts, best score | Done |
 | localStorage persistence, reset, import/review page | Done |
@@ -131,8 +132,9 @@ exercise_system/
 │   │   ├── ordering/         # drag-and-drop a sequence into order
 │   │   ├── expression/       # symbolic math input (mathjs)
 │   │   ├── essay/            # hand-graded text answer + MathLive equation editor
+│   │   ├── conditionalGrading/ # multi-step calculation, errors carried forward
 │   │   └── TextInput.tsx     # shared text box used by number/integer
-│   ├── questions/            # demo question bank (01-13, one per element type) + index.ts
+│   ├── questions/            # demo question bank (01-14, one per element type) + index.ts
 │   ├── assessments/index.ts  # assessment definitions (exercises, quizzes)
 │   ├── components/           # QuestionView, AssessmentView, ReviewView, Markdown, ...
 │   │   ├── jsxgraphComponent/   # JSXGraph drawing board + toolbar + grading (copied from jsxgraph-library)
@@ -142,6 +144,7 @@ exercise_system/
 │   ├── scorm/                # SCORM 2004 runtime: LMS API, suspend data, score/interaction reporting
 │   └── test/                 # test setup + fixtures
 ├── jsxgraph-library/         # standalone JSXGraph widget project (the component was copied from here)
+├── exams/sample-exam2/       # course quiz: exam2.js + questions/ (plain JS, SCORM-packaged; also "ex2" in the app)
 ├── dist/                     # built standalone app (generated)
 ├── dist-lib/                 # built library: exercise-system.js / .css (generated)
 └── quarto-demo/              # minimal Quarto site running the demo quiz (quiz1.js + questions/)
@@ -197,19 +200,22 @@ waits for the teacher (see [`essay`](#essay)).
 ### Grade and Save buttons
 
 Each question has a **Grade** button (it was called Submit) that grades the answer and shows the
-score, feedback and, once the question is finished, the correct answer. Two optional assessment
-fields change the buttons:
+score, feedback and, once the question is finished, the correct answer. The optional assessment
+field `gradeButton` changes that:
 
 | Setting | Buttons | What students see |
 | --- | --- | --- |
 | *(default)* | Grade | score and feedback after each Grade, as described above |
-| `saveButton: true` | Grade, Save | the same; Save only confirms that the answers are kept (they're saved on every change anyway) and uses no attempt |
-| `gradeButton: false` | Save | **no grades**: no scores, feedback, correct answers, attempt counts or totals, here or on the results page |
+| `gradeButton: false` | none on the question; **Save & next** / **Save & finish** below it | **no grades**: no scores, feedback, correct answers, attempt counts or totals, here or on the results page |
 
-With `gradeButton: false` (grades hidden), Save checks the answer format (an invalid answer is not
-saved), grades the answer silently and stores it as the question's answer, replacing the previous
-save: **the latest save counts**, not the best one, and saving never uses up attempts or closes the
-question, so students can change their answers until the quiz is closed. The status line says
+With `gradeButton: false` (grades hidden), there is no Save button: **moving on saves**. Save &
+next (Save & finish on the last question) checks the answer format, grades the answer silently
+and stores it as the question's answer, replacing the previous save: **the latest save counts**,
+not the best one, and saving never uses up attempts or closes the question, so students can come
+back and change their answers until the quiz is closed. If the question isn't answered completely,
+the first press shows a warning (and marks the missing parts) and saves nothing; pressing again
+skips the question for now. Previous, the Q1, Q2, ... buttons and the Results link also save a
+complete, changed answer, without warning. Enter in an answer box saves too. The status line says
 "Answer saved" or "You have unsaved changes". The silent grade still goes to the LMS in a SCORM
 package and into results files, so a teacher can release grades after the due date (in
 Blackboard, by hiding the grade column until then). `New variant` is not offered in this mode.
@@ -219,7 +225,7 @@ export const assessment = {
   id: "midterm",
   title: "Midterm",
   mode: "exam",
-  gradeButton: false,   // students only Save; grades are hidden
+  gradeButton: false,   // no Grade button: Save & next saves; grades are hidden
   questions: [/* ... */],
 };
 ```
@@ -230,7 +236,7 @@ export const assessment = {
 
 ### Question types at a glance
 
-There are **11 element types**. A question is made of one or more **parts**, and each part uses
+There are **12 element types**. A question is made of one or more **parts**, and each part uses
 one element, so a single question can mix them. For example, you could combine a number box with
 a multiple-choice part, or a drawing with a follow-up number.
 
@@ -239,7 +245,7 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `multiple-choice` | picks one option | radio buttons or an inline dropdown; shuffled or fixed order; show a random subset (`numberAnswers`) | 1 if the correct option is chosen, else 0; optional per-option feedback |
 | `number` | types a decimal number | units after the box (`suffix`) | relative/absolute tolerance (`relabs`), significant figures (`sigfig`) or decimal places (`decdig`) |
 | `integer` | types a whole number | units after the box | exact match |
-| `jsxgraph` | draws on a JSXGraph canvas | the tools of the drawing component (`src/components/jsxgraphComponent`) | the app's **Grade** (or Save): the drawing is compared with `expectedDrawing` (slope/intercept lines or exact points), partial credit per shape |
+| `jsxgraph` | draws on a JSXGraph canvas | the tools of the drawing component (`src/components/jsxgraphComponent`) | the app's **Grade** (or Save & next): the drawing is compared with `expectedDrawing` (slope/intercept lines or exact points), partial credit per shape |
 | `svgDrawing` | draws on a plain-SVG canvas | the same tools as `jsxgraph` (`src/components/svgDrawingComponent`), no JSXGraph dependency | same as `jsxgraph`: graded on **Grade** against `expectedDrawing`, partial credit per shape |
 | `table` | fills in blank cells of a table | fixed cells, section rows, grouped column headers | each blank like a `number` part; partial credit (default) or all-or-nothing |
 | `matching` | drag-and-drop reorders the right column to match the fixed, numbered left column | left column (1, 2, 3, …) fixed at prepare time; right column (a, b, c, …) shuffled at prepare time | fraction of rows where the right item lines up with its correct left item; partial credit (default) or all-or-nothing |
@@ -247,9 +253,10 @@ a multiple-choice part, or a drawing with a follow-up number.
 | `ordering` | drag-and-drop arranges a single sequence of boxes into the correct order | a list of items (authored in correct order), shuffled at prepare time; `layout: "vertical" \| "horizontal"` and an optional arrow between boxes | fraction of boxes in their correct position; partial credit (default) or all-or-nothing |
 | `expression` | types a math expression, with a live KaTeX preview of it as they type | variables and the range to sample them from (`variables`), number of test points (`samples`) | evaluates the student's and the correct expression at the same random points (via mathjs) and compares within `tolerance` — so algebraically equivalent forms (`x^2 + .5 x + 1` vs `x^2 + 1/2 x + 1`) both grade as correct |
 | `essay` | writes a short text answer (math via an equation editor or `$...$`), submitted once | word/character limits (`maxWords`, `maxChars`, `minWords`); an optional `modelAnswer` shown after submitting | **by the teacher**, later, in the review page (points + comment); pending until then |
+| `conditional-grading` | answers a chain of steps (numbers or expressions), each building on the one before | per step: `kind` (`number`/`expression`), a `correct` formula that may use earlier steps' answers, `weight`; `carryForwardCredit` | each step against its formula evaluated with the correct earlier answers **and** with the student's own earlier answers; matching either earns the step (error carried forward), so one mistake costs only its own step |
 
 `multiple-choice`, `number` and `integer` come from the phase 1 plan. `table`, `jsxgraph`, `svgDrawing`,
-`matching`, `true-false`, `ordering`, `expression` and `essay` were added later. All eleven are included in the
+`matching`, `true-false`, `ordering`, `expression`, `essay` and `conditional-grading` were added later. All twelve are included in the
 embeddable library.
 
 **Which questions use which elements.** The question bank in `src/questions/` has an example of
@@ -270,9 +277,10 @@ each element type:
 | `11_ordering_income_demand_price.ts` | Order the causal chain | `ordering` (3 fixed items, horizontal layout) |
 | `12_expression_marginal_cost.ts` | Find the marginal cost function | `expression` (derivative of a cubic; 1 variable) |
 | `13_essay_quadratic_equation.ts` | Solve a quadratic equation | `essay` (hand-graded, up to 80 words; random integer roots) |
+| `14_conditional-grading_profit_maximum.ts` | Maximize profit step by step | `conditional-grading` (derivative, then q*, then maximum profit; errors carried forward) |
 
-The demo files are numbered consecutively (01-13); if you delete one, renumber the rest and update
-the imports in `src/questions/index.ts`. `quarto-demo/questions/` has the same 13 questions as
+The demo files are numbered consecutively (01-14); if you delete one, renumber the rest and update
+the imports in `src/questions/index.ts`. `quarto-demo/questions/` has the same 14 questions as
 plain `.js` files (same numbers and names, types removed), used by `quarto-demo/quiz1.js`; when you
 change a demo question, change its `.js` copy too.
 
@@ -562,7 +570,7 @@ grade later while reviewing the exported results file.
   file. Its own font and sound loading is turned off: it uses the KaTeX fonts the page already has.
 - **Validation**: an empty answer, or one over `maxWords`/`maxChars` or under `minWords`, is
   **invalid**, so it doesn't use the submission.
-- **Grade** closes the question (no second attempt, no "New variant"; with `gradeButton: false`, Save doesn't), whatever
+- **Grade** closes the question (no second attempt, no "New variant"; with `gradeButton: false`, saving doesn't), whatever
   `maxAttempts` says. The part's result is *pending*: it scores 0 and shows an "Awaiting teacher's
   grade" badge; the header and results page show how many points are awaiting a grade. The model
   answer appears under a "Model answer" heading; without one (omitted or `""`), nothing is
@@ -581,12 +589,58 @@ See `src/questions/13_essay_quadratic_equation.ts`. Files: `src/elements/essay/`
 `gradeEssay.ts`, `MathEditor.tsx`, `types.ts`). Engine support: `ElementDefinition.manualGrading`,
 `GradeResult.pending`, `Submission.manualGrades`, `setManualGrade()` in `engine/storage.ts`.
 
+### `conditional-grading`
+
+A calculation in several steps where each step builds on the previous one, e.g. (a) a derivative,
+(b) where it's zero, (c) the function's value there. Each step is graded **from the student's own
+earlier answers** as well as from the correct ones, so a student who makes one mistake early and
+then works correctly from it loses only the step with the mistake.
+
+```ts
+{
+  type: "conditional-grading",
+  name: "steps",
+  steps: [
+    { name: "a", kind: "expression", label: "a) $f'(x) =$", correct: "-x + 2" },
+    { name: "b", kind: "number", label: "b) Maximum at $x =$", correct: "-a(0) / (a(1) - a(0))" },
+    { name: "c", kind: "number", label: "c) Maximum value", correct: "-1/2 * b^2 + 2 * b + 1" },
+  ],
+  carryForwardCredit: 1,   // optional: credit for a step that's right only given earlier mistakes; default 1 (full)
+}
+```
+
+- **Steps** are answered in order, one box each (`label`/`suffix` as for parts; optional `weight`,
+  default 1). `kind: "number"` is a decimal box graded like a `number` part (`rtol`, `atol`);
+  `kind: "expression"` is a math box graded like an `expression` part (`variables`, `tolerance`;
+  test points are sampled once per variant by `prepare()`, `samples` per variable, default 5), with
+  a live KaTeX preview.
+- **`correct`** is always a mathjs formula, and it may use the answers to **earlier** steps by name:
+  a number step is a number (`b`), an expression step is a function of its variables (`a(0)`,
+  `a(x)`). Step names must be identifiers that aren't mathjs names (`e`, `pi`, ... are rejected).
+  In the example, (b)'s formula is the zero of a linear `a`, so it works for whatever line the
+  student entered in (a).
+- **Grading**: each step's formula is evaluated twice: with the correct earlier answers, and with
+  the student's own. Matching the first is "correct"; matching only the second is "carried forward"
+  (`carryForwardCredit`). With the example, `a = -.5x + 2` (wrong), `b = 4`, `c = 1` scores 2/3:
+  0 for (a), full credit for (b) and (c) because they follow from the student's (a). If a student's
+  earlier answer makes a formula undefined (e.g. a constant derivative, so no zero), only the
+  correct answer counts for that step. The feedback lists each step: ✓, ✗ or "✓ (follows from your
+  earlier answers)".
+- **The value** is `{ [stepName]: typed text }`. Every step must be filled in a valid format, or
+  the answer is invalid (no attempt used) and the bad steps are marked.
+- Once finished, the correct answers are shown (expressions typeset, number steps evaluated).
+  `exampleConditional(part)` (for tests) only works if no expression step's formula uses an earlier step.
+
+See `src/questions/14_conditional-grading_profit_maximum.ts`. Files: `src/elements/conditionalGrading/`
+(`ConditionalGradingInput.tsx`, `gradeConditional.ts`, `types.ts`); reuses `expression/mathUtils.ts`
+and `number/gradeNumber.ts`.
+
 ### `jsxgraph`
 
 A JSXGraph drawing board with a toolbar (segments, lines, shapes, curves, ...). The board is a
 **component of this app** (`src/components/jsxgraphComponent/`, originally copied from
 `jsxgraph-library/`), not a separate bundle. It has no Grade button: the student draws and presses
-the app's normal **Grade** (or Save), and the drawing is graded then.
+the app's normal **Grade** (or Save & next), and the drawing is graded then.
 
 ```ts
 {
@@ -753,12 +807,19 @@ Add an entry to the `assessments` array in `src/assessments/index.ts`:
 ```
 
 - A question can appear in any number of assessments.
-- Optional `gradeButton: false` / `saveButton: true` change the question buttons; see
+- Optional `gradeButton: false` hides grades (Save & next saves the answers); see
   [Grade and Save buttons](#grade-and-save-buttons).
+- Optional `resetButton: false` hides the "Reset assessment" button (which erases every answer),
+  e.g. for exams. SCORM packages never show it.
 - **Don't rename `id` or reorder `questions` once students have started.** Saved progress is keyed
   by the assessment id and checked against the question list. If they no longer match, the saved
   state is thrown away.
 - The new assessment shows up on the home page automatically.
+- A plain-JS quiz kept outside `src/` (like `exams/sample-exam2/exam2.js`, the same file the
+  SCORM script packages) can be shown in the app too: give it a `.d.ts` next to it (see
+  `exam2.d.ts`), add its questions to `courseQuestions` in `src/questions/index.ts` (not to the
+  demo `questions` list), and add `{ ...assessment, id: "ex2" }` to `assessments`. The course
+  questions are checked by `src/questions/questions.test.ts`.
 
 ---
 
@@ -823,7 +884,9 @@ simpler of the two: one column instead of matching two). `src/elements/expressio
 `prepare()` differently: to freeze random *test points* rather than shuffle anything, and pulls in
 an external parsing/evaluation library (`mathjs`) rather than parsing the value itself like every
 other element. `src/elements/essay/` is the hand-graded one (`manualGrading`) and lazy-loads an
-external editor component (MathLive). `src/elements/jsxgraph/` / `src/elements/svgDrawing/` are the
+external editor component (MathLive). `src/elements/conditionalGrading/` combines a `number` and an
+`expression` box per step and grades each step from the student's own earlier answers.
+`src/elements/jsxgraph/` / `src/elements/svgDrawing/` are the
 most complex (a thin adapter around a drawing board that lives under `src/components/`).
 
 ---
@@ -862,7 +925,7 @@ Since there's no backend, the browser and JSON files stand in for one.
 
 `npm run build:lib` produces a self-contained bundle in `dist-lib/`:
 
-- `exercise-system.js`: an ES module with React, all 11 element types, JSXGraph, mathjs, MathLive
+- `exercise-system.js`: an ES module with React, all 12 element types, JSXGraph, mathjs, MathLive
   and KaTeX (about 3.9 MB)
 - `exercise-system.css`: Tailwind styles plus the KaTeX fonts, inlined (about 1.5 MB)
 
@@ -1048,7 +1111,7 @@ The quiz file and every file it imports must be inside the quiz's folder (as the
 | `cmi.session_time` | time spent, set when the page closes |
 
 The score and interactions are sent and committed right after each Grade (or, with
-`gradeButton: false`, each Save); while a student
+`gradeButton: false`, each save on Save & next); while a student
 types, only the saved state changes, committed at most every 2 seconds and when the page closes.
 
 ### Saved progress (`cmi.suspend_data`)
@@ -1058,7 +1121,7 @@ The full assessment state (seeds, attempts, best scores, drafts, the current que
 compacted and compressed (`lz-string`): prepared parts are dropped (they're rebuilt from each
 question's seed), and only the **latest submission of each question keeps its answers**; older
 submissions keep just their score and time, so attempt counts and best scores still work. A
-fully answered 13-question demo quiz (with two graphs and an essay) needs about 4,000 to 10,000
+fully answered 14-question demo quiz (with two graphs and an essay) needs about 4,000 to 10,000
 characters; 40 shapes per graph and 30 attempts on every question still stay near 16,000. As with `localStorage`, saved
 progress is ignored if the quiz's id or question list changes, so don't edit a quiz that students
 have started.

@@ -88,17 +88,22 @@ export interface Assessment {
   description?: string;
   mode: "exercise" | "exam";
   questions: AssessmentQuestionRef[];
-  /** Show the "Grade" button (grades and shows feedback right away). Default true. */
+  /**
+   * Show the "Grade" button (grades and shows feedback right away). Default true.
+   * With `false` there is no button: Next (and Finish) saves the answer, graded silently
+   * (for the LMS/results file); students see no scores, feedback or correct answers and
+   * can change and re-save their answers.
+   */
   gradeButton?: boolean;
   /**
-   * Show the "Save" button. Default false. With `gradeButton: false` it is the only
-   * button: answers are graded silently (for the LMS/export) and students see no
-   * scores, feedback or correct answers, and can change and re-save their answers.
+   * Show the "Reset assessment" button, which erases every answer and starts over.
+   * Default true. Set it to false for exams, so students can't wipe their saved work.
+   * (In a SCORM package there is never a Reset button.)
    */
-  saveButton?: boolean;
+  resetButton?: boolean;
 }
 
-/** Students don't see grades: there is no Grade button, only Save. */
+/** Students don't see grades: there is no Grade button; Save & next saves the answers. */
 export function hidesGrades(assessment: Pick<Assessment, "gradeButton">): boolean {
   return assessment.gradeButton === false;
 }
