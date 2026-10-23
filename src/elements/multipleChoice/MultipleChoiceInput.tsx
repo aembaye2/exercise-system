@@ -1,6 +1,7 @@
+import { GraphView } from "../../components/graphView/GraphView";
 import { Markdown } from "../../components/Markdown";
 import type { ElementInputProps } from "../../engine/registry";
-import { selectedIndex } from "./gradeMultipleChoice";
+import { graphName, selectedIndex } from "./gradeMultipleChoice";
 import type { MultipleChoicePart } from "./types";
 
 /** Native <option> elements can't hold markup, so strip Markdown/LaTeX delimiters. */
@@ -12,7 +13,62 @@ export function toPlainText(md: string): string {
 }
 
 export function MultipleChoiceInput(props: ElementInputProps<MultipleChoicePart>) {
-  return (props.part.display ?? "radio") === "dropdown" ? <Dropdown {...props} /> : <RadioGroup {...props} />;
+  if ((props.part.display ?? "radio") === "dropdown") return <Dropdown {...props} />;
+  return props.part.options.some((o) => o.graph) ? <GraphGrid {...props} /> : <RadioGroup {...props} />;
+}
+
+/** Options as a grid of graph cards (two columns when there's room), each with its radio button. */
+function GraphGrid({ part, id, labelId, describedBy, value, onChange, disabled, invalid }: ElementInputProps<MultipleChoicePart>) {
+  const selected = selectedIndex(part, value);
+  return (
+    <div className="@container basis-full">
+      <div
+        role="radiogroup"
+        id={id}
+        aria-labelledby={labelId}
+        aria-describedby={describedBy}
+        aria-invalid={invalid || undefined}
+        className="grid grid-cols-1 gap-3 @lg:grid-cols-2"
+      >
+        {part.options.map((option, i) => {
+          const optionId = `${id}-opt-${i}`;
+          const checked = selected === i;
+          return (
+            <label
+              key={optionId}
+              htmlFor={optionId}
+              className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-2 transition-colors ${
+                checked
+                  ? "border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500 dark:border-indigo-400 dark:bg-indigo-950/50"
+                  : "border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800/60"
+              } ${disabled ? "cursor-not-allowed opacity-80" : ""}`}
+            >
+              {option.graph ? (
+                <GraphView spec={option.graph} label={option.text} className="mx-auto max-w-xs" />
+              ) : (
+                <Markdown inline className="flex min-h-24 items-center justify-center break-words text-center">
+                  {option.text}
+                </Markdown>
+              )}
+              <span className="flex items-center gap-2 px-1 text-sm font-medium">
+                <input
+                  type="radio"
+                  id={optionId}
+                  name={id}
+                  value={i}
+                  checked={checked}
+                  disabled={disabled}
+                  onChange={() => onChange(i)}
+                  className="h-4 w-4 shrink-0 accent-indigo-600"
+                />
+                {option.graph ? graphName(i) : null}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function RadioGroup({ part, id, labelId, describedBy, value, onChange, disabled, invalid }: ElementInputProps<MultipleChoicePart>) {

@@ -15,6 +15,7 @@ import { incomeDemandPriceChain } from "./questions/11_ordering_income_demand_pr
 import { marginalCostExpression } from "./questions/12_expression_marginal_cost.js";
 import { quadraticEssay } from "./questions/13_essay_quadratic_equation.js";
 import { profitMaximum } from "./questions/14_conditional-grading_profit_maximum.js";
+import { supplyDemandShiftGraph } from "./questions/15_mc_graph_supply_demand_shift.js";
 
 export const questions = [
   typesOfGoods,
@@ -31,6 +32,7 @@ export const questions = [
   marginalCostExpression,
   quadraticEssay,
   profitMaximum,
+  supplyDemandShiftGraph,
 ];
 
 export const assessment = {

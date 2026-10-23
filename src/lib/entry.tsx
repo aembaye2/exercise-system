@@ -49,7 +49,13 @@ export function mount(container: Element, { assessment, questions, review }: Mou
 export function mountScorm(container: Element, { assessment, questions }: Omit<MountOptions, "review">): () => void {
   const bank = questionBank(questions);
   const api = findScormApi();
-  const scorm = api ? connectScorm(api, bank, { hideGrades: hidesGrades(assessment) }) : null;
+  const scorm = api
+    ? connectScorm(api, bank, {
+        hideGrades: hidesGrades(assessment),
+        // Exercises may start over; an exam reset would erase the student's attempts.
+        canReset: assessment.mode === "exercise",
+      })
+    : null;
   const end = () => scorm?.terminate();
   window.addEventListener("pagehide", end);
   window.addEventListener("beforeunload", end);

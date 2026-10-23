@@ -13,7 +13,9 @@ import { incomeDemandPriceChain } from "./11_ordering_income_demand_price";
 import { marginalCostExpression } from "./12_expression_marginal_cost";
 import { quadraticEssay } from "./13_essay_quadratic_equation";
 import { profitMaximum } from "./14_conditional-grading_profit_maximum";
-import { questions as sampleExam2Questions } from "../../exams/sample-exam2/exam2.js";
+import { supplyDemandShiftGraph } from "./15_mc_graph_supply_demand_shift";
+import { questions as sampleExam2Questions } from "../../exams/macro-sample-exam2/exam2.js";
+import { questions as microSampleExam2Questions } from "../../exams/micro-sample-exam2/sample-micro-exam2.js";
 
 /** Every question available to assessments. Add new questions here. */
 export const questions: AnyQuestion[] = [
@@ -31,13 +33,14 @@ export const questions: AnyQuestion[] = [
   marginalCostExpression,
   quadraticEssay,
   profitMaximum,
+  supplyDemandShiftGraph,
 ];
 
 /**
  * Course questions that live outside the demo bank (plain-JS quizzes under `exams/`, also
  * packaged for SCORM). Assessments can use them, but they are not part of `questions`.
  */
-export const courseQuestions: AnyQuestion[] = [...sampleExam2Questions];
+export const courseQuestions: AnyQuestion[] = [...sampleExam2Questions, ...microSampleExam2Questions];
 
 const allQuestions = [...questions, ...courseQuestions];
 const byId = new Map(allQuestions.map((q) => [q.id, q]));

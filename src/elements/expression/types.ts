@@ -24,6 +24,8 @@ export interface ExpressionPart extends BasePart {
    * each variable name to its sampled value. Random per variant.
    */
   testPoints?: Record<string, number>[];
+  /** Grey hint text in the empty box, e.g. "e.g. 2q + 3". Default "e.g. x^2 + 1/2 x + 1"; "" shows none. */
+  placeholder?: string;
   showHelpText?: boolean; // default true
 }
 

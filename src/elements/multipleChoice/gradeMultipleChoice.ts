@@ -20,11 +20,23 @@ export function gradeMultipleChoice(part: MultipleChoicePart, value: JsonValue |
   return result;
 }
 
+/** "Graph A", "Graph B", ... for the option at display index `i`. */
+export function graphName(i: number): string {
+  return `Graph ${String.fromCharCode(65 + i)}`;
+}
+
+/** An option as named in reviews: its text, prefixed with "Graph B: " for a graph option. */
+function describeOption(part: MultipleChoicePart, i: number): string {
+  const o = part.options[i];
+  return o.graph ? `${graphName(i)}: ${o.text}` : o.text;
+}
+
 export function formatMultipleChoiceAnswer(part: MultipleChoicePart, value: JsonValue | undefined): string {
   const i = selectedIndex(part, value);
-  return i === null ? "_(no answer)_" : part.options[i].text;
+  return i === null ? "_(no answer)_" : describeOption(part, i);
 }
 
 export function formatMultipleChoiceCorrect(part: MultipleChoicePart): string {
-  return part.options.find((o) => o.correct)?.text ?? "";
+  const i = part.options.findIndex((o) => o.correct);
+  return i < 0 ? "" : describeOption(part, i);
 }

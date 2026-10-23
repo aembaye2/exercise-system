@@ -11,16 +11,20 @@ import {
   saveState,
   storageKey,
 } from "./storage";
-import { exercise, seedCounter, testBank } from "../test/fixtures";
+import { createVariant } from "./variant";
+import { addQuestion, exercise, seedCounter, testBank } from "../test/fixtures";
 
 const NOW = "2026-01-01T00:00:00.000Z";
 
 function played(): AssessmentState {
   let s = createAssessmentState(exercise, testBank, seedCounter(100), NOW);
-  const part = s.questions[0].preparedParts[0];
-  const correct = part.type === "integer" ? part.correct : 0;
   s = assessmentReducer(s, { type: "setValue", index: 0, part: "sum", value: "999" });
   s = assessmentReducer(s, { type: "submit", index: 0, timestamp: NOW });
+  // A graded variant is locked; the second attempt is on a new variant.
+  const preparedParts = createVariant(addQuestion as never, 200).parts;
+  s = assessmentReducer(s, { type: "newVariant", index: 0, seed: 200, preparedParts });
+  const part = preparedParts[0];
+  const correct = part.type === "integer" ? part.correct : 0;
   s = assessmentReducer(s, { type: "setValue", index: 0, part: "sum", value: String(correct) });
   s = assessmentReducer(s, { type: "submit", index: 0, timestamp: NOW });
   return assessmentReducer(s, { type: "setStudentName", name: "  Ada Lovelace " });
@@ -78,7 +82,7 @@ describe("export / import", () => {
     expect(data.studentName).toBe("Ada Lovelace");
     expect(data.earned).toBe(10);
     expect(data.possible).toBe(14);
-    expect(data.questions[0].currentSeed).toBe(100);
+    expect(data.questions[0].currentSeed).toBe(200);
     expect(data.questions[0].submissions.map((x) => x.score)).toEqual([0, 1]);
     expect(data.questions[0].submissions[0].values).toEqual({ sum: "999" });
     expect(exportFileName(data)).toBe("test-hw-ada-lovelace-2026-02-03-04-05-06.json");

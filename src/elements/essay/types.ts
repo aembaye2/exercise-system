@@ -14,7 +14,7 @@ export interface EssayPart extends BasePart {
   maxChars?: number;
   /** Lower limit on words. */
   minWords?: number;
-  /** Show the "Insert equation" button (MathLive editor). Default true; `$...$` typing works either way. */
+  /** Show the "Insert equation" button (MathLive editor). Default false (hidden); `$...$` typing works either way. */
   equationEditor?: boolean;
   /** Height of the text box in lines. Default 8. */
   rows?: number;

@@ -4,7 +4,7 @@ import { parseExpression } from "./mathUtils";
 import type { ExpressionPart } from "./types";
 
 /** A text box for typing a math expression, with a live KaTeX preview of what's been typed so far. */
-export function ExpressionInput({ part: _part, id, labelId, describedBy, value, onChange, disabled, invalid }: ElementInputProps<ExpressionPart>) {
+export function ExpressionInput({ part, id, labelId, describedBy, value, onChange, disabled, invalid }: ElementInputProps<ExpressionPart>) {
   const raw = typeof value === "string" ? value : "";
   const trimmed = raw.trim();
   const parsed = trimmed === "" ? null : parseExpression(trimmed);
@@ -21,7 +21,7 @@ export function ExpressionInput({ part: _part, id, labelId, describedBy, value, 
         aria-describedby={describedBy}
         aria-invalid={invalid || undefined}
         disabled={disabled}
-        placeholder="e.g. x^2 + 1/2 x + 1"
+        placeholder={part.placeholder ?? "e.g. x^2 + 1/2 x + 1"}
         value={raw}
         onChange={(e) => onChange(e.target.value)}
         className={`w-full max-w-md rounded-md border bg-white px-2 py-1.5 font-mono dark:bg-slate-900 ${

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { assessmentReducer, createAssessmentState, type AssessmentAction, type AssessmentState } from "../engine/assessment";
 import type { Assessment, Question } from "../engine/types";
+import { createVariant } from "../engine/variant";
 import { exercise, seedCounter, testBank } from "../test/fixtures";
 import { findScormApi } from "./api";
 import { fakeLms } from "./fakeLms";
@@ -38,13 +39,17 @@ function run(s: AssessmentState, ...actions: AssessmentAction[]): AssessmentStat
   return actions.reduce(assessmentReducer, s);
 }
 
-/** Q1: a wrong then a right answer; Q2: an essay (pending); Q3 untouched, with a draft. */
+/** Q1: a wrong answer, then a right one on a new variant; Q2: an essay (pending); Q3 untouched, with a draft. */
 function played(): AssessmentState {
   let s = createAssessmentState(quiz, bank, seedCounter(7), NOW);
   s = run(
     s,
     { type: "setValue", index: 0, part: "sum", value: "999" },
     { type: "submit", index: 0, timestamp: NOW },
+    { type: "newVariant", index: 0, seed: 50, preparedParts: createVariant(testBank("add")!, 50).parts },
+  );
+  s = run(
+    s,
     { type: "setValue", index: 0, part: "sum", value: correctSum(s) },
     { type: "submit", index: 0, timestamp: "2026-01-01T00:05:00.123Z" },
     { type: "setValue", index: 1, part: "why", value: "Supply falls.\nPrices rise by $5$ units." },
@@ -160,6 +165,10 @@ describe("connectScorm", () => {
     expect(lms.data["cmi.exit"]).toBe("suspend");
     expect(scorm.learnerName).toBe("Jane Doe");
     expect(scorm.canReset).toBe(false);
+  });
+
+  it("allows Reset only when asked to (exercise mode)", () => {
+    expect(connectScorm(fakeLms().api, bank, { canReset: true })!.canReset).toBe(true);
   });
 
   it("returns null when the LMS refuses to initialize", () => {

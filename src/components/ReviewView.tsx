@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import type { QuestionBank, Submission } from "../engine/assessment";
 import { gradeQuestion, hasPending } from "../engine/gradeQuestion";
-import { getElement } from "../engine/registry";
+import { getElement, isManualPart } from "../engine/registry";
 import { downloadJson, exportFileName, setManualGrade, type ExportedQuestion, type ResultsExport } from "../engine/storage";
 import type { ManualGrade, Part } from "../engine/types";
 import { createVariant, type Variant } from "../engine/variant";
@@ -171,7 +171,7 @@ function VariantReview({ group, variant, idPrefix, points, onGrade }: VariantRev
   const last = group.submissions[group.submissions.length - 1];
   const lastGrade = last ? gradeQuestion(variant.parts, last.values, last.manualGrades) : null;
   const totalWeight = variant.parts.reduce((sum, p) => sum + (p.weight ?? 1), 0);
-  const manualParts = variant.parts.filter((p) => getElement(p.type).manualGrading);
+  const manualParts = variant.parts.filter(isManualPart);
 
   return (
     <section aria-label={`Variant ${group.variant + 1}`} className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800">

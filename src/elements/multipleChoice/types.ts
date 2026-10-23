@@ -1,9 +1,16 @@
+import type { GraphSpec } from "../../components/graphView/types";
 import type { BasePart } from "../../engine/types";
 
 export interface MultipleChoiceOption {
-  text: string; // Markdown + LaTeX (plain text in dropdown display)
+  /**
+   * Markdown + LaTeX (plain text in dropdown display). For an option with a `graph`, it isn't
+   * shown: it describes the graph to screen readers and names the option in reviews and the LMS.
+   */
+  text: string;
   correct?: boolean;
   feedback?: string;
+  /** Show this option as a graph (labelled "Graph A", "Graph B", ... in display order). Radio display only. */
+  graph?: GraphSpec;
 }
 
 export interface MultipleChoicePart extends BasePart {

@@ -1,5 +1,5 @@
 import { gradeQuestion, pendingShare } from "./gradeQuestion";
-import { getElement } from "./registry";
+import { isManualPart } from "./registry";
 import { createVariant } from "./variant";
 import type {
   AnswerValues,
@@ -120,16 +120,15 @@ export function lastSubmission(q: QuestionState): Submission | undefined {
 }
 
 export function hasManualParts(parts: Part[]): boolean {
-  return parts.some((p) => getElement(p.type).manualGrading);
+  return parts.some(isManualPart);
 }
 
 /**
- * Finished = the current variant was answered fully correctly, no attempts remain,
- * or it has a hand-graded part and was submitted (one submission per variant).
+ * Finished = the current variant was graded (one graded submission per variant: its answers
+ * lock and the correct answer shows, so trying again takes "New variant"), or no attempts remain.
  */
 export function isFinished(q: QuestionState): boolean {
-  const last = lastSubmission(q);
-  return last?.score === 1 || attemptsRemaining(q) === 0 || (last !== undefined && hasManualParts(q.preparedParts));
+  return lastSubmission(q) !== undefined || attemptsRemaining(q) === 0;
 }
 
 /** The current draft is exactly what was last submitted/saved for this variant. */
@@ -159,9 +158,13 @@ export function isDone(q: QuestionState, hideGrades: boolean): boolean {
   return hideGrades ? q.submissions.length > 0 : isFinished(q);
 }
 
-export function canNewVariant(q: QuestionState, mode: Assessment["mode"]): boolean {
+/**
+ * "New variant" (a fresh seed) is offered whenever grades are shown (`gradeButton` not false),
+ * in either mode, after a graded submission of the current variant with attempts left.
+ */
+export function canNewVariant(q: QuestionState, hideGrades: boolean): boolean {
   return (
-    mode === "exercise" &&
+    !hideGrades &&
     currentVariantSubmissions(q).length > 0 &&
     attemptsRemaining(q) !== 0 &&
     !hasManualParts(q.preparedParts)
@@ -279,7 +282,7 @@ function reduce(state: AssessmentState, action: AssessmentAction, { hideGrades =
 
     case "newVariant":
       return updateQuestion(state, action.index, (q) => {
-        if (!canNewVariant(q, state.mode)) return q;
+        if (!canNewVariant(q, hideGrades)) return q;
         return {
           ...q,
           variant: q.variant + 1,

@@ -135,7 +135,8 @@
   padding: 10px 8px;
   background: #000;
   border-left: 1px solid #000;
-  overflow-y: auto;
+  /* No overflow here: it would clip the tool tooltips, which open to the left of the toolbar.
+     The jsxgraph board's toolbar shares this class name, so this rule styles it too. */
 }
 
 .tools-grid {

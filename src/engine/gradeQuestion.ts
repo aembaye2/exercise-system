@@ -1,4 +1,4 @@
-import { getElement } from "./registry";
+import { getElement, isManualPart } from "./registry";
 import type { AnswerValues, GradeResult, ManualGrades, Part, ValidationResult } from "./types";
 
 export interface QuestionGrade {
@@ -39,8 +39,12 @@ export function gradeQuestion(parts: Part[], values: AnswerValues, manualGrades?
   const results: Record<string, GradeResult> = {};
   for (const part of parts) {
     const el = getElement(part.type);
-    const manual = el.manualGrading ? manualGrades?.[part.name] : undefined;
-    const r: GradeResult = manual ? { score: manual.score, feedback: manual.comment || undefined } : el.grade(part, values[part.name]);
+    const manual = isManualPart(part) ? manualGrades?.[part.name] : undefined;
+    const r: GradeResult = manual
+      ? { score: manual.score, feedback: manual.comment || undefined }
+      : part.manualGrading && !el.manualGrading
+        ? { score: 0, pending: true } // an auto-graded type marked for hand grading: never auto-graded
+        : el.grade(part, values[part.name]);
     results[part.name] = { ...r, score: clamp01(r.score) };
   }
   return { valid, validation, results, score: weightedScore(parts, results) };

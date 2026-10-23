@@ -29,6 +29,13 @@ function run(state: AssessmentState, ...actions: AssessmentAction[]): Assessment
 
 const set = (value: string, index = 0, part = "sum"): AssessmentAction => ({ type: "setValue", index, part, value });
 const submit = (index = 0): AssessmentAction => ({ type: "submit", index, timestamp: NOW });
+/** "New variant" on question `index` with `seed` (prepared as the add question; fine for tests that only regrade). */
+const newVariant = (seed: number, index = 0): AssessmentAction => ({
+  type: "newVariant",
+  index,
+  seed,
+  preparedParts: createVariant(addQuestion as never, seed).parts,
+});
 
 describe("createAssessmentState", () => {
   it("creates one prepared variant per question with the given seeds", () => {
@@ -74,6 +81,7 @@ describe("submitting", () => {
     expect(s.questions[0].submissions).toHaveLength(1);
     expect(s.questions[0].submissions[0].score).toBe(0);
     expect(s.questions[0].bestScore).toBe(0);
+    s = run(s, newVariant(900));
     s = run(s, set(correctSum(s)), submit());
     expect(s.questions[0].submissions).toHaveLength(2);
     expect(s.questions[0].bestScore).toBe(1);
@@ -107,11 +115,11 @@ describe("exercise mode", () => {
       const seed = seeds();
       return { type: "newVariant", index: 0, seed, preparedParts: createVariant(addQuestion as never, seed).parts };
     };
-    expect(canNewVariant(s.questions[0], "exercise")).toBe(false);
+    expect(canNewVariant(s.questions[0], false)).toBe(false);
     expect(run(s, nv())).toBe(s);
 
     s = run(s, set(correctSum(s)), submit());
-    expect(canNewVariant(s.questions[0], "exercise")).toBe(true);
+    expect(canNewVariant(s.questions[0], false)).toBe(true);
     s = run(s, nv());
     const q = s.questions[0];
     expect(q.variant).toBe(1);
@@ -127,10 +135,22 @@ describe("exercise mode", () => {
 
   it("unlimited attempts by default", () => {
     let s = createAssessmentState(exercise, testBank, seedCounter(), NOW);
-    for (let i = 0; i < 20; i++) s = run(s, set("12345"), submit());
+    for (let i = 0; i < 20; i++) s = run(s, newVariant(900 + i), set("12345"), submit());
     expect(s.questions[0].submissions).toHaveLength(20);
     expect(attemptsRemaining(s.questions[0])).toBeNull();
+    expect(canNewVariant(s.questions[0], false)).toBe(true);
+  });
+
+  it("locks a variant once graded, even when wrong: the correct answer shows and retrying takes a new variant", () => {
+    let s = createAssessmentState(exercise, testBank, seedCounter(), NOW);
+    s = run(s, set("999"), submit());
+    expect(isFinished(s.questions[0])).toBe(true);
+    // Edits and regrades of the graded variant are ignored.
+    expect(run(s, set(correctSum(s)), submit())).toBe(s);
+    s = run(s, newVariant(900));
     expect(isFinished(s.questions[0])).toBe(false);
+    s = run(s, set(correctSum(s)), submit());
+    expect(s.questions[0].bestScore).toBe(1);
   });
 });
 
@@ -141,10 +161,20 @@ describe("exam mode", () => {
     const q = s.questions[0];
     expect(attemptsRemaining(q)).toBe(0);
     expect(isFinished(q)).toBe(true);
-    expect(canNewVariant(q, "exam")).toBe(false);
+    expect(canNewVariant(q, false)).toBe(false);
     // further submits and edits are ignored
     expect(run(s, set(correctSum(s)), submit())).toBe(s);
     expect(s.questions[0].bestScore).toBe(0);
+  });
+
+  it("allows a new variant when grades are shown and attempts remain", () => {
+    let s = createAssessmentState(exam, testBank, seedCounter(), NOW);
+    s = run(s, set("999", 1, "double"), { type: "setValue", index: 1, part: "parity", value: 0 }, submit(1));
+    expect(canNewVariant(s.questions[1], false)).toBe(true);
+    expect(canNewVariant(s.questions[1], true)).toBe(false);
+    s = run(s, { type: "newVariant", index: 1, seed: 900, preparedParts: createVariant(addQuestion as never, 900).parts });
+    expect(s.questions[1].variant).toBe(1);
+    expect(s.questions[1].seed).toBe(900);
   });
 
   it("invalid submissions don't count toward the exam limit", () => {
@@ -159,10 +189,11 @@ describe("exam mode", () => {
     let s = createAssessmentState(exam, testBank, seedCounter(), NOW);
     s = run(s, set("0", 1, "double"), { type: "setValue", index: 1, part: "parity", value: 1 }, submit(1));
     expect(attemptsRemaining(s.questions[1])).toBe(1);
-    expect(isFinished(s.questions[1])).toBe(false);
-    s = run(s, submit(1));
+    expect(canNewVariant(s.questions[1], false)).toBe(true);
+    s = run(s, newVariant(900, 1), set("0", 1, "sum"), submit(1));
+    expect(attemptsRemaining(s.questions[1])).toBe(0);
     expect(isFinished(s.questions[1])).toBe(true);
-    expect(s.questions[1].seed).toBe(s.questions[1].submissions[0].seed);
+    expect(canNewVariant(s.questions[1], false)).toBe(false);
   });
 });
 
@@ -196,6 +227,13 @@ describe("saving with hidden grades", () => {
     expect(s.questions[0].bestScore).toBe(0);
     expect(isDone(s.questions[0], true)).toBe(true);
     expect(isDone(s.questions[1], true)).toBe(false);
+  });
+
+  it("never offers a new variant", () => {
+    let s = createAssessmentState(exercise, testBank, seedCounter(), NOW);
+    s = runHidden(s, set("999"), save());
+    expect(canNewVariant(s.questions[0], true)).toBe(false);
+    expect(runHidden(s, { type: "newVariant", index: 0, seed: 900, preparedParts: s.questions[0].preparedParts })).toBe(s);
   });
 
   it("rejects invalid input without saving", () => {

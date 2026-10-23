@@ -10,4 +10,5 @@ dist-scorm
 # Quarto rendered output / deployment config
 
 # Scratch notes
-Z_temp.md
+Z_*
+exams/

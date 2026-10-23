@@ -55,7 +55,7 @@ describe("hand-graded parts", () => {
     expect(q.submissions[0].results.why).toMatchObject({ score: 0, pending: true });
     expect(q.submissions[0].score).toBeCloseTo(0.25);
     expect(isFinished(q)).toBe(true);
-    expect(canNewVariant(q, "exercise")).toBe(false);
+    expect(canNewVariant(q, false)).toBe(false);
     expect(pendingPoints(q)).toBeCloseTo(6);
     expect(totals(s)).toEqual({ earned: 2, possible: 8, pending: 6 });
   });

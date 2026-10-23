@@ -72,6 +72,6 @@ export function formatEssayCorrect(part: EssayPart): string {
 
 export function essayHelpText(part: EssayPart): string | undefined {
   if (part.showHelpText === false) return undefined;
-  const math = part.equationEditor === false ? "Type math" : "Use “Insert equation” for math, or type it";
+  const math = part.equationEditor === true ? "Use “Insert equation” for math, or type it" : "Type math";
   return `${math} between dollar signs, e.g. $x^2 + 5$. Write a plain dollar sign as \\$ (e.g. \\$5). You can submit once; your teacher grades the answer later.`;
 }

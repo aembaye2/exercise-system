@@ -29,6 +29,9 @@ export function App() {
     content = <NotFound what="This page" />;
   }
 
+  // The assessment page is wider, to make room for the question sidebar.
+  const width = route.page === "assessment" ? "max-w-6xl" : "max-w-4xl";
+
   return (
     <div className="min-h-screen">
       <a
@@ -42,13 +45,13 @@ export function App() {
         Skip to content
       </a>
       <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+        <div className={`mx-auto flex ${width} items-center justify-between px-4 py-3`}>
           <a href="#/" className="font-semibold tracking-tight">
-            Exercise System
+            Economiahome
           </a>
         </div>
       </header>
-      <main id="main" tabIndex={-1} className="mx-auto max-w-4xl px-4 py-6 outline-none">
+      <main id="main" tabIndex={-1} className={`mx-auto ${width} px-4 py-6 outline-none`}>
         <ErrorBoundary key={JSON.stringify(route)}>{content}</ErrorBoundary>
       </main>
     </div>

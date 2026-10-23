@@ -36,6 +36,9 @@ export interface DrawingQuestionProps {
    * shown as the correct answer when the question is finished (unless
    * `suggestedAnswer` is given). */
   expectedDrawing?: ExpectedShape[];
+  /** Grade the shapes in any drawing order (text labels ignored; extra shapes
+   * lower the score) instead of position by position. Default false. */
+  anyOrder?: boolean;
   /** Exact shapes shown (dashed, in their own `color`) as the correct answer, in
    * place of `expectedDrawing`. */
   suggestedAnswer?: InitialObjectSpec[];
@@ -190,7 +193,7 @@ export default function DrawingApp({
             <div className="footer-actions">
               {showDownloadButton && (
                 <div className="output-button-wrapper">
-                  <button className="output-button" onClick={handleDownload} aria-label="Download Image">
+                  <button type="button" className="output-button" onClick={handleDownload} aria-label="Download Image">
                     <Download />
                   </button>
                   <div className="output-tooltip">Download</div>
@@ -199,7 +202,7 @@ export default function DrawingApp({
 
               {showOutputButton && (
                 <div className="output-button-wrapper">
-                  <button
+                  <button type="button"
                     className="output-button"
                     onClick={() => setShowDrawings((v) => !v)}
                     aria-label={showDrawings ? "Hide Drawing Data" : "Show Drawing Data"}
@@ -212,7 +215,7 @@ export default function DrawingApp({
 
               {actions.includes("undo") && (
                 <div className="output-button-wrapper">
-                  <button
+                  <button type="button"
                     className="output-button"
                     onClick={() => boardRef.current?.undo()}
                     disabled={readOnly || !canUndo}
@@ -226,7 +229,7 @@ export default function DrawingApp({
 
               {actions.includes("redo") && (
                 <div className="output-button-wrapper">
-                  <button
+                  <button type="button"
                     className="output-button"
                     onClick={() => boardRef.current?.redo()}
                     disabled={readOnly || !canRedo}
@@ -240,7 +243,7 @@ export default function DrawingApp({
 
               {actions.includes("clear") && (
                 <div className="output-button-wrapper">
-                  <button
+                  <button type="button"
                     className="output-button delete-button"
                     onClick={() => boardRef.current?.clear()}
                     disabled={readOnly}

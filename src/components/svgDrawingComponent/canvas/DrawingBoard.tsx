@@ -646,7 +646,7 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
       {hint && <div className="drawing-hint">{hint}</div>}
       {showNavigation && (
         <div className="svg-navigation">
-          <button
+          <button type="button"
             onClick={() =>
               setView((b) => {
                 const dx = (b[1] - b[0]) * 0.1;
@@ -657,7 +657,7 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
           >
             +
           </button>
-          <button
+          <button type="button"
             onClick={() =>
               setView((b) => {
                 const dx = (b[1] - b[0]) * 0.1;
@@ -668,7 +668,7 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
           >
             −
           </button>
-          <button onClick={() => setView(boundingBox)}>⌂</button>
+          <button type="button" onClick={() => setView(boundingBox)}>⌂</button>
         </div>
       )}
     </div>

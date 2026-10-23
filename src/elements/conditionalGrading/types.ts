@@ -9,6 +9,8 @@ interface StepBase {
   name: string;
   label?: string; // Markdown + LaTeX, shown before the box
   suffix?: string; // Markdown + LaTeX, shown after the box
+  /** Grey hint text in the empty box, e.g. "e.g. 2q + 3". Default "e.g. -2x + 3" for expression steps, none for number steps; "" shows none. */
+  placeholder?: string;
   weight?: number; // share of the part's score, default 1
   /**
    * The correct answer as a mathjs formula. It may use the answers to *earlier* steps by

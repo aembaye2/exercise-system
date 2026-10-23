@@ -96,7 +96,7 @@ export function QuestionView({ index }: { index: number }) {
             <Button type="submit" variant="primary" disabled={finished}>
               Grade
             </Button>
-            {canNewVariant(q, state.mode) && <Button onClick={() => actions.newVariant(index)}>New variant</Button>}
+            {canNewVariant(q, hideGrades) && <Button onClick={() => actions.newVariant(index)}>New variant</Button>}
           </div>
         )}
       </form>
@@ -119,7 +119,13 @@ export function QuestionView({ index }: { index: number }) {
         ) : last ? (
           <p>
             Submission score: <strong>{formatPercent(last.score)}</strong>
-            {last.score === 1 ? " — well done!" : finished ? " — no attempts left." : ""}
+            {last.score === 1
+              ? " — well done!"
+              : canNewVariant(q, hideGrades)
+                ? " — the correct answer is shown below. Press New variant to try again with new numbers."
+                : finished
+                  ? " — no attempts left."
+                  : ""}
           </p>
         ) : null}
       </div>
@@ -133,12 +139,10 @@ export function QuestionView({ index }: { index: number }) {
               Attempts used: {attemptsUsed(q)}
               {q.maxAttempts === null ? " (unlimited)" : ` of ${q.maxAttempts} · ${remaining} remaining`}
             </span>
-            {state.mode === "exercise" && (
-              <span>
-                Variant {q.variant + 1}
-                {variantAttempts > 0 ? ` · ${variantAttempts} attempt${variantAttempts === 1 ? "" : "s"} on this variant` : ""}
-              </span>
-            )}
+            <span>
+              Variant {q.variant + 1}
+              {variantAttempts > 0 ? ` · ${variantAttempts} attempt${variantAttempts === 1 ? "" : "s"} on this variant` : ""}
+            </span>
             <span>Best score: {formatPercent(q.bestScore)}</span>
           </>
         )}

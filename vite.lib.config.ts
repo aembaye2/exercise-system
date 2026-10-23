@@ -23,7 +23,15 @@ export default defineConfig({
     cssCodeSplit: false,
     chunkSizeWarningLimit: 1600,
     // Keep the lazily imported MathLive inside the single exercise-system.js file.
-    rolldownOptions: { output: { inlineDynamicImports: true } },
+    rolldownOptions: {
+      output: { inlineDynamicImports: true },
+      // JSXGraph's JessieCode parser uses a direct `eval` (only for JessieCode scripts, which
+      // this app never runs); hide that one warning, but keep it for any other module.
+      onLog(level, log, handler) {
+        if (log.code === "EVAL" && /[\\/]jsxgraph[\\/]/.test(log.id ?? "")) return;
+        handler(level, log);
+      },
+    },
     lib: {
       entry: resolve(import.meta.dirname, "src/lib/entry.tsx"),
       formats: ["es"],

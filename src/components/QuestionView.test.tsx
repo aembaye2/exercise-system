@@ -22,7 +22,7 @@ function renderQuestion(assessment = exercise, index = 0) {
 }
 
 describe("QuestionView", () => {
-  it("submits a wrong answer, then a correct one, showing feedback and score", async () => {
+  it("submits a wrong answer, then a correct one on a new variant, showing feedback and score", async () => {
     const user = userEvent.setup();
     renderQuestion();
     const input = screen.getByRole("textbox", { name: "Sum:" });
@@ -40,19 +40,22 @@ describe("QuestionView", () => {
     expect(screen.getByText("Incorrect")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Submission score: 0%");
     expect(screen.getByText(/Attempts used: 1/)).toBeInTheDocument();
-    // Correct answer not revealed yet.
-    expect(screen.queryByText(/Correct answer:/)).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "New variant" })).toBeInTheDocument();
+    // The graded variant is locked and shows its correct answer; retrying takes a new variant.
+    expect(screen.getByText(/Correct answer:/)).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(/Press New variant to try again/);
+    expect(input).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Grade" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "New variant" }));
 
-    // Correct answer.
-    await user.clear(input);
-    await user.type(input, `${correctSum(100)}{Enter}`);
+    // Correct answer on the new variant (seed 102: the provider used 100 and 101 at start).
+    const fresh = screen.getByRole("textbox", { name: "Sum:" });
+    await user.type(fresh, `${correctSum(102)}{Enter}`);
     expect(screen.getByText("Correct")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Submission score: 100%");
     expect(screen.getByText(/Best score: 100%/)).toBeInTheDocument();
     expect(screen.getByText("10 / 10 points")).toBeInTheDocument();
     expect(screen.getByText(/Correct answer:/)).toBeInTheDocument();
-    expect(input).toBeDisabled();
+    expect(fresh).toBeDisabled();
     expect(screen.getByRole("button", { name: "Grade" })).toBeDisabled();
   });
 

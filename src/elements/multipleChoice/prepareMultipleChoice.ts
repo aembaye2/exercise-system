@@ -1,3 +1,4 @@
+import { checkGraph } from "../../components/graphView/geometry";
 import { AuthoringError, type Rng } from "../../engine/types";
 import type { MultipleChoicePart } from "./types";
 
@@ -16,6 +17,10 @@ export function checkMultipleChoice(part: MultipleChoicePart): void {
     if (!key) throw new AuthoringError("multiple-choice option text must not be empty.");
     if (seen.has(key)) throw new AuthoringError(`duplicate option text "${o.text}".`);
     seen.add(key);
+    if (o.graph !== undefined) {
+      if (part.display === "dropdown") throw new AuthoringError("graph options need display \"radio\", not a dropdown.");
+      checkGraph(o.graph);
+    }
   }
   if (part.numberAnswers !== undefined) {
     const n = part.numberAnswers;

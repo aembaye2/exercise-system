@@ -56,6 +56,7 @@ Phase 1 from `planning.md` is done, and some later work has been added on top of
 | **expression element** (symbolic math input, checked by evaluating at random points, with a live KaTeX preview) | Done. Added beyond phase 1. Demo: `12_expression_marginal_cost.ts` in Exercise 1 |
 | **essay element** (hand-graded written answer with word/character limits, MathLive equation editor, model answer shown after submitting) | Done. Added beyond phase 1. Demo: `13_essay_quadratic_equation.ts` in Exercise 1 |
 | **conditional-grading element** (multi-step calculation; later steps graded from the student's own earlier answers, so an early error is carried forward) | Done. Added beyond phase 1. Demo: `14_conditional-grading_profit_maximum.ts` in Exercise 1 |
+| **Graph options for multiple choice** (each choice is a static SVG graph: lines, curves, points, shaded areas, arrows) | Done. Added beyond phase 1. Demo: `15_mc_graph_supply_demand_shift.ts` in Exercise 1 |
 | **Manual (teacher) grading** (pending results, points + comment in the review page, graded results file; Quarto `data-review` page) | Done. Added beyond phase 1 |
 | Exercise and exam modes, attempts, best score | Done |
 | localStorage persistence, reset, import/review page | Done |
@@ -121,7 +122,7 @@ exercise_system/
 │   │   └── storage.ts        # localStorage save/load, JSON export/import, setManualGrade
 │   ├── elements/             # one folder per element type
 │   │   ├── index.ts          # registers every element with the engine
-│   │   ├── multipleChoice/
+│   │   ├── multipleChoice/   # radio, dropdown, or graph options (cards of GraphView)
 │   │   ├── number/
 │   │   ├── integer/
 │   │   ├── table/            # fillable table (e.g. gains-from-trade worksheets)
@@ -134,17 +135,19 @@ exercise_system/
 │   │   ├── essay/            # hand-graded text answer + MathLive equation editor
 │   │   ├── conditionalGrading/ # multi-step calculation, errors carried forward
 │   │   └── TextInput.tsx     # shared text box used by number/integer
-│   ├── questions/            # demo question bank (01-14, one per element type) + index.ts
+│   ├── questions/            # demo question bank (01-15, one per element type + graph options) + index.ts
 │   ├── assessments/index.ts  # assessment definitions (exercises, quizzes)
 │   ├── components/           # QuestionView, AssessmentView, ReviewView, Markdown, ...
 │   │   ├── jsxgraphComponent/   # JSXGraph drawing board + toolbar + grading (copied from jsxgraph-library)
-│   │   └── svgDrawingComponent/ # plain-SVG drawing board + toolbar + grading
+│   │   ├── svgDrawingComponent/ # plain-SVG drawing board + toolbar + grading
+│   │   └── graphView/        # static (display-only) SVG graphs, e.g. graph options in multiple choice
 │   ├── pages/                # Home, Results, Import
 │   ├── lib/                  # embeddable build: entry.tsx (mount, mountScorm) + QuizWidget
 │   ├── scorm/                # SCORM 2004 runtime: LMS API, suspend data, score/interaction reporting
 │   └── test/                 # test setup + fixtures
 ├── jsxgraph-library/         # standalone JSXGraph widget project (the component was copied from here)
-├── exams/sample-exam2/       # course quiz: exam2.js + questions/ (plain JS, SCORM-packaged; also "ex2" in the app)
+├── exams/macro-sample-exam2/       # course quiz: exam2.js + questions/01-29 (plain JS, SCORM-packaged; also "ex2" in the app)
+├── exams/micro-sample-exam2/       # course quiz: sample-micro-exam2.js + questions/01-20 (micro, plain JS, SCORM-packaged; also "ex3" in the app)
 ├── dist/                     # built standalone app (generated)
 ├── dist-lib/                 # built library: exercise-system.js / .css (generated)
 └── quarto-demo/              # minimal Quarto site running the demo quiz (quiz1.js + questions/)
@@ -184,16 +187,34 @@ the **weighted average** of the part scores.
 - A variant is identified by `{ questionId, seed }`. The seed is shown in small text under each
   question.
 
+### Question navigation
+
+When the assessment is at least 56rem (896px) wide (the app, which widens its assessment page to
+72rem for this, and SCORM packages), the questions are listed in a **sidebar on the left**: each row
+shows a status mark (✓ answered/saved, ◐ in progress, ● closed, ⧗ awaiting the teacher, ○ not
+started), `Q1`, the question's title (cut short with "…"; hover for the full title) and, unless
+grades are hidden, the points earned (`7/10`). The sidebar stays in place while the page scrolls.
+When the assessment is narrower (phones, a normal-width Quarto page) it falls back to a row of
+`Q1`, `Q2`, ... buttons above the question. This is a CSS container query on the assessment's own
+width, not the window's, so an embedded quiz picks the layout that fits its column.
+
 ### Assessment modes
 
 | | `exercise` | `exam` |
 | --- | --- | --- |
-| Variants | "New variant" gives a fresh seed after a graded submission | One fixed seed per question, chosen when the assessment starts |
+| Variants | "New variant" gives a fresh seed after a graded submission | The same, but with the default 1 attempt it never shows; set `maxAttempts` above 1 to offer it |
 | Attempts | Unlimited by default | 1 by default |
 | Score | Best score across all variants | Best score across attempts |
-| Correct answers | Shown once the question is finished | Shown after the last attempt |
+| Correct answers | Shown as soon as a variant is graded | The same |
 
-You can override `maxAttempts` for each question in the assessment definition. A question with a
+**One grade per variant:** pressing Grade finishes the current variant, whatever the score: its
+answers lock and the correct answer is shown. To try again, the student presses "New variant",
+which gives the question new random numbers (a question without random parameters comes back the
+same, so its answer has already been seen). The score is the best one across variants.
+
+You can override `maxAttempts` for each question in the assessment definition. "New variant"
+depends on the Grade button, not the mode: it is offered whenever grades are shown (`gradeButton`
+not `false`), after a graded submission of the current variant, while attempts remain. A question with a
 hand-graded part (`essay`) is the exception in both modes: one submission closes it, and its score
 waits for the teacher (see [`essay`](#essay)).
 
@@ -242,7 +263,7 @@ a multiple-choice part, or a drawing with a follow-up number.
 
 | Element | The student… | Options | Graded by |
 | --- | --- | --- | --- |
-| `multiple-choice` | picks one option | radio buttons or an inline dropdown; shuffled or fixed order; show a random subset (`numberAnswers`) | 1 if the correct option is chosen, else 0; optional per-option feedback |
+| `multiple-choice` | picks one option (text, or a graph) | radio buttons or an inline dropdown; options can be graphs (`graph`, drawn as SVG); shuffled or fixed order; show a random subset (`numberAnswers`) | 1 if the correct option is chosen, else 0; optional per-option feedback |
 | `number` | types a decimal number | units after the box (`suffix`) | relative/absolute tolerance (`relabs`), significant figures (`sigfig`) or decimal places (`decdig`) |
 | `integer` | types a whole number | units after the box | exact match |
 | `jsxgraph` | draws on a JSXGraph canvas | the tools of the drawing component (`src/components/jsxgraphComponent`) | the app's **Grade** (or Save & next): the drawing is compared with `expectedDrawing` (slope/intercept lines or exact points), partial credit per shape |
@@ -278,9 +299,10 @@ each element type:
 | `12_expression_marginal_cost.ts` | Find the marginal cost function | `expression` (derivative of a cubic; 1 variable) |
 | `13_essay_quadratic_equation.ts` | Solve a quadratic equation | `essay` (hand-graded, up to 80 words; random integer roots) |
 | `14_conditional-grading_profit_maximum.ts` | Maximize profit step by step | `conditional-grading` (derivative, then q*, then maximum profit; errors carried forward) |
+| `15_mc_graph_supply_demand_shift.ts` | Which graph shows the change? | multiple choice with **graph options** (4 supply/demand graphs, random event and shift size) |
 
-The demo files are numbered consecutively (01-14); if you delete one, renumber the rest and update
-the imports in `src/questions/index.ts`. `quarto-demo/questions/` has the same 14 questions as
+The demo files are numbered consecutively (01-15); if you delete one, renumber the rest and update
+the imports in `src/questions/index.ts`. `quarto-demo/questions/` has the same 15 questions as
 plain `.js` files (same numbers and names, types removed), used by `quarto-demo/quiz1.js`; when you
 change a demo question, change its `.js` copy too.
 
@@ -311,6 +333,54 @@ unit).
 
 Exactly one option must be `correct`, and option texts must be unique. Breaking either rule is an
 authoring error. The score is 1 or 0, and the chosen option's `feedback` is shown if it has one.
+
+**Graph options.** Give an option a `graph` and it's shown as a graph instead of its text: the
+options become a grid of cards (two columns when there's room, one on a phone), each with a radio
+button and "Graph A", "Graph B", ... (letters follow the shuffled display order).
+
+```ts
+{
+  type: "multiple-choice",
+  name: "graph",
+  options: [
+    {
+      text: "Demand shifts right (D₁ to D₂)",   // not shown; see below
+      correct: true,
+      graph: {
+        xMax: 12, yMax: 12, xLabel: "Q", yLabel: "P",   // xMin/yMin default to 0
+        xTicks: [5], yTicks: [6],                       // optional labelled ticks
+        shapes: [
+          { type: "segment", from: [1, 10], to: [9, 2], color: "blue", label: "D₁" },
+          { type: "segment", from: [3, 10], to: [11, 2], color: "blue", dashed: true, label: "D₂" },
+          { type: "function", fn: "1 + x", domain: [1, 9], color: "red", label: "S" },
+          { type: "point", at: [5, 6], label: "E₁", guides: true },   // guides: dashed lines to the axes
+          { type: "polygon", points: [[0, 10], [0, 6], [5, 6]], color: "green", label: "CS" },  // shaded area
+          { type: "arrow", from: [2.9, 8.5], to: [4.6, 8.5], color: "gray" },
+          { type: "text", at: [10, 11], text: "Coffee" },
+        ],
+      },
+    },
+    // ... the other options, each with its own graph
+  ],
+}
+```
+
+- **The option `text` isn't shown** with a graph. It's the graph's description for screen readers
+  (the SVG is an image to them), and it names the option in reviews, the results file and
+  Blackboard's Student submissions (`Graph B: Demand shifts right (D₁ to D₂)`). Screen-reader users
+  choose by these descriptions, so write them so they test the same knowledge as the pictures.
+- **Shapes**: `segment`, `function` (`fn` is a mathjs expression in `x`), `point`, `polygon`,
+  `arrow`, `text`. Colors: `blue`, `red`, `green`, `orange`, `purple`, `gray` (default: the text
+  color); all readable in dark mode. Everything is clipped to the axes. Labels are plain text (SVG
+  can't typeset LaTeX), so use Unicode: `D₁`, `P*`, `π`.
+- Graphs are JSON built in `parts(params)`, so they can depend on the variant's random numbers.
+- Graph options need `display: "radio"` (the default); a dropdown can't show graphs. A malformed
+  graph (bad bounds, a `fn` that doesn't parse or uses another variable, ...) is an authoring error.
+- An option without a `graph` in the same question (e.g. "None of these") is shown as a text card.
+
+The graph component is `src/components/graphView/` (`GraphView.tsx`, `geometry.ts`, `types.ts`); it
+can be reused to show a graph anywhere (e.g. in a future question-text graph). See
+`src/questions/15_mc_graph_supply_demand_shift.ts`.
 
 ### `number`
 
@@ -487,6 +557,7 @@ any algebraically equivalent form is accepted.
   variables: { x: [1, 9] },                // optional: defaults to [1, 9] for every auto-detected variable
   samples: 5,                              // optional: how many random points to test; default 5
   tolerance: 1e-6,                         // optional: relative tolerance when comparing; default 1e-6
+  placeholder: "e.g. 2q + 3",              // optional: hint in the empty box; default "e.g. x^2 + 1/2 x + 1", "" for none
 }
 ```
 
@@ -529,11 +600,11 @@ grade later while reviewing the exported results file.
   maxChars: 1000,                            // optional upper limit on characters (spaces included)
   minWords: 20,                              // optional lower limit on words
   rows: 8,                                   // optional text box height; default 8
-  equationEditor: false,                     // optional: hide the "Insert equation" button; default true
+  equationEditor: true,                      // optional: show the "Insert equation" button; default false (hidden)
 }
 ```
 
-- **Math in answers**: the **Insert equation** button opens a [MathLive](https://mathlive.io/)
+- **Math in answers**: the **Insert equation** button (only with `equationEditor: true`) opens a [MathLive](https://mathlive.io/)
   equation editor (WYSIWYG, with an on-screen math keyboard behind its keyboard icon, handy on
   phones). **Insert** (or Enter) puts the equation into the essay at the cursor as LaTeX between
   dollar signs, e.g. `$x^2 + 5$`; Esc or **Cancel** closes it. Students can also type `$...$` (or
@@ -541,8 +612,8 @@ grade later while reviewing the exported results file.
   type. Because `$` starts math, a plain dollar sign is written `\$` (e.g. `\$5`); the help text
   under the box says so. A live counter shows words and characters against the limits and turns
   red when over.
-- **Hiding the equation editor**: set `equationEditor: false` on the part to hide the **Insert
-  equation** button (and its mention in the help text) when students should just type LaTeX.
+- **Showing the equation editor**: the **Insert equation** button (and its mention in the help
+  text) is hidden unless the part sets `equationEditor: true`; students then just type LaTeX.
   `$...$` and `$$...$$` work the same either way.
 - **Line breaks**: each Enter in the essay starts a new line in the preview (`remark-breaks`; normal
   Markdown would join single lines), so a solution can be written step by step:
@@ -601,7 +672,7 @@ then works correctly from it loses only the step with the mistake.
   type: "conditional-grading",
   name: "steps",
   steps: [
-    { name: "a", kind: "expression", label: "a) $f'(x) =$", correct: "-x + 2" },
+    { name: "a", kind: "expression", label: "a) $f'(x) =$", correct: "-x + 2", placeholder: "e.g. 2x + 3" },
     { name: "b", kind: "number", label: "b) Maximum at $x =$", correct: "-a(0) / (a(1) - a(0))" },
     { name: "c", kind: "number", label: "c) Maximum value", correct: "-1/2 * b^2 + 2 * b + 1" },
   ],
@@ -614,6 +685,9 @@ then works correctly from it loses only the step with the mistake.
   `kind: "expression"` is a math box graded like an `expression` part (`variables`, `tolerance`;
   test points are sampled once per variant by `prepare()`, `samples` per variable, default 5), with
   a live KaTeX preview.
+- **`placeholder`** (optional, per step) is the grey hint in the empty box, so it can use the
+  question's own variable (`"e.g. 2q + 3"`, `"e.g. 2r + 3"`). Default `"e.g. -2x + 3"` on
+  expression steps and none on number steps; `""` shows none.
 - **`correct`** is always a mathjs formula, and it may use the answers to **earlier** steps by name:
   a number step is a number (`b`), an expression step is a function of its variables (`a(0)`,
   `a(x)`). Step names must be identifiers that aren't mathjs names (`e`, `pi`, ... are rejected).
@@ -659,22 +733,55 @@ the app's normal **Grade** (or Save & next), and the drawing is graded then.
 ```
 
 - **`props`** are the component's `DrawingQuestionProps` (see `DrawingApp.tsx`): board size and
-  labels, `initialObjects`, `enabledTools`/`enabledActions`, colors, button visibility, `width`
-  and `height`. Only `expectedDrawing` is required (`check` throws an `AuthoringError` without it).
+  labels, `initialObjects` (fixed shapes; `showPoints: false` hides a shape's defining dots, e.g.
+  for the curves of a diagram), `enabledTools`/`enabledActions`, colors, button visibility
+  (`showColorPicker: false` hides the color palette, `showDownloadButton`, `showOutputButton`),
+  `width` and `height`. Only `expectedDrawing` is required (`check` throws an `AuthoringError` without it),
+  except in a hand-graded part (below).
+- **Tools** (`enabledTools`): `select`, `point`, `line`, `arrow`, `doubleArrow`, `segment`,
+  `rectangle` (drag two opposite corners), `triangle` (click the three corners; it completes on the
+  third click, e.g. to shade a CS, PS or DWL area), `circle`, `polygon`, `scatter`, `curve` (a smooth
+  curve through 4 clicks), `curve5` (through 5 clicks, smoother for U-shaped cost curves), `text`,
+  `coordinate`, `eraser`. Both curves count as line-like in grading. Lines, segments, rectangles and
+  triangles can be graded (plus vertical/through-point shapes); circles, polygons and the other
+  tools can be drawn and are saved, but aren't graded.
+  `triangle` and `curve5` are jsxgraph-only (the `svgDrawing` board doesn't have them).
 - **The value** of the part is the list of shapes the student drew (`UserDrawing[]`), updated on
   every change (draw, drag, erase, undo, redo, clear). It is saved, exported and restored like any
   other value: the board is rebuilt from it when saved progress is loaded.
-- **Grading** runs `gradeDrawing(expectedDrawing, drawings, boundingBox)` on Grade. Shapes are
-  matched in order; a line or segment given as `slope`/`yIntercept` only has to lie on that line,
-  within `tolerance` (default 10%); exact-points shapes get 5% of the board diagonal. The score is
-  the share of expected shapes drawn correctly. The feedback names the wrong shapes but not the
+- **Grading** runs `gradeDrawing(expectedDrawing, drawings, boundingBox, { anyOrder })` on Grade.
+  Expected shapes can be:
+  - exact points (`{ type: "segment", points: [...] }`), within 5% of the board diagonal; also
+    `{ type: "rectangle", points: [corner, oppositeCorner] }` (dragged along either diagonal) and
+    `{ type: "triangle", points: [a, b, c] }` (corners in any order), e.g. a profit rectangle and a
+    DWL triangle (`exams/micro-sample-exam2/questions/19_jsxgraph_monopoly_profit_dwl.js`);
+  - a line or segment given as `slope`/`yIntercept`, which only has to lie on that line, within
+    `tolerance` (default 10%);
+  - a vertical line, `{ type: "segment", x: 6 }` (e.g. an FE line): any line, segment, curve or
+    scatter whose points are all within `tolerance` (default 5% of the board width) of `x`;
+  - a line or curve through a point, `{ type: "curve", through: [6, 3.5], slope: "up" }` (e.g. a
+    shifted LM curve through the new equilibrium): any line-like drawing that passes within
+    `tolerance` (default 5% of the board diagonal) of the point and rises (`"up"`) or falls
+    (`"down"`) from its left end to its right end, whatever its exact shape.
+
+  By default shapes are matched in order (expected shape 1 with the first drawing, ...). With
+  `anyOrder: true` in `props`, each expected shape may match any drawing, text labels are ignored,
+  and extra drawings lower the score (correct / max(expected, drawn)). The score is the share of
+  expected shapes drawn correctly. The feedback names the wrong shapes (in order) but not the
   expected values. An empty board is invalid, so it doesn't use an attempt.
 - **When the question is finished** the board is locked (`readOnly`) and the correct answer is
   drawn dashed on top (`suggestedAnswer` if given, otherwise `expectedDrawing`).
+- **Hand-graded drawings:** `manualGrading: true` on the part (not in `props`) makes the teacher
+  grade it like an essay, for drawings that can't be checked automatically (e.g. free-hand AVC and
+  MC curves). `expectedDrawing` can then be left out; give a `suggestedAnswer` to show as the model
+  answer. The result is pending until graded in the review page (or the LMS gradebook for SCORM).
+  `manualGrading: true` works on any part type. See
+  `exams/micro-sample-exam2/questions/18_jsxgraph-essay_optimal_output_mc_avc.js`.
 - **Dependencies:** `jsxgraph` and `lucide-react` (both bundled, including into `exercise-system.js`
   for Quarto).
 
-See `src/questions/07_jsxgraph_budget_line.ts`. Files: `src/elements/jsxgraph/` (`JsxGraphInput.tsx`,
+See `src/questions/07_jsxgraph_budget_line.ts`, and `exams/macro-sample-exam2/questions/27_jsxgraph_supply_shock_is_lm_fe.js`
+for an IS-LM-FE diagram graded with vertical/through-point shapes in any order. Files: `src/elements/jsxgraph/` (`JsxGraphInput.tsx`,
 `gradeJsxGraph.ts`, `types.ts`) and `src/components/jsxgraphComponent/` (`DrawingApp.tsx`,
 `canvas/drawingLogic.tsx` for the board, `canvas/drawingTools.tsx`, `canvas/grading.ts`,
 `canvas/DrawingCanvas.css`).
@@ -810,16 +917,17 @@ Add an entry to the `assessments` array in `src/assessments/index.ts`:
 - Optional `gradeButton: false` hides grades (Save & next saves the answers); see
   [Grade and Save buttons](#grade-and-save-buttons).
 - Optional `resetButton: false` hides the "Reset assessment" button (which erases every answer),
-  e.g. for exams. SCORM packages never show it.
+  e.g. for exams. SCORM packages show it only in `mode: "exercise"` (never in an exam).
 - **Don't rename `id` or reorder `questions` once students have started.** Saved progress is keyed
   by the assessment id and checked against the question list. If they no longer match, the saved
   state is thrown away.
 - The new assessment shows up on the home page automatically.
-- A plain-JS quiz kept outside `src/` (like `exams/sample-exam2/exam2.js`, the same file the
+- A plain-JS quiz kept outside `src/` (like `exams/macro-sample-exam2/exam2.js`, the same file the
   SCORM script packages) can be shown in the app too: give it a `.d.ts` next to it (see
   `exam2.d.ts`), add its questions to `courseQuestions` in `src/questions/index.ts` (not to the
   demo `questions` list), and add `{ ...assessment, id: "ex2" }` to `assessments`. The course
-  questions are checked by `src/questions/questions.test.ts`.
+  questions are checked by `src/questions/questions.test.ts`. The micro exam
+  (`exams/micro-sample-exam2/sample-micro-exam2.js`) is wired in the same way as `ex3`.
 
 ---
 
@@ -1121,12 +1229,13 @@ The full assessment state (seeds, attempts, best scores, drafts, the current que
 compacted and compressed (`lz-string`): prepared parts are dropped (they're rebuilt from each
 question's seed), and only the **latest submission of each question keeps its answers**; older
 submissions keep just their score and time, so attempt counts and best scores still work. A
-fully answered 14-question demo quiz (with two graphs and an essay) needs about 4,000 to 10,000
+fully answered 15-question demo quiz (with two graphs and an essay) needs about 4,000 to 10,000
 characters; 40 shapes per graph and 30 attempts on every question still stay near 16,000. As with `localStorage`, saved
 progress is ignored if the quiz's id or question list changes, so don't edit a quiz that students
 have started.
 
-Inside an LMS the **Reset assessment** button is hidden (students can't wipe their attempts), and
+Inside an LMS the **Reset assessment** button only shows in `mode: "exercise"` (in an exam,
+students can't wipe their attempts), and
 the student's name is filled in from the LMS (`cmi.learner_name`). Opened outside an LMS (for
 example unzipped and served by a local web server; ES modules don't load from a double-clicked
 `file://` page), the package runs as a preview: a banner says it isn't connected, progress goes to
@@ -1191,7 +1300,11 @@ The tests cover:
   near-zero values, table validation and partial credit, the jsxgraph/svgDrawing grading and input
   syncing (`elements/jsxgraph/`, `elements/svgDrawing/`), and input components; the essay's limits,
   `$...$` preview and equation editor (MathLive is mocked, since jsdom can't run it), plus the
-  student flow from typing to "awaiting grade" (`elements/essay/`)
+  student flow from typing to "awaiting grade" (`elements/essay/`); the conditional-grading
+  step chain, including errors carried forward, undefined carried-forward values and
+  `carryForwardCredit` (`elements/conditionalGrading/`)
+- static graphs: coordinate mapping, function sampling, arrowheads, graph authoring checks, the
+  SVG rendering, and multiple choice with graph options (`components/graphView/graphView.test.tsx`)
 - every question in the bank across many seeds (`questions/questions.test.ts`)
 - SCORM: finding the LMS API, suspend data round trips and size, the reported cmi values, commit
   timing and resuming, against an in-memory fake LMS (`scorm/scorm.test.ts`,

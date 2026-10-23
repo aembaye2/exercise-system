@@ -7,6 +7,7 @@ import {
   MoveDiagonal,
   MoveUpRight,
   Square,
+  Triangle,
   Circle,
   Pentagon,
   Type,
@@ -92,6 +93,32 @@ const FourPointArcIcon = forwardRef<SVGSVGElement, FourPointArcIconProps>(
 );
 
 /** Connected scatter plot: dots joined by straight segments. */
+/** A U-shaped curve through 5 dots, like a cost curve. */
+const FivePointCurveIcon = forwardRef<SVGSVGElement, FourPointArcIconProps>(
+  ({ color = "currentColor", size = 24, ...props }, ref) =>
+    createElement(
+      "svg",
+      {
+        ...props,
+        ref,
+        width: size,
+        height: size,
+        viewBox: "0 0 100 100",
+        fill: "none",
+        stroke: color,
+        strokeWidth: 7,
+        strokeLinecap: "round",
+        xmlns: "http://www.w3.org/2000/svg",
+      },
+      createElement("path", { d: "M 10 18 C 20 70 35 84 50 84 S 80 70 90 18" }),
+      createElement("circle", { cx: 10, cy: 18, r: 10, fill: color, stroke: "none" }),
+      createElement("circle", { cx: 26, cy: 66, r: 10, fill: color, stroke: "none" }),
+      createElement("circle", { cx: 50, cy: 84, r: 10, fill: color, stroke: "none" }),
+      createElement("circle", { cx: 74, cy: 66, r: 10, fill: color, stroke: "none" }),
+      createElement("circle", { cx: 90, cy: 18, r: 10, fill: color, stroke: "none" })
+    )
+);
+
 const ConnectedScatterIcon = forwardRef<SVGSVGElement, FourPointArcIconProps>(
   ({ color = "currentColor", size = 24, ...props }, ref) =>
     createElement(
@@ -125,10 +152,12 @@ const ALL_TOOLS: { name: ToolName; label: string; icon: React.ReactNode }[] = [
   { name: "arrow", label: "Arrow", icon: <MoveUpRight /> },
   { name: "doubleArrow", label: "Double Arrow", icon: <MoveDiagonal /> },  
   { name: "rectangle", label: "Rectangle", icon: <Square /> },
+  { name: "triangle", label: "Triangle", icon: <Triangle /> },
   { name: "circle", label: "Circle", icon: <Circle /> },
   { name: "polygon", label: "Polygon", icon: <Pentagon /> },
   { name: "scatter", label: "Connected Scatter", icon: <ConnectedScatterIcon /> },
   { name: "curve", label: "4-Point Curve", icon: <FourPointArcIcon /> },
+  { name: "curve5", label: "5-Point Curve", icon: <FivePointCurveIcon /> },
   { name: "text", label: "Text", icon: <Type /> },
   { name: "coordinate", label: "Coordinate", icon: <XYCoordIcon /> },
   { name: "eraser", label: "Eraser", icon: <Eraser /> },
@@ -145,7 +174,7 @@ interface ToolButtonProps {
 function ToolButton({ name, label, icon, activeTool, onClick }: ToolButtonProps) {
   return (
     <div className="tool-wrapper">
-      <button
+      <button type="button"
         className={`tool-button ${activeTool === name ? "tool-button-active" : ""}`}
         onClick={() => onClick(name)}
         aria-label={label}
@@ -240,7 +269,7 @@ export default function DrawingToolbar({
                 <div className="color-picker-backdrop" onClick={() => setShowColors(false)} />
               )}
 
-              <button
+              <button type="button"
                 className="color-picker-trigger"
                 onClick={() => setShowColors(!showColors)}
                 title="Choose color"
@@ -261,7 +290,7 @@ export default function DrawingToolbar({
 
                   <div className="color-swatch-row">
                     {colors.map((c) => (
-                      <button
+                      <button type="button"
                         key={c}
                         className={`color-swatch ${color === c ? "selected-color" : ""}`}
                         style={{ backgroundColor: c }}

@@ -12,6 +12,8 @@ export interface ScormPersistence extends Persistence {
 export interface ConnectOptions {
   /** The assessment hides grades from students (Save only); see `hidesGrades`. */
   hideGrades?: boolean;
+  /** Show "Reset assessment" (exercises only: an exam reset would erase the student's attempts). Default false. */
+  canReset?: boolean;
   warn?: (msg: string) => void;
 }
 
@@ -36,7 +38,7 @@ function sessionTime(ms: number): string {
 export function connectScorm(
   api: Scorm2004Api,
   bank: QuestionBank,
-  { hideGrades = false, warn = console.warn }: ConnectOptions = {},
+  { hideGrades = false, canReset = false, warn = console.warn }: ConnectOptions = {},
 ): ScormPersistence | null {
   if (api.Initialize("") !== "true") {
     warn(`SCORM Initialize failed: ${api.GetErrorString(api.GetLastError())}`);
@@ -72,7 +74,7 @@ export function connectScorm(
   const learnerName = api.GetValue("cmi.learner_name");
 
   return {
-    canReset: false,
+    canReset,
     saveFailedMessage:
       "Your latest answers couldn't be saved to the course site. Keep this page open and check your internet connection; " +
       "the quiz tries again each time you change or save an answer. If this message doesn't go away, tell your instructor.",
@@ -97,6 +99,8 @@ export function connectScorm(
       }
       return ok;
     },
+    // The fresh state replaces suspend_data and the score on the next save. Interactions already
+    // written stay in the LMS until the fresh attempt overwrites them (SCORM can't delete them).
     clear: () => {},
     terminate() {
       if (terminated) return;

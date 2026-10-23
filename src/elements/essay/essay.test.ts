@@ -57,8 +57,9 @@ describe("essay element", () => {
     expect(gradeEssay({ type: "essay", name: "e" }).feedback).not.toMatch(/model answer/);
   });
 
-  it("mentions the equation button only when it is shown", () => {
-    expect(essayHelpText(part)).toMatch(/Insert equation/);
+  it("mentions the equation button only when it is shown (off by default)", () => {
+    expect(essayHelpText(part)).not.toMatch(/Insert equation/);
+    expect(essayHelpText({ ...part, equationEditor: true })).toMatch(/Insert equation/);
     expect(essayHelpText({ ...part, equationEditor: false })).not.toMatch(/Insert equation/);
     expect(essayHelpText({ ...part, equationEditor: false })).toMatch(/^Type math between dollar signs/);
   });

@@ -165,7 +165,7 @@ export default function DrawingToolbar({
                 <input type="color" value={color} onChange={(e) => onColorChange(e.target.value)} aria-label="Pick a custom color" />
                 <div className="color-swatch-row">
                   {colors.map((c) => (
-                    <button
+                    <button type="button"
                       key={c}
                       className={`color-swatch ${c === color ? "selected-color" : ""}`}
                       style={{ background: c }}

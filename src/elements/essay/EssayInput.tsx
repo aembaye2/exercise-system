@@ -63,7 +63,7 @@ export function EssayInput({ part, id, labelId, describedBy, value, onChange, di
             {part.maxChars !== undefined && ` / ${part.maxChars}`} characters
           </span>
         </p>
-        {part.equationEditor !== false && !disabled && !editingMath && (
+        {part.equationEditor === true && !disabled && !editingMath && (
           <Button onClick={() => setEditingMath(true)}>
             <Sigma aria-hidden="true" className="h-4 w-4" /> Insert equation
           </Button>

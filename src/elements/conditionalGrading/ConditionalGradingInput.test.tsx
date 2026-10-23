@@ -31,6 +31,16 @@ describe("ConditionalGradingInput", () => {
     expect(screen.getByRole("textbox", { name: "b) Maximum at" })).toBeInTheDocument();
   });
 
+  it("shows the default placeholder on expression steps only, unless a step sets its own", () => {
+    setup();
+    expect(screen.getByRole("textbox", { name: "a) Derivative" })).toHaveAttribute("placeholder", "e.g. -2x + 3");
+    expect(screen.getByRole("textbox", { name: "b) Maximum at" })).not.toHaveAttribute("placeholder");
+    const steps = part.steps.map((s) => ({ ...s, placeholder: s.name === "a" ? "e.g. 2q + 3" : "a number" }));
+    render(<ConditionalGradingInput part={{ ...part, steps }} id="q-t" labelId="lbl" value={undefined} onChange={vi.fn()} />);
+    expect(screen.getByPlaceholderText("e.g. 2q + 3")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("a number")).toBeInTheDocument();
+  });
+
   it("reports the value of every step when one changes", async () => {
     const onChange = setup({ a: "-x + 2" });
     await userEvent.type(screen.getByRole("textbox", { name: "b) Maximum at" }), "2");

@@ -67,3 +67,8 @@ export function getElement(type: string): ElementDefinition {
 export function hasElement(type: string): boolean {
   return registry.has(type);
 }
+
+/** Hand-graded by the teacher: an element type that always is (essay), or a part marked `manualGrading: true`. */
+export function isManualPart(part: { type: string; manualGrading?: boolean }): boolean {
+  return part.manualGrading === true || !!getElement(part.type).manualGrading;
+}

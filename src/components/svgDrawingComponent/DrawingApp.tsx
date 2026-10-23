@@ -187,7 +187,7 @@ export default function DrawingApp({
             <div className="footer-actions">
               {eraserEnabled && (
                 <div className="output-button-wrapper">
-                  <button
+                  <button type="button"
                     className={`output-button ${activeTool === "eraser" ? "footer-tool-active" : ""}`}
                     aria-pressed={activeTool === "eraser"}
                     onClick={() => handleToolChange("eraser")}
@@ -200,19 +200,19 @@ export default function DrawingApp({
               )}
 
               {actions.includes("undo") && (
-                <button className="output-button" onClick={() => boardRef.current?.undo()} disabled={readOnly || !canUndo} aria-label="Undo">
+                <button type="button" className="output-button" onClick={() => boardRef.current?.undo()} disabled={readOnly || !canUndo} aria-label="Undo">
                   <Undo2 />
                 </button>
               )}
 
               {actions.includes("redo") && (
-                <button className="output-button" onClick={() => boardRef.current?.redo()} disabled={readOnly || !canRedo} aria-label="Redo">
+                <button type="button" className="output-button" onClick={() => boardRef.current?.redo()} disabled={readOnly || !canRedo} aria-label="Redo">
                   <Redo2 />
                 </button>
               )}
 
               {actions.includes("clear") && (
-                <button
+                <button type="button"
                   className="output-button footer-delete-button"
                   onClick={() => boardRef.current?.clear()}
                   disabled={readOnly}
@@ -223,13 +223,13 @@ export default function DrawingApp({
               )}
 
               {showDownloadButton && (
-                <button className="output-button" onClick={handleDownload} aria-label="Download Image">
+                <button type="button" className="output-button" onClick={handleDownload} aria-label="Download Image">
                   <Download />
                 </button>
               )}
 
               {showOutputButton && (
-                <button
+                <button type="button"
                   className="output-button"
                   onClick={() => {
                     if (!showDrawings) refreshDrawingsOutput();

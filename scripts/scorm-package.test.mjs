@@ -37,7 +37,7 @@ describe("scorm-package", () => {
     const files = collectModuleFiles(join(root, "quiz1.js"), root);
     expect(files).toContain("quiz1.js");
     expect(files).toContain("questions/07_jsxgraph_budget_line.js");
-    expect(files).toHaveLength(14);
+    expect(files).toHaveLength(16);
   });
 
   it("refuses imports outside the quiz folder", () => {

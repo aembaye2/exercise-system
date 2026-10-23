@@ -20,6 +20,11 @@ export interface BasePart {
   weight?: number; // default 1
   label?: string; // optional prompt shown before the input (Markdown + LaTeX)
   suffix?: string; // optional text shown after the input (Markdown + LaTeX)
+  /**
+   * Graded by the teacher, like an essay, even though the element type is normally graded
+   * automatically (e.g. a free-hand drawing). Its result is pending until a grade is entered.
+   */
+  manualGrading?: boolean;
 }
 
 /**
@@ -98,7 +103,7 @@ export interface Assessment {
   /**
    * Show the "Reset assessment" button, which erases every answer and starts over.
    * Default true. Set it to false for exams, so students can't wipe their saved work.
-   * (In a SCORM package there is never a Reset button.)
+   * (In a SCORM package the Reset button only shows in exercise mode, never in an exam.)
    */
   resetButton?: boolean;
 }

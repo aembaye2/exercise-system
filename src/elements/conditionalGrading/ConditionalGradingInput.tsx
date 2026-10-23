@@ -44,7 +44,7 @@ export function ConditionalGradingInput({
                 aria-describedby={describedBy}
                 aria-invalid={stepInvalid || undefined}
                 disabled={disabled}
-                placeholder={step.kind === "number" ? undefined : "e.g. -2x + 3"}
+                placeholder={step.placeholder ?? (step.kind === "number" ? undefined : "e.g. -2x + 3")}
                 value={raw}
                 onChange={(e) => onChange({ ...values, [step.name]: e.target.value })}
                 className={`${step.kind === "number" ? "w-40" : "w-full max-w-md"} max-w-full rounded-md border bg-white px-2 py-1.5 font-mono dark:bg-slate-900 ${

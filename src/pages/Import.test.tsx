@@ -5,18 +5,22 @@ import { Import } from "./Import";
 import { assessmentReducer, createAssessmentState } from "../engine/assessment";
 import { buildExport, type ResultsExport } from "../engine/storage";
 import type { Assessment, Question } from "../engine/types";
-import { exercise, seedCounter, testBank } from "../test/fixtures";
+import { createVariant } from "../engine/variant";
+import { addQuestion, exercise, seedCounter, testBank } from "../test/fixtures";
 
 const NOW = "2026-01-01T00:00:00.000Z";
 
 function exportedResults(): ResultsExport {
   let s = createAssessmentState(exercise, testBank, seedCounter(100), NOW);
-  const part = s.questions[0].preparedParts[0];
+  s = assessmentReducer(s, { type: "setValue", index: 0, part: "sum", value: "999" });
+  s = assessmentReducer(s, { type: "submit", index: 0, timestamp: NOW });
+  // A graded variant is locked; the second (correct) answer is on a new variant.
+  const preparedParts = createVariant(addQuestion as never, 200).parts;
+  s = assessmentReducer(s, { type: "newVariant", index: 0, seed: 200, preparedParts });
+  const part = preparedParts[0];
   const correct = part.type === "integer" ? part.correct : 0;
-  for (const value of ["999", String(correct)]) {
-    s = assessmentReducer(s, { type: "setValue", index: 0, part: "sum", value });
-    s = assessmentReducer(s, { type: "submit", index: 0, timestamp: NOW });
-  }
+  s = assessmentReducer(s, { type: "setValue", index: 0, part: "sum", value: String(correct) });
+  s = assessmentReducer(s, { type: "submit", index: 0, timestamp: NOW });
   s = assessmentReducer(s, { type: "setStudentName", name: "Ada" });
   return buildExport(s, exercise, NOW);
 }

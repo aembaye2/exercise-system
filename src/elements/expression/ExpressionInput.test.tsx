@@ -27,6 +27,13 @@ describe("ExpressionInput", () => {
     expect(screen.getByText("Preview appears here as you type…")).toBeInTheDocument();
   });
 
+  it("uses the part's own placeholder when it sets one", () => {
+    setup();
+    expect(screen.getByRole("textbox")).toHaveAttribute("placeholder", "e.g. x^2 + 1/2 x + 1");
+    render(<ExpressionInput part={{ ...part, placeholder: "e.g. 2r + 3" }} id="q-f" labelId="lbl" value={undefined} onChange={vi.fn()} />);
+    expect(screen.getByPlaceholderText("e.g. 2r + 3")).toBeInTheDocument();
+  });
+
   it("reports what the student types", async () => {
     const onChange = setup();
     const input = screen.getByRole("textbox");

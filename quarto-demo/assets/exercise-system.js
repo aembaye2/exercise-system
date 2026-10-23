@@ -5929,6 +5929,9 @@ function getElement(t) {
 	if (!n) throw Error(`Unknown element type "${t}". Did you register it in src/elements/index.ts?`);
 	return n;
 }
+function isManualPart(t) {
+	return t.manualGrading === !0 || !!getElement(t.type).manualGrading;
+}
 //#endregion
 //#region node_modules/devlop/lib/default.js
 function ok$1() {}
@@ -44869,18 +44872,18 @@ var name$102 = "simplifyCore", dependencies$89 = [
 	minE: -EXP_LIMIT,
 	maxE: EXP_LIMIT,
 	crypto: !1
-}, inexact, quadrant, external = !0, decimalError = "[DecimalError] ", invalidArgument = decimalError + "Invalid argument: ", precisionLimitExceeded = decimalError + "Precision limit exceeded", cryptoUnavailable = decimalError + "crypto unavailable", tag = "[object Decimal]", mathfloor = Math.floor, mathpow = Math.pow, isBinary = /^0b([01]+(\.[01]*)?|\.[01]+)(p[+-]?\d+)?$/i, isHex = /^0x([0-9a-f]+(\.[0-9a-f]*)?|\.[0-9a-f]+)(p[+-]?\d+)?$/i, isOctal = /^0o([0-7]+(\.[0-7]*)?|\.[0-7]+)(p[+-]?\d+)?$/i, isDecimal = /^(\d+(\.\d*)?|\.\d+)(e[+-]?\d+)?$/i, BASE = 1e7, LOG_BASE = 7, MAX_SAFE_INTEGER = 9007199254740991, LN10_PRECISION = LN10.length - 1, PI_PRECISION = PI.length - 1, P$2 = { toStringTag: tag };
-P$2.absoluteValue = P$2.abs = function() {
+}, inexact, quadrant, external = !0, decimalError = "[DecimalError] ", invalidArgument = decimalError + "Invalid argument: ", precisionLimitExceeded = decimalError + "Precision limit exceeded", cryptoUnavailable = decimalError + "crypto unavailable", tag = "[object Decimal]", mathfloor = Math.floor, mathpow = Math.pow, isBinary = /^0b([01]+(\.[01]*)?|\.[01]+)(p[+-]?\d+)?$/i, isHex = /^0x([0-9a-f]+(\.[0-9a-f]*)?|\.[0-9a-f]+)(p[+-]?\d+)?$/i, isOctal = /^0o([0-7]+(\.[0-7]*)?|\.[0-7]+)(p[+-]?\d+)?$/i, isDecimal = /^(\d+(\.\d*)?|\.\d+)(e[+-]?\d+)?$/i, BASE = 1e7, LOG_BASE = 7, MAX_SAFE_INTEGER = 9007199254740991, LN10_PRECISION = LN10.length - 1, PI_PRECISION = PI.length - 1, P$4 = { toStringTag: tag };
+P$4.absoluteValue = P$4.abs = function() {
 	var t = new this.constructor(this);
 	return t.s < 0 && (t.s = 1), finalise(t);
-}, P$2.ceil = function() {
+}, P$4.ceil = function() {
 	return finalise(new this.constructor(this), this.e + 1, 2);
-}, P$2.clampedTo = P$2.clamp = function(t, n) {
+}, P$4.clampedTo = P$4.clamp = function(t, n) {
 	var r, a = this, o = a.constructor;
 	if (t = new o(t), n = new o(n), !t.s || !n.s) return new o(NaN);
 	if (t.gt(n)) throw Error(invalidArgument + n);
 	return r = a.cmp(t), r < 0 ? t : a.cmp(n) > 0 ? n : new o(a);
-}, P$2.comparedTo = P$2.cmp = function(t) {
+}, P$4.comparedTo = P$4.cmp = function(t) {
 	var n, r, a, o, c = this, l = c.d, u = (t = new c.constructor(t)).d, d = c.s, f = t.s;
 	if (!l || !u) return !d || !f ? NaN : d === f ? l === u ? 0 : !l ^ d < 0 ? 1 : -1 : d;
 	if (!l[0] || !u[0]) return l[0] ? d : u[0] ? -f : 0;
@@ -44888,10 +44891,10 @@ P$2.absoluteValue = P$2.abs = function() {
 	if (c.e !== t.e) return c.e > t.e ^ d < 0 ? 1 : -1;
 	for (a = l.length, o = u.length, n = 0, r = a < o ? a : o; n < r; ++n) if (l[n] !== u[n]) return l[n] > u[n] ^ d < 0 ? 1 : -1;
 	return a === o ? 0 : a > o ^ d < 0 ? 1 : -1;
-}, P$2.cosine = P$2.cos = function() {
+}, P$4.cosine = P$4.cos = function() {
 	var t, n, r = this, a = r.constructor;
 	return r.d ? r.d[0] ? (t = a.precision, n = a.rounding, a.precision = t + Math.max(r.e, r.sd()) + LOG_BASE, a.rounding = 1, r = cosine(a, toLessThanHalfPi(a, r)), a.precision = t, a.rounding = n, finalise(quadrant == 2 || quadrant == 3 ? r.neg() : r, t, n, !0)) : new a(1) : new a(NaN);
-}, P$2.cubeRoot = P$2.cbrt = function() {
+}, P$4.cubeRoot = P$4.cbrt = function() {
 	var t, n, r, a, o, c, l, u, d, f, m = this, _ = m.constructor;
 	if (!m.isFinite() || m.isZero()) return new _(m);
 	for (external = !1, c = m.s * mathpow(m.s * m, 1 / 3), !c || Math.abs(c) == 1 / 0 ? (r = digitsToString(m.d), t = m.e, (c = (t - r.length + 1) % 3) && (r += c == 1 || c == -2 ? "0" : "00"), c = mathpow(r, 1 / 3), t = mathfloor((t + 1) / 3) - (t % 3 == (t < 0 ? -1 : 2)), c == 1 / 0 ? r = "5e" + t : (r = c.toExponential(), r = r.slice(0, r.indexOf("e") + 1) + t), a = new _(r), a.s = m.s) : a = new _(c.toString()), l = (t = _.precision) + 3;;) if (u = a, d = u.times(u).times(u), f = d.plus(m), a = divide(f.plus(m).times(u), f.plus(d), l + 2, 1), digitsToString(u.d).slice(0, l) === (r = digitsToString(a.d)).slice(0, l)) {
@@ -44907,35 +44910,35 @@ P$2.absoluteValue = P$2.abs = function() {
 		}
 	}
 	return external = !0, finalise(a, t, _.rounding, n);
-}, P$2.decimalPlaces = P$2.dp = function() {
+}, P$4.decimalPlaces = P$4.dp = function() {
 	var t, n = this.d, r = NaN;
 	if (n) {
 		if (t = n.length - 1, r = (t - mathfloor(this.e / LOG_BASE)) * LOG_BASE, t = n[t], t) for (; t % 10 == 0; t /= 10) r--;
 		r < 0 && (r = 0);
 	}
 	return r;
-}, P$2.dividedBy = P$2.div = function(t) {
+}, P$4.dividedBy = P$4.div = function(t) {
 	return divide(this, new this.constructor(t));
-}, P$2.dividedToIntegerBy = P$2.divToInt = function(t) {
+}, P$4.dividedToIntegerBy = P$4.divToInt = function(t) {
 	var n = this, r = n.constructor;
 	return finalise(divide(n, new r(t), 0, 1, 1), r.precision, r.rounding);
-}, P$2.equals = P$2.eq = function(t) {
+}, P$4.equals = P$4.eq = function(t) {
 	return this.cmp(t) === 0;
-}, P$2.floor = function() {
+}, P$4.floor = function() {
 	return finalise(new this.constructor(this), this.e + 1, 3);
-}, P$2.greaterThan = P$2.gt = function(t) {
+}, P$4.greaterThan = P$4.gt = function(t) {
 	return this.cmp(t) > 0;
-}, P$2.greaterThanOrEqualTo = P$2.gte = function(t) {
+}, P$4.greaterThanOrEqualTo = P$4.gte = function(t) {
 	var n = this.cmp(t);
 	return n == 1 || n === 0;
-}, P$2.hyperbolicCosine = P$2.cosh = function() {
+}, P$4.hyperbolicCosine = P$4.cosh = function() {
 	var t, n, r, a, o, c = this, l = c.constructor, u = new l(1);
 	if (!c.isFinite()) return new l(c.s ? 1 / 0 : NaN);
 	if (c.isZero()) return u;
 	r = l.precision, a = l.rounding, l.precision = r + Math.max(c.e, c.sd()) + 4, l.rounding = 1, o = c.d.length, o < 32 ? (t = Math.ceil(o / 3), n = (1 / tinyPow(4, t)).toString()) : (t = 16, n = "2.3283064365386962890625e-10"), c = taylorSeries(l, 1, c.times(n), new l(1), !0);
 	for (var d, f = t, m = new l(8); f--;) d = c.times(c), c = u.minus(d.times(m.minus(d.times(m))));
 	return finalise(c, l.precision = r, l.rounding = a, !0);
-}, P$2.hyperbolicSine = P$2.sinh = function() {
+}, P$4.hyperbolicSine = P$4.sinh = function() {
 	var t, n, r, a, o = this, c = o.constructor;
 	if (!o.isFinite() || o.isZero()) return new c(o);
 	if (n = c.precision, r = c.rounding, c.precision = n + Math.max(o.e, o.sd()) + 4, c.rounding = 1, a = o.d.length, a < 3) o = taylorSeries(c, 2, o, o, !0);
@@ -44944,25 +44947,25 @@ P$2.absoluteValue = P$2.abs = function() {
 		for (var l, u = new c(5), d = new c(16), f = new c(20); t--;) l = o.times(o), o = o.times(u.plus(l.times(d.times(l).plus(f))));
 	}
 	return c.precision = n, c.rounding = r, finalise(o, n, r, !0);
-}, P$2.hyperbolicTangent = P$2.tanh = function() {
+}, P$4.hyperbolicTangent = P$4.tanh = function() {
 	var t, n, r = this, a = r.constructor;
 	return r.isFinite() ? r.isZero() ? new a(r) : (t = a.precision, n = a.rounding, a.precision = t + 7, a.rounding = 1, divide(r.sinh(), r.cosh(), a.precision = t, a.rounding = n)) : new a(r.s);
-}, P$2.inverseCosine = P$2.acos = function() {
+}, P$4.inverseCosine = P$4.acos = function() {
 	var t = this, n = t.constructor, r = t.abs().cmp(1), a = n.precision, o = n.rounding;
 	return r === -1 ? t.isZero() ? getPi(n, a + 4, o).times(.5) : (n.precision = a + 6, n.rounding = 1, t = new n(1).minus(t).div(t.plus(1)).sqrt().atan(), n.precision = a, n.rounding = o, t.times(2)) : r === 0 ? t.isNeg() ? getPi(n, a, o) : new n(0) : new n(NaN);
-}, P$2.inverseHyperbolicCosine = P$2.acosh = function() {
+}, P$4.inverseHyperbolicCosine = P$4.acosh = function() {
 	var t, n, r = this, a = r.constructor;
 	return r.lte(1) ? new a(r.eq(1) ? 0 : NaN) : r.isFinite() ? (t = a.precision, n = a.rounding, a.precision = t + Math.max(Math.abs(r.e), r.sd()) + 4, a.rounding = 1, external = !1, r = r.times(r).minus(1).sqrt().plus(r), external = !0, a.precision = t, a.rounding = n, r.ln()) : new a(r);
-}, P$2.inverseHyperbolicSine = P$2.asinh = function() {
+}, P$4.inverseHyperbolicSine = P$4.asinh = function() {
 	var t, n, r = this, a = r.constructor;
 	return !r.isFinite() || r.isZero() ? new a(r) : (t = a.precision, n = a.rounding, a.precision = t + 2 * Math.max(Math.abs(r.e), r.sd()) + 6, a.rounding = 1, external = !1, r = r.times(r).plus(1).sqrt().plus(r), external = !0, a.precision = t, a.rounding = n, r.ln());
-}, P$2.inverseHyperbolicTangent = P$2.atanh = function() {
+}, P$4.inverseHyperbolicTangent = P$4.atanh = function() {
 	var t, n, r, a, o = this, c = o.constructor;
 	return o.isFinite() ? o.e >= 0 ? new c(o.abs().eq(1) ? o.s / 0 : o.isZero() ? o : NaN) : (t = c.precision, n = c.rounding, a = o.sd(), Math.max(a, t) < 2 * -o.e - 1 ? finalise(new c(o), t, n, !0) : (c.precision = r = a - o.e, o = divide(o.plus(1), new c(1).minus(o), r + t, 1), c.precision = t + 4, c.rounding = 1, o = o.ln(), c.precision = t, c.rounding = n, o.times(.5))) : new c(NaN);
-}, P$2.inverseSine = P$2.asin = function() {
+}, P$4.inverseSine = P$4.asin = function() {
 	var t, n, r, a, o = this, c = o.constructor;
 	return o.isZero() ? new c(o) : (n = o.abs().cmp(1), r = c.precision, a = c.rounding, n === -1 ? (c.precision = r + 6, c.rounding = 1, o = o.div(new c(1).minus(o.times(o)).sqrt().plus(1)).atan(), c.precision = r, c.rounding = a, o.times(2)) : n === 0 ? (t = getPi(c, r + 4, a).times(.5), t.s = o.s, t) : new c(NaN));
-}, P$2.inverseTangent = P$2.atan = function() {
+}, P$4.inverseTangent = P$4.atan = function() {
 	var t, n, r, a, o, c, l, u, d, f = this, m = f.constructor, _ = m.precision, v = m.rounding;
 	if (!f.isFinite()) {
 		if (!f.s) return new m(NaN);
@@ -44972,23 +44975,23 @@ P$2.absoluteValue = P$2.abs = function() {
 	for (m.precision = u = _ + 10, m.rounding = 1, r = Math.min(28, u / LOG_BASE + 2 | 0), t = r; t; --t) f = f.div(f.times(f).plus(1).sqrt().plus(1));
 	for (external = !1, n = Math.ceil(u / LOG_BASE), a = 1, d = f.times(f), l = new m(f), o = f; t !== -1;) if (o = o.times(d), c = l.minus(o.div(a += 2)), o = o.times(d), l = c.plus(o.div(a += 2)), l.d[n] !== void 0) for (t = n; l.d[t] === c.d[t] && t--;);
 	return r && (l = l.times(2 << r - 1)), external = !0, finalise(l, m.precision = _, m.rounding = v, !0);
-}, P$2.isFinite = function() {
+}, P$4.isFinite = function() {
 	return !!this.d;
-}, P$2.isInteger = P$2.isInt = function() {
+}, P$4.isInteger = P$4.isInt = function() {
 	return !!this.d && mathfloor(this.e / LOG_BASE) > this.d.length - 2;
-}, P$2.isNaN = function() {
+}, P$4.isNaN = function() {
 	return !this.s;
-}, P$2.isNegative = P$2.isNeg = function() {
+}, P$4.isNegative = P$4.isNeg = function() {
 	return this.s < 0;
-}, P$2.isPositive = P$2.isPos = function() {
+}, P$4.isPositive = P$4.isPos = function() {
 	return this.s > 0;
-}, P$2.isZero = function() {
+}, P$4.isZero = function() {
 	return !!this.d && this.d[0] === 0;
-}, P$2.lessThan = P$2.lt = function(t) {
+}, P$4.lessThan = P$4.lt = function(t) {
 	return this.cmp(t) < 0;
-}, P$2.lessThanOrEqualTo = P$2.lte = function(t) {
+}, P$4.lessThanOrEqualTo = P$4.lte = function(t) {
 	return this.cmp(t) < 1;
-}, P$2.logarithm = P$2.log = function(t) {
+}, P$4.logarithm = P$4.log = function(t) {
 	var n, r, a, o, c, l, u, d, f = this, m = f.constructor, _ = m.precision, v = m.rounding, y = 5;
 	if (t == null) t = new m(10), n = !0;
 	else {
@@ -45010,7 +45013,7 @@ P$2.absoluteValue = P$2.abs = function() {
 		}
 	while (checkRoundingDigits(d.d, o += 10, v));
 	return external = !0, finalise(d, _, v);
-}, P$2.minus = P$2.sub = function(t) {
+}, P$4.minus = P$4.sub = function(t) {
 	var n, r, a, o, c, l, u, d, f, m, _, v, y = this, b = y.constructor;
 	if (t = new b(t), !y.d || !t.d) return !y.s || !t.s ? t = new b(NaN) : y.d ? t.s = -t.s : t = new b(t.d || y.s !== t.s ? y : NaN), t;
 	if (y.s != t.s) return t.s = -t.s, y.plus(t);
@@ -45041,17 +45044,17 @@ P$2.absoluteValue = P$2.abs = function() {
 	for (; f[--l] === 0;) f.pop();
 	for (; f[0] === 0; f.shift()) --r;
 	return f[0] ? (t.d = f, t.e = getBase10Exponent(f, r), external ? finalise(t, u, d) : t) : new b(d === 3 ? -0 : 0);
-}, P$2.modulo = P$2.mod = function(t) {
+}, P$4.modulo = P$4.mod = function(t) {
 	var n, r = this, a = r.constructor;
 	return t = new a(t), !r.d || !t.s || t.d && !t.d[0] ? new a(NaN) : !t.d || r.d && !r.d[0] ? finalise(new a(r), a.precision, a.rounding) : (external = !1, a.modulo == 9 ? (n = divide(r, t.abs(), 0, 3, 1), n.s *= t.s) : n = divide(r, t, 0, a.modulo, 1), n = n.times(t), external = !0, r.minus(n));
-}, P$2.naturalExponential = P$2.exp = function() {
+}, P$4.naturalExponential = P$4.exp = function() {
 	return naturalExponential(this);
-}, P$2.naturalLogarithm = P$2.ln = function() {
+}, P$4.naturalLogarithm = P$4.ln = function() {
 	return naturalLogarithm(this);
-}, P$2.negated = P$2.neg = function() {
+}, P$4.negated = P$4.neg = function() {
 	var t = new this.constructor(this);
 	return t.s = -t.s, finalise(t);
-}, P$2.plus = P$2.add = function(t) {
+}, P$4.plus = P$4.add = function(t) {
 	var n, r, a, o, c, l, u, d, f, m, _ = this, v = _.constructor;
 	if (t = new v(t), !_.d || !t.d) return !_.s || !t.s ? t = new v(NaN) : _.d || (t = new v(t.d || _.s === t.s ? _ : NaN)), t;
 	if (_.s != t.s) return t.s = -t.s, _.minus(t);
@@ -45063,17 +45066,17 @@ P$2.absoluteValue = P$2.abs = function() {
 	for (l = f.length, o = m.length, l - o < 0 && (o = l, r = m, m = f, f = r), n = 0; o;) n = (f[--o] = f[o] + m[o] + n) / BASE | 0, f[o] %= BASE;
 	for (n && (f.unshift(n), ++a), l = f.length; f[--l] == 0;) f.pop();
 	return t.d = f, t.e = getBase10Exponent(f, a), external ? finalise(t, u, d) : t;
-}, P$2.precision = P$2.sd = function(t) {
+}, P$4.precision = P$4.sd = function(t) {
 	var n, r = this;
 	if (t !== void 0 && t !== !!t && t !== 1 && t !== 0) throw Error(invalidArgument + t);
 	return r.d ? (n = getPrecision(r.d), t && r.e + 1 > n && (n = r.e + 1)) : n = NaN, n;
-}, P$2.round = function() {
+}, P$4.round = function() {
 	var t = this, n = t.constructor;
 	return finalise(new n(t), t.e + 1, n.rounding);
-}, P$2.sine = P$2.sin = function() {
+}, P$4.sine = P$4.sin = function() {
 	var t, n, r = this, a = r.constructor;
 	return r.isFinite() ? r.isZero() ? new a(r) : (t = a.precision, n = a.rounding, a.precision = t + Math.max(r.e, r.sd()) + LOG_BASE, a.rounding = 1, r = sine(a, toLessThanHalfPi(a, r)), a.precision = t, a.rounding = n, finalise(quadrant > 2 ? r.neg() : r, t, n, !0)) : new a(NaN);
-}, P$2.squareRoot = P$2.sqrt = function() {
+}, P$4.squareRoot = P$4.sqrt = function() {
 	var t, n, r, a, o, c, l = this, u = l.d, d = l.e, f = l.s, m = l.constructor;
 	if (f !== 1 || !u || !u[0]) return new m(!f || f < 0 && (!u || u[0]) ? NaN : u ? l : 1 / 0);
 	for (external = !1, f = Math.sqrt(+l), f == 0 || f == 1 / 0 ? (n = digitsToString(u), (n.length + d) % 2 == 0 && (n += "0"), f = Math.sqrt(n), d = mathfloor((d + 1) / 2) - (d < 0 || d % 2), f == 1 / 0 ? n = "5e" + d : (n = f.toExponential(), n = n.slice(0, n.indexOf("e") + 1) + d), a = new m(n)) : a = new m(f.toString()), r = (d = m.precision) + 3;;) if (c = a, a = c.plus(divide(l, c, r + 2, 1)).times(.5), digitsToString(c.d).slice(0, r) === (n = digitsToString(a.d)).slice(0, r)) {
@@ -45089,10 +45092,10 @@ P$2.absoluteValue = P$2.abs = function() {
 		}
 	}
 	return external = !0, finalise(a, d, m.rounding, t);
-}, P$2.tangent = P$2.tan = function() {
+}, P$4.tangent = P$4.tan = function() {
 	var t, n, r = this, a = r.constructor;
 	return r.isFinite() ? r.isZero() ? new a(r) : (t = a.precision, n = a.rounding, a.precision = t + 10, a.rounding = 1, r = r.sin(), r.s = 1, r = divide(r, new a(1).minus(r.times(r)).sqrt(), t + 10, 0), a.precision = t, a.rounding = n, finalise(quadrant == 2 || quadrant == 4 ? r.neg() : r, t, n, !0)) : new a(NaN);
-}, P$2.times = P$2.mul = function(t) {
+}, P$4.times = P$4.mul = function(t) {
 	var n, r, a, o, c, l, u, d, f, m = this, _ = m.constructor, v = m.d, y = (t = new _(t)).d;
 	if (t.s *= m.s, !v || !v[0] || !y || !y[0]) return new _(!t.s || v && !v[0] && !y || y && !y[0] && !v ? NaN : !v || !y ? t.s / 0 : t.s * 0);
 	for (r = mathfloor(m.e / LOG_BASE) + mathfloor(t.e / LOG_BASE), d = v.length, f = y.length, d < f && (c = v, v = y, y = c, l = d, d = f, f = l), c = [], l = d + f, a = l; a--;) c.push(0);
@@ -45102,18 +45105,18 @@ P$2.absoluteValue = P$2.abs = function() {
 	}
 	for (; !c[--l];) c.pop();
 	return n ? ++r : c.shift(), t.d = c, t.e = getBase10Exponent(c, r), external ? finalise(t, _.precision, _.rounding) : t;
-}, P$2.toBinary = function(t, n) {
+}, P$4.toBinary = function(t, n) {
 	return toStringBinary(this, 2, t, n);
-}, P$2.toDecimalPlaces = P$2.toDP = function(t, n) {
+}, P$4.toDecimalPlaces = P$4.toDP = function(t, n) {
 	var r = this, a = r.constructor;
 	return r = new a(r), t === void 0 ? r : (checkInt32(t, 0, MAX_DIGITS), n === void 0 ? n = a.rounding : checkInt32(n, 0, 8), finalise(r, t + r.e + 1, n));
-}, P$2.toExponential = function(t, n) {
+}, P$4.toExponential = function(t, n) {
 	var r, a = this, o = a.constructor;
 	return t === void 0 ? r = finiteToString(a, !0) : (checkInt32(t, 0, MAX_DIGITS), n === void 0 ? n = o.rounding : checkInt32(n, 0, 8), a = finalise(new o(a), t + 1, n), r = finiteToString(a, !0, t + 1)), a.isNeg() && !a.isZero() ? "-" + r : r;
-}, P$2.toFixed = function(t, n) {
+}, P$4.toFixed = function(t, n) {
 	var r, a, o = this, c = o.constructor;
 	return t === void 0 ? r = finiteToString(o) : (checkInt32(t, 0, MAX_DIGITS), n === void 0 ? n = c.rounding : checkInt32(n, 0, 8), a = finalise(new c(o), t + o.e + 1, n), r = finiteToString(a, !1, t + a.e + 1)), o.isNeg() && !o.isZero() ? "-" + r : r;
-}, P$2.toFraction = function(t) {
+}, P$4.toFraction = function(t) {
 	var n, r, a, o, c, l, u, d, f, m, _, v, y = this, b = y.d, C = y.constructor;
 	if (!b) return new C(y);
 	if (f = r = new C(1), a = d = new C(0), n = new C(a), c = n.e = getPrecision(b) - y.e - 1, l = c % LOG_BASE, n.d[0] = mathpow(10, l < 0 ? LOG_BASE + l : l), t == null) t = c > 0 ? n : f;
@@ -45123,9 +45126,9 @@ P$2.absoluteValue = P$2.abs = function() {
 	}
 	for (external = !1, u = new C(digitsToString(b)), m = C.precision, C.precision = c = b.length * LOG_BASE * 2; _ = divide(u, n, 0, 1, 1), o = r.plus(_.times(a)), o.cmp(t) != 1;) r = a, a = o, o = f, f = d.plus(_.times(o)), d = o, o = n, n = u.minus(_.times(o)), u = o;
 	return o = divide(t.minus(r), a, 0, 1, 1), d = d.plus(o.times(f)), r = r.plus(o.times(a)), d.s = f.s = y.s, v = divide(f, a, c, 1).minus(y).abs().cmp(divide(d, r, c, 1).minus(y).abs()) < 1 ? [f, a] : [d, r], C.precision = m, external = !0, v;
-}, P$2.toHexadecimal = P$2.toHex = function(t, n) {
+}, P$4.toHexadecimal = P$4.toHex = function(t, n) {
 	return toStringBinary(this, 16, t, n);
-}, P$2.toNearest = function(t, n) {
+}, P$4.toNearest = function(t, n) {
 	var r = this, a = r.constructor;
 	if (r = new a(r), t == null) {
 		if (!r.d) return r;
@@ -45135,11 +45138,11 @@ P$2.absoluteValue = P$2.abs = function() {
 		if (!t.d) return t.s && (t.s = r.s), t;
 	}
 	return t.d[0] ? (external = !1, r = divide(r, t, 0, n, 1).times(t), external = !0, finalise(r)) : (t.s = r.s, r = t), r;
-}, P$2.toNumber = function() {
+}, P$4.toNumber = function() {
 	return +this;
-}, P$2.toOctal = function(t, n) {
+}, P$4.toOctal = function(t, n) {
 	return toStringBinary(this, 8, t, n);
-}, P$2.toPower = P$2.pow = function(t) {
+}, P$4.toPower = P$4.pow = function(t) {
 	var n, r, a, o, c, l, u = this, d = u.constructor, f = +(t = new d(t));
 	if (!u.d || !t.d || !u.d[0] || !t.d[0]) return new d(mathpow(+u, f));
 	if (u = new d(u), u.eq(1)) return u;
@@ -45150,18 +45153,18 @@ P$2.absoluteValue = P$2.abs = function() {
 		if (t.d[n] & 1 || (l = 1), u.e == 0 && u.d[0] == 1 && u.d.length == 1) return u.s = l, u;
 	}
 	return r = mathpow(+u, f), n = r == 0 || !isFinite(r) ? mathfloor(f * (Math.log("0." + digitsToString(u.d)) / Math.LN10 + u.e + 1)) : new d(r + "").e, n > d.maxE + 1 || n < d.minE - 1 ? new d(n > 0 ? l / 0 : 0) : (external = !1, d.rounding = u.s = 1, r = Math.min(12, (n + "").length), o = naturalExponential(t.times(naturalLogarithm(u, a + r)), a), o.d && (o = finalise(o, a + 5, 1), checkRoundingDigits(o.d, a, c) && (n = a + 10, o = finalise(naturalExponential(t.times(naturalLogarithm(u, n + r)), n), n + 5, 1), +digitsToString(o.d).slice(a + 1, a + 15) + 1 == 0x5af3107a4000 && (o = finalise(o, a + 1, 0)))), o.s = l, external = !0, d.rounding = c, finalise(o, a, c));
-}, P$2.toPrecision = function(t, n) {
+}, P$4.toPrecision = function(t, n) {
 	var r, a = this, o = a.constructor;
 	return t === void 0 ? r = finiteToString(a, a.e <= o.toExpNeg || a.e >= o.toExpPos) : (checkInt32(t, 1, MAX_DIGITS), n === void 0 ? n = o.rounding : checkInt32(n, 0, 8), a = finalise(new o(a), t, n), r = finiteToString(a, t <= a.e || a.e <= o.toExpNeg, t)), a.isNeg() && !a.isZero() ? "-" + r : r;
-}, P$2.toSignificantDigits = P$2.toSD = function(t, n) {
+}, P$4.toSignificantDigits = P$4.toSD = function(t, n) {
 	var r = this, a = r.constructor;
 	return t === void 0 ? (t = a.precision, n = a.rounding) : (checkInt32(t, 1, MAX_DIGITS), n === void 0 ? n = a.rounding : checkInt32(n, 0, 8)), finalise(new a(r), t, n);
-}, P$2.toString = function() {
+}, P$4.toString = function() {
 	var t = this, n = t.constructor, r = finiteToString(t, t.e <= n.toExpNeg || t.e >= n.toExpPos);
 	return t.isNeg() && !t.isZero() ? "-" + r : r;
-}, P$2.truncated = P$2.trunc = function() {
+}, P$4.truncated = P$4.trunc = function() {
 	return finalise(new this.constructor(this), this.e + 1, 1);
-}, P$2.valueOf = P$2.toJSON = function() {
+}, P$4.valueOf = P$4.toJSON = function() {
 	var t = this, n = t.constructor, r = finiteToString(t, t.e <= n.toExpNeg || t.e >= n.toExpPos);
 	return t.isNeg() ? "-" + r : r;
 };
@@ -45564,7 +45567,7 @@ function clone$2(t) {
 		if (a === "bigint") return t < 0 ? (t = -t, c.s = -1) : c.s = 1, parseDecimal(c, t.toString());
 		throw Error(invalidArgument + t);
 	}
-	if (o.prototype = P$2, o.ROUND_UP = 0, o.ROUND_DOWN = 1, o.ROUND_CEIL = 2, o.ROUND_FLOOR = 3, o.ROUND_HALF_UP = 4, o.ROUND_HALF_DOWN = 5, o.ROUND_HALF_EVEN = 6, o.ROUND_HALF_CEIL = 7, o.ROUND_HALF_FLOOR = 8, o.EUCLID = 9, o.config = o.set = config, o.clone = clone$2, o.isDecimal = isDecimalInstance, o.abs = abs, o.acos = acos, o.acosh = acosh, o.add = add$1, o.asin = asin, o.asinh = asinh, o.atan = atan, o.atanh = atanh, o.atan2 = atan2, o.cbrt = cbrt, o.ceil = ceil, o.clamp = clamp, o.cos = cos, o.cosh = cosh, o.div = div, o.exp = exp, o.floor = floor, o.hypot = hypot, o.ln = ln$1, o.log = log, o.log10 = log10, o.log2 = log2, o.max = max, o.min = min, o.mod = mod, o.mul = mul, o.pow = pow, o.random = random, o.round = round$4, o.sign = sign, o.sin = sin, o.sinh = sinh, o.sqrt = sqrt, o.sub = sub, o.sum = sum, o.tan = tan, o.tanh = tanh, o.trunc = trunc, t === void 0 && (t = {}), t && t.defaults !== !0) for (a = [
+	if (o.prototype = P$4, o.ROUND_UP = 0, o.ROUND_DOWN = 1, o.ROUND_CEIL = 2, o.ROUND_FLOOR = 3, o.ROUND_HALF_UP = 4, o.ROUND_HALF_DOWN = 5, o.ROUND_HALF_EVEN = 6, o.ROUND_HALF_CEIL = 7, o.ROUND_HALF_FLOOR = 8, o.EUCLID = 9, o.config = o.set = config, o.clone = clone$2, o.isDecimal = isDecimalInstance, o.abs = abs, o.acos = acos, o.acosh = acosh, o.add = add$1, o.asin = asin, o.asinh = asinh, o.atan = atan, o.atanh = atanh, o.atan2 = atan2, o.cbrt = cbrt, o.ceil = ceil, o.clamp = clamp, o.cos = cos, o.cosh = cosh, o.div = div, o.exp = exp, o.floor = floor, o.hypot = hypot, o.ln = ln$1, o.log = log, o.log10 = log10, o.log2 = log2, o.max = max, o.min = min, o.mod = mod, o.mul = mul, o.pow = pow, o.random = random, o.round = round$4, o.sign = sign, o.sin = sin, o.sinh = sinh, o.sqrt = sqrt, o.sub = sub, o.sum = sum, o.tan = tan, o.tanh = tanh, o.trunc = trunc, t === void 0 && (t = {}), t && t.defaults !== !0) for (a = [
 		"precision",
 		"rounding",
 		"toExpNeg",
@@ -45673,8 +45676,8 @@ function tanh(t) {
 function trunc(t) {
 	return finalise(t = new this(t), t.e + 1, 1);
 }
-P$2[Symbol.for("nodejs.util.inspect.custom")] = P$2.toString, P$2[Symbol.toStringTag] = "Decimal";
-var Decimal = P$2.constructor = clone$2(DEFAULTS);
+P$4[Symbol.for("nodejs.util.inspect.custom")] = P$4.toString, P$4[Symbol.toStringTag] = "Decimal";
+var Decimal = P$4.constructor = clone$2(DEFAULTS);
 LN10 = new Decimal(LN10), PI = new Decimal(PI);
 //#endregion
 //#region node_modules/mathjs/lib/esm/error/IndexError.js
@@ -49914,22 +49917,22 @@ var createCompareTextNumber = /* #__PURE__ */ factory(name$48, ["typed"], (t) =>
 		"Array | Matrix": n.referToSelf((t) => (n) => deepMap(n, t))
 	});
 	function r(t) {
-		for (var n = t * t, r = P$1[0][4] * n, a = n, o = 0; o < 3; o += 1) r = (r + P$1[0][o]) * n, a = (a + Q$1[0][o]) * n;
-		return t * (r + P$1[0][3]) / (a + Q$1[0][3]);
+		for (var n = t * t, r = P$3[0][4] * n, a = n, o = 0; o < 3; o += 1) r = (r + P$3[0][o]) * n, a = (a + Q$1[0][o]) * n;
+		return t * (r + P$3[0][3]) / (a + Q$1[0][3]);
 	}
 	function a(t) {
-		for (var n = P$1[1][8] * t, r = t, a = 0; a < 7; a += 1) n = (n + P$1[1][a]) * t, r = (r + Q$1[1][a]) * t;
-		var o = (n + P$1[1][7]) / (r + Q$1[1][7]), c = parseInt(t * 16) / 16, l = (t - c) * (t + c);
+		for (var n = P$3[1][8] * t, r = t, a = 0; a < 7; a += 1) n = (n + P$3[1][a]) * t, r = (r + Q$1[1][a]) * t;
+		var o = (n + P$3[1][7]) / (r + Q$1[1][7]), c = parseInt(t * 16) / 16, l = (t - c) * (t + c);
 		return Math.exp(-c * c) * Math.exp(-l) * o;
 	}
 	function o(t) {
-		for (var n = 1 / (t * t), r = P$1[2][5] * n, a = n, o = 0; o < 4; o += 1) r = (r + P$1[2][o]) * n, a = (a + Q$1[2][o]) * n;
-		var c = n * (r + P$1[2][4]) / (a + Q$1[2][4]);
+		for (var n = 1 / (t * t), r = P$3[2][5] * n, a = n, o = 0; o < 4; o += 1) r = (r + P$3[2][o]) * n, a = (a + Q$1[2][o]) * n;
+		var c = n * (r + P$3[2][4]) / (a + Q$1[2][4]);
 		c = (SQRPI - c) / t, n = parseInt(t * 16) / 16;
 		var l = (t - n) * (t + n);
 		return Math.exp(-n * n) * Math.exp(-l) * c;
 	}
-}), THRESH = .46875, SQRPI = .5641895835477563, P$1 = [
+}), THRESH = .46875, SQRPI = .5641895835477563, P$3 = [
 	[
 		3.1611237438705655,
 		113.86415415105016,
@@ -51847,7 +51850,7 @@ function ConditionalGradingInput({ part: t, id: n, labelId: r, describedBy: a, v
 							"aria-describedby": a,
 							"aria-invalid": y || void 0,
 							disabled: l,
-							placeholder: r.kind === "number" ? void 0 : "e.g. -2x + 3",
+							placeholder: r.placeholder ?? (r.kind === "number" ? void 0 : "e.g. -2x + 3"),
 							value: m,
 							onChange: (t) => c({
 								...d,
@@ -51923,41 +51926,41 @@ var conditionalGradingElement = {
 		...a
 	}));
 	return r.displayName = toPascalCase(t), r;
-}, __iconNode$25 = [["path", {
+}, __iconNode$26 = [["path", {
 	d: "M12 5v14",
 	key: "s699le"
 }], ["path", {
 	d: "m19 12-7 7-7-7",
 	key: "1idqje"
-}]], ArrowDown = createLucideIcon("arrow-down", __iconNode$25), __iconNode$24 = [["path", {
+}]], ArrowDown = createLucideIcon("arrow-down", __iconNode$26), __iconNode$25 = [["path", {
 	d: "M5 12h14",
 	key: "1ays0h"
 }], ["path", {
 	d: "m12 5 7 7-7 7",
 	key: "xquz4c"
-}]], ArrowRight = createLucideIcon("arrow-right", __iconNode$24), __iconNode$23 = [["path", {
+}]], ArrowRight = createLucideIcon("arrow-right", __iconNode$25), __iconNode$24 = [["path", {
 	d: "m6 9 6 6 6-6",
 	key: "qrunsl"
-}]], ChevronDown = createLucideIcon("chevron-down", __iconNode$23), __iconNode$22 = [["path", {
+}]], ChevronDown = createLucideIcon("chevron-down", __iconNode$24), __iconNode$23 = [["path", {
 	d: "m15 18-6-6 6-6",
 	key: "1wnfg3"
-}]], ChevronLeft = createLucideIcon("chevron-left", __iconNode$22), __iconNode$21 = [["path", {
+}]], ChevronLeft = createLucideIcon("chevron-left", __iconNode$23), __iconNode$22 = [["path", {
 	d: "m9 18 6-6-6-6",
 	key: "mthhwq"
-}]], ChevronRight = createLucideIcon("chevron-right", __iconNode$21), __iconNode$20 = [["path", {
+}]], ChevronRight = createLucideIcon("chevron-right", __iconNode$22), __iconNode$21 = [["path", {
 	d: "m18 15-6-6-6 6",
 	key: "153udz"
-}]], ChevronUp = createLucideIcon("chevron-up", __iconNode$20), __iconNode$19 = [["circle", {
+}]], ChevronUp = createLucideIcon("chevron-up", __iconNode$21), __iconNode$20 = [["circle", {
 	cx: "12",
 	cy: "12",
 	r: "10",
 	key: "1mglay"
-}]], Circle$1 = createLucideIcon("circle", __iconNode$19), __iconNode$18 = [["circle", {
+}]], Circle$1 = createLucideIcon("circle", __iconNode$20), __iconNode$19 = [["circle", {
 	cx: "12.1",
 	cy: "12.1",
 	r: "1",
 	key: "18d7e5"
-}]], Dot = createLucideIcon("dot", __iconNode$18), __iconNode$17 = [
+}]], Dot = createLucideIcon("dot", __iconNode$19), __iconNode$18 = [
 	["path", {
 		d: "M12 15V3",
 		key: "m9g1x1"
@@ -51970,13 +51973,13 @@ var conditionalGradingElement = {
 		d: "m7 10 5 5 5-5",
 		key: "brsn70"
 	}]
-], Download = createLucideIcon("download", __iconNode$17), __iconNode$16 = [["path", {
+], Download = createLucideIcon("download", __iconNode$18), __iconNode$17 = [["path", {
 	d: "M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21",
 	key: "g5wo59"
 }], ["path", {
 	d: "m5.082 11.09 8.828 8.828",
 	key: "1wx5vj"
-}]], Eraser = createLucideIcon("eraser", __iconNode$16), __iconNode$15 = [
+}]], Eraser = createLucideIcon("eraser", __iconNode$17), __iconNode$16 = [
 	["path", {
 		d: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49",
 		key: "ct8e1f"
@@ -51993,7 +51996,7 @@ var conditionalGradingElement = {
 		d: "m2 2 20 20",
 		key: "1ooewy"
 	}]
-], EyeOff = createLucideIcon("eye-off", __iconNode$15), __iconNode$14 = [["path", {
+], EyeOff = createLucideIcon("eye-off", __iconNode$16), __iconNode$15 = [["path", {
 	d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0",
 	key: "1nclc0"
 }], ["circle", {
@@ -52001,7 +52004,7 @@ var conditionalGradingElement = {
 	cy: "12",
 	r: "3",
 	key: "1v7zrd"
-}]], Eye = createLucideIcon("eye", __iconNode$14), __iconNode$13 = [
+}]], Eye = createLucideIcon("eye", __iconNode$15), __iconNode$14 = [
 	["circle", {
 		cx: "9",
 		cy: "12",
@@ -52038,13 +52041,13 @@ var conditionalGradingElement = {
 		r: "1",
 		key: "f4zoj3"
 	}]
-], GripVertical = createLucideIcon("grip-vertical", __iconNode$13), __iconNode$12 = [["path", {
+], GripVertical = createLucideIcon("grip-vertical", __iconNode$14), __iconNode$13 = [["path", {
 	d: "M5 12h14",
 	key: "1ays0h"
-}]], Minus = createLucideIcon("minus", __iconNode$12), __iconNode$11 = [["path", {
+}]], Minus = createLucideIcon("minus", __iconNode$13), __iconNode$12 = [["path", {
 	d: "M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z",
 	key: "edeuup"
-}]], MousePointer2 = createLucideIcon("mouse-pointer-2", __iconNode$11), __iconNode$10 = [
+}]], MousePointer2 = createLucideIcon("mouse-pointer-2", __iconNode$12), __iconNode$11 = [
 	["path", {
 		d: "M11 19H5v-6",
 		key: "8awifj"
@@ -52057,16 +52060,16 @@ var conditionalGradingElement = {
 		d: "M19 5 5 19",
 		key: "wwaj1z"
 	}]
-], MoveDiagonal = createLucideIcon("move-diagonal", __iconNode$10), __iconNode$9 = [["path", {
+], MoveDiagonal = createLucideIcon("move-diagonal", __iconNode$11), __iconNode$10 = [["path", {
 	d: "M13 5H19V11",
 	key: "1n1gyv"
 }], ["path", {
 	d: "M19 5L5 19",
 	key: "72u4yj"
-}]], MoveUpRight = createLucideIcon("move-up-right", __iconNode$9), __iconNode$8 = [["path", {
+}]], MoveUpRight = createLucideIcon("move-up-right", __iconNode$10), __iconNode$9 = [["path", {
 	d: "M2.586 16.726A2 2 0 0 1 2 15.312V8.688a2 2 0 0 1 .586-1.414l4.688-4.688A2 2 0 0 1 8.688 2h6.624a2 2 0 0 1 1.414.586l4.688 4.688A2 2 0 0 1 22 8.688v6.624a2 2 0 0 1-.586 1.414l-4.688 4.688a2 2 0 0 1-1.414.586H8.688a2 2 0 0 1-1.414-.586z",
 	key: "2d38gg"
-}]], Octagon = createLucideIcon("octagon", __iconNode$8), __iconNode$7 = [
+}]], Octagon = createLucideIcon("octagon", __iconNode$9), __iconNode$8 = [
 	["path", {
 		d: "M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z",
 		key: "e79jfc"
@@ -52099,26 +52102,26 @@ var conditionalGradingElement = {
 		fill: "currentColor",
 		key: "fotxhn"
 	}]
-], Palette = createLucideIcon("palette", __iconNode$7), __iconNode$6 = [["path", {
+], Palette = createLucideIcon("palette", __iconNode$8), __iconNode$7 = [["path", {
 	d: "M10.83 2.38a2 2 0 0 1 2.34 0l8 5.74a2 2 0 0 1 .73 2.25l-3.04 9.26a2 2 0 0 1-1.9 1.37H7.04a2 2 0 0 1-1.9-1.37L2.1 10.37a2 2 0 0 1 .73-2.25z",
 	key: "2hea0t"
-}]], Pentagon = createLucideIcon("pentagon", __iconNode$6), __iconNode$5 = [["path", {
+}]], Pentagon = createLucideIcon("pentagon", __iconNode$7), __iconNode$6 = [["path", {
 	d: "m15 14 5-5-5-5",
 	key: "12vg1m"
 }], ["path", {
 	d: "M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13",
 	key: "6uklza"
-}]], Redo2 = createLucideIcon("redo-2", __iconNode$5), __iconNode$4 = [["path", {
+}]], Redo2 = createLucideIcon("redo-2", __iconNode$6), __iconNode$5 = [["path", {
 	d: "M18 7V5a1 1 0 0 0-1-1H6.5a.5.5 0 0 0-.4.8l4.5 6a2 2 0 0 1 0 2.4l-4.5 6a.5.5 0 0 0 .4.8H17a1 1 0 0 0 1-1v-2",
 	key: "wuwx1p"
-}]], Sigma = createLucideIcon("sigma", __iconNode$4), __iconNode$3 = [["rect", {
+}]], Sigma = createLucideIcon("sigma", __iconNode$5), __iconNode$4 = [["rect", {
 	width: "18",
 	height: "18",
 	x: "3",
 	y: "3",
 	rx: "2",
 	key: "afitv7"
-}]], Square = createLucideIcon("square", __iconNode$3), __iconNode$2 = [
+}]], Square = createLucideIcon("square", __iconNode$4), __iconNode$3 = [
 	["path", {
 		d: "M10 11v6",
 		key: "nco0om"
@@ -52139,7 +52142,10 @@ var conditionalGradingElement = {
 		d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
 		key: "e791ji"
 	}]
-], Trash2 = createLucideIcon("trash-2", __iconNode$2), __iconNode$1 = [
+], Trash2 = createLucideIcon("trash-2", __iconNode$3), __iconNode$2 = [["path", {
+	d: "M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z",
+	key: "14u9p9"
+}]], Triangle = createLucideIcon("triangle", __iconNode$2), __iconNode$1 = [
 	["path", {
 		d: "M12 4v16",
 		key: "1654pz"
@@ -52309,7 +52315,7 @@ function formatEssayCorrect(t) {
 	return t.modelAnswer?.trim() ?? "";
 }
 function essayHelpText(t) {
-	if (t.showHelpText !== !1) return `${t.equationEditor === !1 ? "Type math" : "Use “Insert equation” for math, or type it"} between dollar signs, e.g. $x^2 + 5$. Write a plain dollar sign as \\$ (e.g. \\$5). You can submit once; your teacher grades the answer later.`;
+	if (t.showHelpText !== !1) return `${t.equationEditor === !0 ? "Use “Insert equation” for math, or type it" : "Type math"} between dollar signs, e.g. $x^2 + 5$. Write a plain dollar sign as \\$ (e.g. \\$5). You can submit once; your teacher grades the answer later.`;
 }
 //#endregion
 //#region node_modules/mathlive/mathlive.min.mjs
@@ -52827,7 +52833,7 @@ function Tr(t, n) {
 		width: .8
 	};
 	let a = String.fromCodePoint(t);
-	if (a in E0) t = E0[a].codePointAt(0);
+	if (a in E0$1) t = E0$1[a].codePointAt(0);
 	else if (vf.test(a)) return t = 77, {
 		defaultMetrics: !0,
 		depth: .2,
@@ -53446,7 +53452,7 @@ function Rf(t) {
 function If(t, n, r) {
 	var a, o, c, l, u;
 	if (!n || n.length === 0) return null;
-	let d = new P({ parent: t }, r.style), f = !((a = d.atomIdsSettings) != null && a.groupNumbers), m = [];
+	let d = new P$2({ parent: t }, r.style), f = !((a = d.atomIdsSettings) != null && a.groupNumbers), m = [];
 	if (n.length === 1) {
 		let t = n[0], r = t.render(d);
 		r && (f && t.isSelected && r.selected(!0), m = [r]);
@@ -53908,7 +53914,7 @@ function tg(t, n, r, a) {
 }
 function ah(t, n, r, a, o) {
 	var c, l;
-	let u = new P({
+	let u = new P$2({
 		parent: a,
 		mathstyle: "textstyle"
 	}, o?.style), d = new w(Ja(t), {
@@ -53976,7 +53982,7 @@ function an(t, n, r, a, o, c) {
 	n === "<" || n === "\\lt" ? n = "\\langle" : (n === ">" || n === "\\gt") && (n = "\\rangle");
 	let l;
 	l = ch.has(n) ? ng : lh.has(n) ? ag : og;
-	let u = lg(Ja(n), r, l, o), d = new P({
+	let u = lg(Ja(n), r, l, o), d = new P$2({
 		parent: o,
 		mathstyle: u.mathstyle
 	}, c?.style);
@@ -53992,7 +53998,7 @@ function lr(t, n) {
 		classes: " ML__nulldelimiter " + (n ?? ""),
 		type: "ignore"
 	});
-	return r.width = t.getRegisterAsEm("nulldelimiterspace"), r.wrap(new P({
+	return r.width = t.getRegisterAsEm("nulldelimiterspace"), r.wrap(new P$2({
 		parent: t,
 		mathstyle: "textstyle"
 	}));
@@ -55103,7 +55109,7 @@ function Kh(t) {
 	return t.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 function Ng(t, n) {
-	let r = new P({ from: t.context });
+	let r = new P$2({ from: t.context });
 	return Br(Or(qt(new w(new x({
 		mode: "math",
 		type: "root",
@@ -55297,7 +55303,7 @@ function Y(t, n) {
 function qg(t, n) {
 	var r;
 	n ??= {};
-	let a = new P({
+	let a = new P$2({
 		from: g(h({}, t.context), {
 			atomIdsSettings: {
 				seed: n.forHighlighting ? Nh(x.serialize([t.model.root], {
@@ -55616,7 +55622,7 @@ function Zg(t) {
 }
 function bo(t) {
 	if (!t) return "";
-	let n = new P();
+	let n = new P$2();
 	return Br(Or(qt(new w(new x({
 		mode: "math",
 		type: "root",
@@ -59138,7 +59144,7 @@ function fe(t, n) {
 	n != null && n.registers && (a.registers = h(h({}, a.registers), n.registers));
 	let o = n?.defaultMode ?? "math", c = "math", l = "displaystyle";
 	o === "inline-math" ? l = "textstyle" : o === "math" ? l = "displaystyle" : o === "text" && (l = "textstyle", c = "text");
-	let u = new P({ from: a }), d = new x({
+	let u = new P$2({ from: a }), d = new x({
 		type: "root",
 		mode: c,
 		body: be(t, {
@@ -60549,7 +60555,7 @@ function lu(t, n) {
 	let a = n ?? {};
 	a.renderToMarkup ??= fe, a.renderToMathML ??= Fs, a.renderToSpeakableText ??= $s, a.serializeToLatex ??= Gs, Qp(r, a);
 }
-var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu, vu, _u, Mu, wu, of, Oi, Yt, F, lf, cf, Qt, er, Tu, uf, ul, cl, Ou, Kn, Ho, Pi, ml, xf, Ki, Ru, Wo, Qr, qo, tt, ri, gl, jo, Nu, Pn, Z, Fu, $u, Jo, bl, Be, Xo, Vu, qu, Zo, yl, xr, Yo, Qo, Hu, Wu, Uu, vr, Rn, xl, ea, Gu, ta, Ii, Tt, zi, ut, In, ju, Dt, qe, _r, Ni, Ju, Xu, Zu, Mr, Yu, Qu, ra, ed, td, ia, rd, id, Fi, nd, od, ad, sd, ld, cd, ud, dd, md, vl, zn, hd, pd, _l, na, rt, $i, oa, aa, Ml, wr, sa, ii, Vi, fd, gd, Sr, dt, bd, yd, xd, la, wl, Sl, vd, _d, Ot, Md, Nn, wd, Sd, kl, kd, Ll, Ld, ni, Ad, Al, kr, Cd, Cl, ca, ua, Ed, Td, da, Dd, Lr, Od, El, Bd, Kd, Pd, ma, Rd, Tl, Id, zd, ha, Ar, Nd, pa, Fd, $d, Vd, qd, Hd, Wd, Ud, Gd, tr, qi, it, oi, ai, Fn, jd, $n, rr, fa, ke, Hi, Dl, Vn, Jd, Xd, nt, Zd, Yd, Qd, em, tm, Ol, qn, rm, Hn, im, Bl, Kl, nm, om, Pl, am, si, ga, sm, lm, Cr, ba, ya, cm, xa, um, va, dm, mm, hm, _a, Wn, pm, fm, gm, bm, ym, xm, vm, Un, _m, Mm, wm, Sm, km, Ce, ir, Er, Lm, Rl, Am, Cm, Il, Em, Tm, Dm, Ma, Om, Bm, zl, Nl, Bt, Fl, $l, Km, Pm, Rm, Im, Vl, zm, Nm, Fm, $m, Vm, qm, Kt, ql, nr, Hm, Hl, Wl, Wm, Ul, Um, Gm, jm, Jm, Xm, Zm, Ym, Qm, e0, wa, t0, r0, i0, n0, o0, Wi, Ui, Gl, a0, s0, l0, c0, Sa, u0, d0, m0, Gi, ka, h0, jl, p0, f0, g0, La, Aa, Ca, b0, y0, x0, Ea, Ta, Da, Oa, v0, Jl, Ba, _0, M0, w0, S0, Ka, B, mt, k0, L0, Re, Gn, A0, C0, vf, Pt, Ie, T0, Xe, Xl, jn, ji, E0, Zl, Yl, D0, Ra, Mf, Pa, K0, Ql, li, _e, w, te, Df, Of, Bf, Va, Zn, Yn, Kr, ui, He, Pr, Ee, Rt, Xn, pt, Pf, P, Ir, x, We, Wa, W0, lc, Vf, qf, G0, en, H, j0, J0, Y0, Q0, eh, th, rh, ih, nh, oh, zr, zt, Nr, nn, on, lh, rg, ch, ig, ng, og, ag, Me, dh, mc$1, mh, cg, z, at, sn, gt, ln, J, cn, Qa, un, cr, es, to, L, me, mn, hn, ur, pn, st, he, Ft, fi, bt, Ae, $t, Vt, fn, hc, xg, vg, gi, xt, xh, wg, _h, Mh, wh, ns, as, Sh, Ag, Cg, pc, kh, fc, gc, Pg, Te, yc, mr, Rh, Ih, vc, Ne, mo, _t, po, ho, kc, ms, vn, sb, Gt, xo, Fe, Wh, xs, Ln, Ec, Xh, Ss, ws, ki, ko, Li, Hc, Wc, se, $e, ve, Os, xp, Bs, Xb, Zb, Yb, vp, Qb, ey, ty, ry, iy, Uc, Gc, Sp, kp, En, Tn, zs, To, Dn, Xt, Do, Ns, ou, Ve, Ip, zp, Ko, wy, Sy, qs, Ey, Ty, Hs, Q, Oy, Jr, ce, Mt, xn, Wp, Up, jp, Po, Jp, Xp, js, Js, Xs, Ny, hL, init_mathlive_min = __esmMin((() => {
+var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu, vu, _u, Mu, wu, of, Oi, Yt, F, lf, cf, Qt, er, Tu, uf, ul, cl, Ou, Kn, Ho, Pi, ml, xf, Ki, Ru, Wo, Qr, qo, tt, ri, gl, jo, Nu, Pn, Z, Fu, $u, Jo, bl, Be, Xo, Vu, qu, Zo, yl, xr, Yo, Qo, Hu, Wu, Uu, vr, Rn, xl, ea, Gu, ta, Ii, Tt, zi, ut, In, ju, Dt, qe, _r, Ni, Ju, Xu, Zu, Mr, Yu, Qu, ra, ed, td, ia, rd, id, Fi, nd, od, ad, sd, ld, cd, ud, dd, md, vl, zn, hd, pd, _l, na, rt, $i, oa, aa, Ml, wr, sa, ii, Vi, fd, gd, Sr, dt, bd, yd, xd, la, wl, Sl, vd, _d, Ot, Md, Nn, wd, Sd, kl, kd, Ll, Ld, ni, Ad, Al, kr, Cd, Cl, ca, ua, Ed, Td, da, Dd, Lr, Od, El, Bd, Kd, Pd, ma, Rd, Tl, Id, zd, ha, Ar, Nd, pa, Fd, $d, Vd, qd, Hd, Wd, Ud, Gd, tr, qi, it, oi, ai, Fn, jd, $n, rr, fa, ke, Hi, Dl, Vn, Jd, Xd, nt, Zd, Yd, Qd, em, tm, Ol, qn, rm, Hn, im, Bl, Kl, nm, om, Pl, am, si, ga, sm, lm, Cr, ba, ya, cm, xa, um, va, dm, mm, hm, _a, Wn, pm, fm, gm, bm, ym, xm, vm, Un, _m, Mm, wm, Sm, km, Ce, ir, Er, Lm, Rl, Am, Cm, Il, Em, Tm, Dm, Ma, Om, Bm, zl, Nl, Bt, Fl, $l, Km, Pm, Rm, Im, Vl, zm, Nm, Fm, $m, Vm, qm, Kt, ql, nr, Hm, Hl, Wl, Wm, Ul, Um, Gm, jm, Jm, Xm, Zm, Ym, Qm, e0, wa, t0, r0, i0, n0, o0, Wi, Ui, Gl, a0, s0, l0, c0, Sa, u0, d0, m0, Gi, ka, h0, jl, p0, f0, g0, La, Aa, Ca, b0, y0, x0, Ea, Ta, Da, Oa, v0, Jl, Ba, _0, M0, w0, S0, Ka, B, mt, k0, L0, Re, Gn, A0, C0, vf, Pt, Ie, T0, Xe, Xl, jn, ji, E0$1, Zl, Yl, D0, Ra, Mf, Pa, K0, Ql, li, _e, w, te, Df, Of, Bf, Va, Zn, Yn, Kr, ui, He, Pr, Ee, Rt, Xn, pt, Pf, P$2, Ir, x, We, Wa, W0, lc, Vf, qf, G0, en, H, j0, J0, Y0, Q0, eh, th, rh, ih, nh, oh, zr, zt, Nr, nn, on, lh, rg, ch, ig, ng, og, ag, Me, dh, mc$1, mh, cg, z, at, sn, gt, ln, J, cn, Qa, un, cr, es, to, L, me, mn, hn, ur, pn, st, he, Ft, fi, bt, Ae, $t, Vt, fn, hc, xg, vg, gi, xt, xh, wg, _h, Mh, wh, ns, as, Sh, Ag, Cg, pc, kh, fc, gc, Pg, Te, yc, mr, Rh, Ih, vc, Ne, mo, _t, po, ho, kc, ms, vn, sb, Gt, xo, Fe, Wh, xs, Ln, Ec, Xh, Ss, ws, ki, ko, Li, Hc, Wc, se, $e, ve, Os, xp, Bs, Xb, Zb, Yb, vp, Qb, ey, ty, ry, iy, Uc, Gc, Sp, kp, En, Tn, zs, To, Dn, Xt, Do, Ns, ou, Ve, Ip, zp, Ko, wy, Sy, qs, Ey, Ty, Hs, Q, Oy, Jr, ce, Mt, xn, Wp, Up, jp, Po, Jp, Xp, js, Js, Xs, Ny, hL, init_mathlive_min = __esmMin((() => {
 	switch (tf = Object.defineProperty, rf = Object.defineProperties, nf = Object.getOwnPropertyDescriptors, No = Object.getOwnPropertySymbols, uu = Object.prototype.hasOwnProperty, du = Object.prototype.propertyIsEnumerable, cu = (t, n, r) => n in t ? tf(t, n, {
 		enumerable: !0,
 		configurable: !0,
@@ -76494,7 +76500,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		1.728,
 		2.074,
 		2.488
-	], ji = 5, E0 = {
+	], ji = 5, E0$1 = {
 		"\xA0": " ",
 		"​": " ",
 		Å: "A",
@@ -77437,7 +77443,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		month: (/* @__PURE__ */ new Date()).getMonth() + 1,
 		day: (/* @__PURE__ */ new Date()).getDate(),
 		year: (/* @__PURE__ */ new Date()).getFullYear()
-	}, P = class t {
+	}, P$2 = class t {
 		constructor(n, r) {
 			var a, o, c, l, u, d, f, m, _, v, y, b, C, E, O;
 			let k;
@@ -77875,7 +77881,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 			if (this.type === "first" && !t.atomIdsSettings) return null;
 			let n = ne(this.command, this.mode);
 			if (n != null && n.render) return n.render(this, t);
-			let r = new P({ parent: t }, this.style), a = this.createBox(r, { classes: this.parent ? "" : "ML__base" });
+			let r = new P$2({ parent: t }, this.style), a = this.createBox(r, { classes: this.parent ? "" : "ML__base" });
 			return a ? (!this.subsupPlacement && (this.superscript || this.subscript) && (a = this.attachSupsub(r, { base: a })), a.wrap(r)) : null;
 		}
 		attachSupsub(n, r) {
@@ -77884,7 +77890,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 			if (!c && !l) return o;
 			let u = null, d = null, f = r.isCharacterBox ?? this.isCharacterBox(), m = 0;
 			if (c) {
-				let r = new P({
+				let r = new P$2({
 					parent: n,
 					mathstyle: "superscript"
 				});
@@ -77892,7 +77898,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 			}
 			let _ = 0;
 			if (l) {
-				let r = new P({
+				let r = new P$2({
 					parent: n,
 					mathstyle: "subscript"
 				});
@@ -77939,10 +77945,10 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 			})], { type: r.type });
 		}
 		attachLimits(n, r) {
-			let a = this.superscript ? t.createBox(new P({
+			let a = this.superscript ? t.createBox(new P$2({
 				parent: n,
 				mathstyle: "superscript"
-			}, this.style), this.superscript) : null, o = this.subscript ? t.createBox(new P({
+			}, this.style), this.superscript) : null, o = this.subscript ? t.createBox(new P$2({
 				parent: n,
 				mathstyle: "subscript"
 			}, this.style), this.subscript) : null;
@@ -79233,7 +79239,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		}
 		render(t) {
 			var n;
-			let r = new P({
+			let r = new P$2({
 				parent: t,
 				mathstyle: "cramp"
 			}, this.style), a = x.createBox(r, this.body) ?? new w("□", { style: this.style }), o = 0;
@@ -79559,11 +79565,11 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		}
 		render(t) {
 			var n, r, a, o, c, l;
-			let u = new P({
+			let u = new P$2({
 				parent: t,
 				mathstyle: this.mathstyleName
 			}, this.style), d = u.getRegisterAsEm("arrayrulewidth"), f = u.getRegisterAsEm("arraycolsep"), m = u.getRegisterAsEm("doublerulesep"), _ = this.arraystretch ?? u.getRegisterAsNumber("arraystretch") ?? 1, v = typeof this.arraycolsep == "number" ? this.arraycolsep : f;
-			this.colSeparationType === "small" && (v = .2778 * (new P({
+			this.colSeparationType === "small" && (v = .2778 * (new P$2({
 				parent: t,
 				mathstyle: "scriptstyle"
 			}).scalingFactor / t.scalingFactor));
@@ -79571,7 +79577,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 			for (let t = 0; t < A; ++t) {
 				let n = this._rows[t];
 				k = Math.max(k, n.length);
-				let r = new P({
+				let r = new P$2({
 					parent: u,
 					mathstyle: this.mathstyleName
 				}, this.style), a = b / r.scalingFactor, o = C / r.scalingFactor, c = {
@@ -79731,7 +79737,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 			if (!c) return null;
 			let l = t.toEm(this.offset ?? { dimension: 0 });
 			c.depth += l, c.setStyle("display", "inline-block"), c.setStyle("position", "relative"), c.setStyle("height", Math.floor(100 * c.height + c.depth) / 100, "em"), c.setStyle("vertical-align", -Math.floor(100 * c.height) / 100, "em");
-			let u = new P({ parent: t }, this.style), d = u.toEm(this.padding ?? { register: "fboxsep" }), f = new w(null, { classes: "ML__box" });
+			let u = new P$2({ parent: t }, this.style), d = u.toEm(this.padding ?? { register: "fboxsep" }), f = new w(null, { classes: "ML__box" });
 			f.height = c.height + d, f.depth = c.depth + d, f.setStyle("box-sizing", "border-box"), f.setStyle("position", "absolute"), f.setStyle("top", -d + .3, "em"), f.setStyle("left", 0), f.setStyle("height", f.height + f.depth, "em"), f.setStyle("width", "100%"), this.backgroundcolor && f.setStyle("background-color", u.toBackgroundColor(this.backgroundcolor) ?? "transparent"), this.framecolor && f.setStyle("border", `${u.getRegisterAsEm("fboxrule", 2)}em solid ${u.toColor(this.framecolor) ?? "black"}`);
 			let m = $a(this.border);
 			m && f.setStyle("border", m);
@@ -79849,9 +79855,9 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		}
 		render(t) {
 			var n, r;
-			let a = new P({ parent: t }, this.style);
+			let a = new P$2({ parent: t }, this.style);
 			this.body;
-			let o = new P({
+			let o = new P$2({
 				parent: t,
 				mathstyle: "textstyle"
 			}, this.style), c = x.createBox(a, this.body, { type: "inner" }) ?? new w(null, { type: "inner" }), l = c.height / o.scalingFactor, u = c.depth / o.scalingFactor, d = [];
@@ -79940,12 +79946,12 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		}
 		render(t) {
 			var n, r, a, o, c;
-			let l = new P({ parent: t }), u = l.getRegisterAsEm("fboxsep"), d = u, f = u, m = x.createBox(t, this.body);
+			let l = new P$2({ parent: t }), u = l.getRegisterAsEm("fboxsep"), d = u, f = u, m = x.createBox(t, this.body);
 			if (!m) return null;
 			let _ = !this.body || this.body.length === 0 || this.body.every((t) => t.type === "first") ? new Me({
 				mode: this.mode,
 				style: this.style
-			}).render(new P({
+			}).render(new P$2({
 				parent: t,
 				isPhantom: !0
 			})) : null, v = _?.height ?? l.metrics.xHeight, y = _?.depth ?? v / 2, b = Math.max(m.height ?? 0, v), C = Math.max(m.depth ?? 0, y);
@@ -79997,7 +80003,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		}
 		render(t) {
 			var n;
-			let r = new P({
+			let r = new P$2({
 				parent: t,
 				isPhantom: !0
 			}), a = this.leftSibling, o = a.render(r) ?? new w(null), c = new w(null);
@@ -80014,7 +80020,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		constructor(t, n, r) {
 			this.errors = [], this.index = 0, this.endCount = 0;
 			var a, o, c, l;
-			r ??= {}, this.tokens = t, this.context = n instanceof P && !(r != null && r.parseMode) && !r.mathstyle ? n : new P({
+			r ??= {}, this.tokens = t, this.context = n instanceof P$2 && !(r != null && r.parseMode) && !r.mathstyle ? n : new P$2({
 				from: n,
 				mathstyle: r.mathstyle
 			}, r.style), this.args = r.args ?? void 0, this.smartFence = this.context.smartFence, this.parsingContext = {
@@ -82639,7 +82645,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		}
 		render(t) {
 			var n, r, a, o;
-			let c = new P({ parent: t }, this.style), l = x.createBox(c, this.body);
+			let c = new P$2({ parent: t }, this.style), l = x.createBox(c, this.body);
 			if (!l) return null;
 			let u = gg(this.borderStyle), d = c.toEm(!this.padding || this.padding === "auto" ? { register: "fboxsep" } : { string: this.padding });
 			l.setStyle("position", "relative"), l.setStyle("display", "inline-block"), l.setStyle("height", l.height + l.depth, "em"), l.setStyle("width", l.width, "em");
@@ -82712,16 +82718,16 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		}
 		render(t) {
 			var n, r;
-			let a = new P({
+			let a = new P$2({
 				parent: t,
 				mathstyle: this.mathstyleName
-			}, this.style), o = a.metrics, c = new P({
+			}, this.style), o = a.metrics, c = new P$2({
 				parent: a,
 				mathstyle: this.continuousFraction ? "" : "numerator"
 			}, this.style), l = this.numerPrefix ? new w([new w(this.numerPrefix), x.createBox(c, this.above)], {
 				isTight: c.isTight,
 				type: "ignore"
-			}) : x.createBox(c, this.above, { type: "ignore" }) ?? new w(null, { type: "ignore" }), u = new P({
+			}) : x.createBox(c, this.above, { type: "ignore" }) ?? new w(null, { type: "ignore" }), u = new P$2({
 				parent: a,
 				mathstyle: this.continuousFraction ? "" : "denominator"
 			}, this.style), d = this.denomPrefix ? new w([new w(this.denomPrefix), x.createBox(u, this.below, { type: "ignore" })]) : x.createBox(u, this.below, { type: "ignore" }) ?? new w(null, { type: "ignore" }), f = 0;
@@ -82933,7 +82939,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 			return this.skipBoundary || (t.skipBoundary = !1), this.subsupPlacement && (t.subsupPlacement = this.subsupPlacement), this.svgAbove && (t.svgAbove = this.svgAbove), this.svgBelow && (t.svgBelow = this.svgBelow), this.svgBody && (t.svgBody = this.svgBody), this.boxType !== "ord" && (t.boxType = this.boxType), this.paddedBody && (t.paddedBody = !0), this.paddedLabels && (t.paddedLabels = !0), t;
 		}
 		render(t) {
-			let n = this.svgBody ? Zi(this.svgBody) : x.createBox(t, this.body, { type: "ignore" }), r = new P({
+			let n = this.svgBody ? Zi(this.svgBody) : x.createBox(t, this.body, { type: "ignore" }), r = new P$2({
 				parent: t,
 				mathstyle: "scriptstyle"
 			}, this.style), a = null;
@@ -82969,7 +82975,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 			return this.isInvisible && (t.isInvisible = !0), this.smashDepth && (t.smashDepth = !0), this.smashHeight && (t.smashHeight = !0), this.smashWidth && (t.smashWidth = !0), h(h({}, super.toJson()), t);
 		}
 		render(t) {
-			let n = new P({
+			let n = new P$2({
 				parent: t,
 				isPhantom: !0
 			});
@@ -83046,7 +83052,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		}
 		render(t) {
 			var n;
-			let r = new P({
+			let r = new P$2({
 				parent: t,
 				mathstyle: "cramp"
 			}, this.style), a = x.createBox(r, this.body, { type: "inner" }) ?? new w(null), o = r.scalingFactor, c = r.metrics.defaultRuleThickness / o, l = t.isDisplayStyle ? Xe : c, u = new w(null, {
@@ -83054,7 +83060,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 				style: this.style
 			});
 			u.height = c, u.softWidth = a.width;
-			let d = o * (c + l / 4), f = Math.max(o * 2 * l, a.height + a.depth) + d + c, m = new P({ parent: t }, this.style), _ = this.bind(m, new w(an("inner", "\\surd", f, !1, m, { isSelected: this.isSelected }), {
+			let d = o * (c + l / 4), f = Math.max(o * 2 * l, a.height + a.depth) + d + c, m = new P$2({ parent: t }, this.style), _ = this.bind(m, new w(an("inner", "\\surd", f, !1, m, { isSelected: this.isSelected }), {
 				isSelected: this.isSelected,
 				classes: "ML__sqrt-sign",
 				style: this.style
@@ -83067,7 +83073,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 				d - 2 * c,
 				{ box: u },
 				c
-			] })), b = x.createBox(new P({
+			] })), b = x.createBox(new P$2({
 				parent: t,
 				mathstyle: "scriptscriptstyle"
 			}), this.above, { type: "ignore" });
@@ -83184,7 +83190,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		render(t) {
 			let n = x.createBox(t, this.body);
 			if (!n) return null;
-			let r = new P({
+			let r = new P$2({
 				parent: t,
 				mathstyle: "displaystyle"
 			}, { fontSize: ji }), a = new w([Or(qt(new w(this.tooltip.render(r), { classes: "ML__tooltip-content" }), r)), n], { classes: "ML__tooltip-container" });
@@ -83924,7 +83930,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		})),
 		render: (t, n) => {
 			var r;
-			let a = new P({ parent: n }, t.style), o = "";
+			let a = new P$2({ parent: n }, t.style), o = "";
 			return t.isSelected && (o += " ML__selected"), new w((ge(a.evaluate(t.args[0])) ?? "").split("").map((n) => new w(n, {
 				type: "ord",
 				classes: o,
@@ -84028,7 +84034,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 	], "{:rest}", {
 		createAtom: (t) => new x(g(h({}, t), { body: T(t.args[0]) })),
 		render: (t, n) => {
-			let r = new P({
+			let r = new P$2({
 				parent: n,
 				mathstyle: t.command.slice(1)
 			}, t.style), a = x.createBox(r, t.body, { type: "lift" });
@@ -84496,7 +84502,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 		createAtom: (t) => new x(t),
 		render: (t, n) => {
 			var r, a, o;
-			let c = new P({
+			let c = new P$2({
 				parent: n,
 				mathstyle: "textstyle"
 			}, t.style), l = c.toEm(t.args[0] ?? { dimension: 0 }), u = c.toEm(t.args[1] ?? { dimension: 10 }), d = c.toEm(t.args[2] ?? { dimension: 10 }), f = new w(null, {
@@ -84509,7 +84515,7 @@ var tf, rf, nf, No, uu, du, cu, h, g, tl, Ti, pu, $o, il, nl, fu, gu, bu, yu, xu
 	}), M(["overline", "underline"], "{:auto}", {
 		createAtom: (t) => new x(g(h({}, t), { body: T(t.args[0]) })),
 		render: (t, n) => {
-			let r = t.command.substring(1), a = new P({
+			let r = t.command.substring(1), a = new P$2({
 				parent: n,
 				mathstyle: "cramp"
 			}, t.style), o = x.createBox(a, t.body);
@@ -91760,7 +91766,7 @@ function EssayInput({ part: t, id: n, labelId: r, describedBy: a, value: o, onCh
 							" characters"
 						]
 					})]
-				}), t.equationEditor !== !1 && !l && !m && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+				}), t.equationEditor === !0 && !l && !m && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
 					onClick: () => _(!0),
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Sigma, {
 						"aria-hidden": "true",
@@ -91820,7 +91826,7 @@ function ExpressionInput({ part: t, id: n, labelId: r, describedBy: a, value: o,
 			"aria-describedby": a,
 			"aria-invalid": u || void 0,
 			disabled: l,
-			placeholder: "e.g. x^2 + 1/2 x + 1",
+			placeholder: t.placeholder ?? "e.g. x^2 + 1/2 x + 1",
 			value: d,
 			onChange: (t) => c(t.target.value),
 			className: `w-full max-w-md rounded-md border bg-white px-2 py-1.5 font-mono dark:bg-slate-900 ${u ? "border-red-500 dark:border-red-400" : "border-slate-300 dark:border-slate-600"} disabled:opacity-80`
@@ -92008,7 +92014,13 @@ var integerElement = {
 	formatCorrectAnswer: (t) => String(t.correct) + (t.suffix ? ` ${t.suffix}` : ""),
 	helpText: () => "Enter a whole number, e.g. 42 or -7.",
 	Input: IntegerInput
-}, DEFAULT_RELATIVE_TOLERANCE$1 = .1, DEFAULT_BOUNDING_BOX$1 = [
+}, LINE_LIKE_TOOLS = [
+	"line",
+	"segment",
+	"curve",
+	"curve5",
+	"scatter"
+], DEFAULT_RELATIVE_TOLERANCE$1 = .1, DEFAULT_BOUNDING_BOX$1 = [
 	-10,
 	10,
 	-10,
@@ -92017,25 +92029,45 @@ var integerElement = {
 function isSlopeIntercept$1(t) {
 	return "slope" in t && "yIntercept" in t;
 }
+function isVertical(t) {
+	return "x" in t && typeof t.x == "number";
+}
+function isThroughPoint(t) {
+	return "through" in t;
+}
 function expectedShapeToDrawable$1(t, n) {
+	let [r, a, o, c] = n;
+	if (isVertical(t)) return {
+		type: "segment",
+		points: [[t.x, Math.max(0, o)], [t.x, c]],
+		color: t.color
+	};
+	if (isThroughPoint(t)) {
+		let [n, l] = t.through, u = .15 * (a - r), d = (t.slope === "up" ? 1 : -1) * .15 * (c - o);
+		return {
+			type: "segment",
+			points: [[n - u, l - d], [n + u, l + d]],
+			color: t.color
+		};
+	}
 	if (!isSlopeIntercept$1(t)) return t;
-	let { slope: r, yIntercept: a, color: o } = t, [, c, , l] = n, u = (t) => r * t + a;
+	let { slope: l, yIntercept: u, color: d } = t, f = (t) => l * t + u;
 	if (t.type === "line") return {
 		type: "line",
-		points: [[0, a], [1, u(1)]],
-		color: o
+		points: [[0, u], [1, f(1)]],
+		color: d
 	};
-	let d = 0, f = c;
-	if (r === 0) {
-		if (a < 0 || a > l) return null;
+	let m = 0, _ = a;
+	if (l === 0) {
+		if (u < 0 || u > c) return null;
 	} else {
-		let t = -a / r, n = (l - a) / r;
-		d = Math.max(d, Math.min(t, n)), f = Math.min(f, Math.max(t, n));
+		let t = -u / l, n = (c - u) / l;
+		m = Math.max(m, Math.min(t, n)), _ = Math.min(_, Math.max(t, n));
 	}
-	return d >= f ? null : {
+	return m >= _ ? null : {
 		type: "segment",
-		points: [[d, u(d)], [f, u(f)]],
-		color: o
+		points: [[m, f(m)], [_, f(_)]],
+		color: d
 	};
 }
 function dist$3(t, n) {
@@ -92075,69 +92107,193 @@ function compareTwoPoints$1(t, n, r) {
 		reason: "Points do not match within tolerance."
 	};
 }
-var lineComparator$1 = (t, n, r) => isSlopeIntercept$1(t) ? compareSlopeIntercept$1(t, n) : compareTwoPoints$1(t.points, n.points, r), comparators$1 = {
-	line: lineComparator$1,
-	segment: lineComparator$1
-};
-function gradeDrawing$1(t, n, r, a = 5) {
-	let [o, c, l, u] = r, d = a / 100 * Math.hypot(c - o, u - l), f = [], m = 0;
-	for (let r = 0; r < t.length; r++) {
-		let a = t[r], o = a.type, c = n[r], l = comparators$1[o];
-		if (!l) {
-			f.push({
-				index: r,
-				tool: o,
-				correct: !1,
-				reason: `Grading for "${o}" is not implemented yet.`
-			});
-			continue;
+function compareRectangle(t, n, r) {
+	if (t.length < 2 || n.length < 2) return {
+		ok: !1,
+		reason: "Drawing needs two corners."
+	};
+	let a = ([[t, n], [r, a]]) => [
+		Math.min(t, r),
+		Math.max(t, r),
+		Math.min(n, a),
+		Math.max(n, a)
+	], o = a(t), c = a(n);
+	return o.every((t, n) => Math.abs(t - c[n]) <= r) ? { ok: !0 } : {
+		ok: !1,
+		reason: "The rectangle's corners do not match within tolerance."
+	};
+}
+function compareTriangle(t, n, r) {
+	return t.length !== 3 || n.length !== 3 ? {
+		ok: !1,
+		reason: "Drawing needs three corners."
+	} : [
+		[
+			0,
+			1,
+			2
+		],
+		[
+			0,
+			2,
+			1
+		],
+		[
+			1,
+			0,
+			2
+		],
+		[
+			1,
+			2,
+			0
+		],
+		[
+			2,
+			0,
+			1
+		],
+		[
+			2,
+			1,
+			0
+		]
+	].some((a) => a.every((a, o) => dist$3(t[o], n[a]) <= r)) ? { ok: !0 } : {
+		ok: !1,
+		reason: "The triangle's corners do not match within tolerance."
+	};
+}
+function compareVertical(t, n, r) {
+	let [a, o, c, l] = r;
+	if (n.points.length < 2) return {
+		ok: !1,
+		reason: "Drawing needs two points."
+	};
+	let u = (t.tolerance ?? .05) * (o - a);
+	if (n.points.some(([n]) => Math.abs(n - t.x) > u)) return {
+		ok: !1,
+		reason: "Not a vertical line at the right position."
+	};
+	let d = n.points.map(([, t]) => t);
+	return Math.max(...d) - Math.min(...d) < .1 * (l - c) ? {
+		ok: !1,
+		reason: "The line is too short."
+	} : { ok: !0 };
+}
+function distanceToSegment(t, n, r, a) {
+	let [o, c] = [r[0] - n[0], r[1] - n[1]], l = o * o + c * c;
+	if (l === 0) return dist$3(t, n);
+	let u = ((t[0] - n[0]) * o + (t[1] - n[1]) * c) / l;
+	return a || (u = Math.max(0, Math.min(1, u))), dist$3(t, [n[0] + u * o, n[1] + u * c]);
+}
+function compareThroughPoint(t, n, r) {
+	let [a, o, c, l] = r, u = n.points;
+	if (u.length < 2) return {
+		ok: !1,
+		reason: "Drawing needs two points."
+	};
+	let d = (t.tolerance ?? .05) * Math.hypot(o - a, l - c), f = n.tool === "line";
+	if (!u.slice(1).some((n, r) => distanceToSegment(t.through, u[r], n, f) <= d)) return {
+		ok: !1,
+		reason: "It does not pass through the right point."
+	};
+	let m = [...u].sort((t, n) => t[0] - n[0]), [_, v] = [m[0], m[m.length - 1]], y = v[1] - _[1];
+	return v[0] - _[0] < 1e-9 || (t.slope === "up" ? y <= 0 : y >= 0) ? {
+		ok: !1,
+		reason: `It should slope ${t.slope === "up" ? "upward" : "downward"}.`
+	} : { ok: !0 };
+}
+function compare(t, n, r, a) {
+	return isVertical(t) || isThroughPoint(t) ? LINE_LIKE_TOOLS.includes(n.tool) ? isVertical(t) ? compareVertical(t, n, a) : compareThroughPoint(t, n, a) : {
+		ok: !1,
+		reason: `Expected a line or curve here, but a "${n.tool}" was drawn instead.`
+	} : n.tool === t.type ? isSlopeIntercept$1(t) ? compareSlopeIntercept$1(t, n) : t.type === "rectangle" ? compareRectangle(t.points, n.points, r) : t.type === "triangle" ? compareTriangle(t.points, n.points, r) : compareTwoPoints$1(t.points, n.points, r) : {
+		ok: !1,
+		reason: `Expected a "${t.type}" here, but a "${n.tool}" was drawn instead.`
+	};
+}
+var GRADABLE_TOOLS = [
+	"line",
+	"segment",
+	"rectangle",
+	"triangle"
+];
+function gradable(t) {
+	return isVertical(t) || isThroughPoint(t) || GRADABLE_TOOLS.includes(t.type);
+}
+function bestMatching(t, n) {
+	let r = t.map(() => null), a = -1, o = Array(n).fill(!1), c = [], l = (u, d) => {
+		if (!(d + (t.length - u) <= a)) {
+			if (u === t.length) {
+				a = d, r = [...c];
+				return;
+			}
+			for (let r = 0; r < n; r++) t[u][r] && !o[r] && (o[r] = !0, c.push(r), l(u + 1, d + 1), c.pop(), o[r] = !1);
+			c.push(null), l(u + 1, d), c.pop();
 		}
-		if (!c) {
-			f.push({
-				index: r,
-				tool: o,
+	};
+	return l(0, 0), r;
+}
+function gradeDrawing$1(t, n, r, { tolerancePercent: a = 5, anyOrder: o = !1 } = {}) {
+	let [c, l, u, d] = r, f = a / 100 * Math.hypot(l - c, d - u), m = t.length, _ = (t, n) => ({
+		index: t,
+		tool: n,
+		correct: !1,
+		reason: `Grading for "${n}" is not implemented yet.`
+	}), v = (t, n, r) => {
+		let a = t.filter((t) => t.correct).length;
+		return {
+			total: m,
+			correct: a,
+			score: n === 0 ? 0 : Math.round(a / n * 100),
+			details: t,
+			extra: r
+		};
+	};
+	if (o) {
+		let a = n.filter((t) => t.tool !== "text" && t.tool !== "coordinate"), o = bestMatching(t.map((t) => a.map((n) => gradable(t) && compare(t, n, f, r).ok)), a.length);
+		return v(t.map((t, n) => {
+			let r = t.type;
+			return gradable(t) ? o[n] === null ? {
+				index: n,
+				tool: r,
 				correct: !1,
-				reason: `Expected a "${o}" here, but nothing was drawn at this position.`
-			});
-			continue;
-		}
-		if (c.tool !== o) {
-			f.push({
-				index: r,
-				tool: o,
-				correct: !1,
-				reason: `Expected a "${o}" here, but a "${c.tool}" was drawn instead.`
-			});
-			continue;
-		}
-		let u = l(a, c, d);
-		if (!u.ok) {
-			f.push({
-				index: r,
-				tool: o,
-				correct: !1,
-				reason: u.reason
-			});
-			continue;
-		}
-		m += 1, f.push({
-			index: r,
+				reason: "No drawing matches this shape."
+			} : {
+				index: n,
+				tool: r,
+				correct: !0,
+				reason: "Matched."
+			} : _(n, r);
+		}), Math.max(m, a.length), Math.max(0, a.length - m));
+	}
+	return v(t.map((t, a) => {
+		let o = t.type, c = n[a];
+		if (!gradable(t)) return _(a, o);
+		if (!c) return {
+			index: a,
+			tool: o,
+			correct: !1,
+			reason: `Expected a "${o}" here, but nothing was drawn at this position.`
+		};
+		let l = compare(t, c, f, r);
+		return l.ok ? {
+			index: a,
 			tool: o,
 			correct: !0,
 			reason: "Matched."
-		});
-	}
-	let _ = t.length;
-	return {
-		total: _,
-		correct: m,
-		score: _ === 0 ? 0 : Math.round(m / _ * 100),
-		details: f
-	};
+		} : {
+			index: a,
+			tool: o,
+			correct: !1,
+			reason: l.reason
+		};
+	}), m, 0);
 }
 //#endregion
 //#region src/elements/jsxgraph/gradeJsxGraph.ts
 function checkJsxGraph(t) {
+	if (t.manualGrading) return;
 	let n = t.props?.expectedDrawing;
 	if (!Array.isArray(n) || n.length === 0) throw new AuthoringError(`jsxgraph part "${t.name}" needs props.expectedDrawing with at least one shape.`);
 }
@@ -92151,10 +92307,10 @@ function validateJsxGraph(t, n) {
 	};
 }
 function gradeJsxGraph(t, n) {
-	let r = gradeDrawing$1(t.props.expectedDrawing, readDrawings$1(n), t.props.boundingBox ?? DEFAULT_BOUNDING_BOX$1), a = Math.min(1, Math.max(0, r.score / 100)), o = r.details.filter((t) => !t.correct).map((t) => `shape ${t.index + 1} (${t.tool})`);
+	let r = gradeDrawing$1(t.props.expectedDrawing, readDrawings$1(n), t.props.boundingBox ?? DEFAULT_BOUNDING_BOX$1, { anyOrder: t.props.anyOrder }), a = Math.min(1, Math.max(0, r.score / 100)), o = r.details.filter((t) => !t.correct).map((t) => `shape ${t.index + 1} (${t.tool})`), c = t.props.anyOrder ? "" : o.length ? ` Check ${o.join(", ")}.` : "", l = r.extra ? ` ${r.extra} extra shape${r.extra === 1 ? "" : "s"} lowered the score (labels don't count).` : "";
 	return {
 		score: a,
-		feedback: `${r.correct} of ${r.total} shapes drawn correctly.` + (o.length ? ` Check ${o.join(", ")}.` : "")
+		feedback: `${r.correct} of ${r.total} shapes drawn correctly.${c}${l}`
 	};
 }
 function formatJsxGraphAnswer(t, n) {
@@ -92168,18 +92324,26 @@ function formatJsxGraphAnswer(t, n) {
 }
 var round2$1 = (t) => String(Math.round(t * 100) / 100), round$3 = (t) => String(Math.round(t * 1e3) / 1e3);
 function describeShape$1(t) {
-	let { type: n, slope: r, yIntercept: a, points: o } = t, c = String(n);
-	return typeof r == "number" && typeof a == "number" ? `a ${c} on the line y = ${round$3(r)}x + ${round$3(a)}` : Array.isArray(o) ? `a ${c} through ${JSON.stringify(o)}` : `a ${c}`;
+	let { type: n, slope: r, yIntercept: a, points: o, x: c, through: l } = t, u = String(n);
+	if (typeof c == "number") return `a vertical line at x = ${round$3(c)}`;
+	if (Array.isArray(l)) {
+		let [t, n] = l;
+		return `an ${r === "down" ? "downward" : "upward"}-sloping line or curve through (${round$3(t)}, ${round$3(n)})`;
+	}
+	if (typeof r == "number" && typeof a == "number") return `a ${u} on the line y = ${round$3(r)}x + ${round$3(a)}`;
+	if (!Array.isArray(o)) return `a ${u}`;
+	let d = o.map(([t, n]) => `(${round$3(t)}, ${round$3(n)})`).join(", ");
+	return u === "rectangle" ? `a rectangle with opposite corners ${d}` : u === "triangle" ? `a triangle with corners ${d}` : `a ${u} through ${JSON.stringify(o)}`;
 }
 function formatJsxGraphCorrect(t) {
-	return `Draw ${t.props.expectedDrawing.map((t) => describeShape$1(t)).join("; ")}.`;
+	return t.props.expectedDrawing?.length ? `Draw ${t.props.expectedDrawing.map((t) => describeShape$1(t)).join("; ")}.` : "";
 }
-function jsxGraphHelpText() {
-	return "Draw on the graph. Your drawing is checked when you press Grade (or Save).";
+function jsxGraphHelpText(t) {
+	return t.manualGrading ? "Draw on the graph. Your teacher grades the drawing after you submit." : "Draw on the graph. Your drawing is checked when you press Grade (or Save).";
 }
 //#endregion
 //#region src/components/jsxgraphComponent/canvas/drawingTools.tsx
-var COLORS$1 = [
+var COLORS$2 = [
 	"#111827",
 	"#dc2626",
 	"#2563eb",
@@ -92270,6 +92434,47 @@ var COLORS$1 = [
 	r: 11,
 	fill: t,
 	stroke: "none"
+}))), FivePointCurveIcon = (0, import_react.forwardRef)(({ color: t = "currentColor", size: n = 24, ...r }, a) => (0, import_react.createElement)("svg", {
+	...r,
+	ref: a,
+	width: n,
+	height: n,
+	viewBox: "0 0 100 100",
+	fill: "none",
+	stroke: t,
+	strokeWidth: 7,
+	strokeLinecap: "round",
+	xmlns: "http://www.w3.org/2000/svg"
+}, (0, import_react.createElement)("path", { d: "M 10 18 C 20 70 35 84 50 84 S 80 70 90 18" }), (0, import_react.createElement)("circle", {
+	cx: 10,
+	cy: 18,
+	r: 10,
+	fill: t,
+	stroke: "none"
+}), (0, import_react.createElement)("circle", {
+	cx: 26,
+	cy: 66,
+	r: 10,
+	fill: t,
+	stroke: "none"
+}), (0, import_react.createElement)("circle", {
+	cx: 50,
+	cy: 84,
+	r: 10,
+	fill: t,
+	stroke: "none"
+}), (0, import_react.createElement)("circle", {
+	cx: 74,
+	cy: 66,
+	r: 10,
+	fill: t,
+	stroke: "none"
+}), (0, import_react.createElement)("circle", {
+	cx: 90,
+	cy: 18,
+	r: 10,
+	fill: t,
+	stroke: "none"
 }))), ConnectedScatterIcon$1 = (0, import_react.forwardRef)(({ color: t = "currentColor", size: n = 24, ...r }, a) => (0, import_react.createElement)("svg", {
 	...r,
 	ref: a,
@@ -92343,6 +92548,11 @@ var COLORS$1 = [
 		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Square, {})
 	},
 	{
+		name: "triangle",
+		label: "Triangle",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Triangle, {})
+	},
+	{
 		name: "circle",
 		label: "Circle",
 		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Circle$1, {})
@@ -92361,6 +92571,11 @@ var COLORS$1 = [
 		name: "curve",
 		label: "4-Point Curve",
 		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FourPointArcIcon$1, {})
+	},
+	{
+		name: "curve5",
+		label: "5-Point Curve",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FivePointCurveIcon, {})
 	},
 	{
 		name: "text",
@@ -92382,6 +92597,7 @@ function ToolButton({ name: t, label: n, icon: r, activeTool: a, onClick: o }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "tool-wrapper",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+			type: "button",
 			className: `tool-button ${a === t ? "tool-button-active" : ""}`,
 			onClick: () => o(t),
 			"aria-label": n,
@@ -92397,7 +92613,7 @@ var BUTTON_PITCH = 38, COLOR_SECTION_HEIGHT = 60, ALL_ACTIONS = [
 	"redo",
 	"clear"
 ];
-function DrawingToolbar$1({ activeTool: t, onToolChange: n, color: r, onColorChange: a, enabledTools: o, colors: c = COLORS$1, showColorPicker: l = !0 }) {
+function DrawingToolbar$1({ activeTool: t, onToolChange: n, color: r, onColorChange: a, enabledTools: o, colors: c = COLORS$2, showColorPicker: l = !0 }) {
 	let [u, d] = (0, import_react.useState)(!1), f = (0, import_react.useRef)(null), [m, _] = (0, import_react.useState)(!1), v = o ? ALL_TOOLS.filter((t) => o.includes(t.name)) : ALL_TOOLS, y = 20 + v.length * BUTTON_PITCH + (l ? COLOR_SECTION_HEIGHT : 0);
 	return (0, import_react.useEffect)(() => {
 		let t = f.current?.parentElement;
@@ -92428,6 +92644,7 @@ function DrawingToolbar$1({ activeTool: t, onToolChange: n, color: r, onColorCha
 						onClick: () => d(!1)
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
 						className: "color-picker-trigger",
 						onClick: () => d(!u),
 						title: "Choose color",
@@ -92448,6 +92665,7 @@ function DrawingToolbar$1({ activeTool: t, onToolChange: n, color: r, onColorCha
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "color-swatch-row",
 							children: c.map((t) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
 								className: `color-swatch ${r === t ? "selected-color" : ""}`,
 								style: { backgroundColor: t },
 								onClick: () => {
@@ -119603,9 +119821,12 @@ jxg_default.themes.mono_thin = {
 };
 //#endregion
 //#region node_modules/jsxgraph/src/index.js
-var COORDS_BY_SCREEN = jxg_default.COORDS_BY_SCREEN, COORDS_BY_USER = jxg_default.COORDS_BY_USER, Dump = jxg_default.Dump, Expect = jxg_default.Expect, JSXGraph = jxg_default.JSXGraph, Mat = jxg_default.Math, Options = jxg_default.Options, boards = jxg_default.boards, elements = jxg_default.elements, palette = jxg_default.palette, paletteWong = jxg_default.paletteWong, Board = jxg_default.Board, Chart = jxg_default.Chart, Circle = jxg_default.Circle, Complex = jxg_default.Complex, Composition = jxg_default.Composition, Coords = jxg_default.Coords, CoordsElement = jxg_default.CoordsElement, Curve = jxg_default.Curve, GeometryElement = jxg_default.GeometryElement, Group = jxg_default.Group, Image$1 = jxg_default.Image, JessieCode = jxg_default.JessieCode, Prefix = jxg_default.PrefixParser, Line = jxg_default.Line, Point = jxg_default.Point, Polygon = jxg_default.Polygon, Text = jxg_default.Text, Ticks = jxg_default.Ticks, Transformation = jxg_default.Transformation, Turtle = jxg_default.Turtle, View3D = jxg_default.View3D, LMS2rgb = jxg_default.LMS2rgb, addEvent = jxg_default.addEvent, autoDigits = jxg_default.autoDigits, autoHighlight = jxg_default.autoHighlight, bind = jxg_default.bind, capitalize = jxg_default.capitalize, clearVisPropOld = jxg_default.clearVisPropOld, clone = jxg_default.clone, cloneAndCopy = jxg_default.cloneAndCopy, cmpArrays = jxg_default.cmpArrays, coordsArrayToMatrix = jxg_default.coordsArrayToMatrix, copyAttributes = jxg_default.copyAttributes, createEvalFunction = jxg_default.createEvalFunction, createFunction = jxg_default.createFunction, createHTMLSlider = jxg_default.createHTMLSlider, darkenColor = jxg_default.darkenColor, debug = jxg_default.debug, debugInt = jxg_default.debugInt, debugLine = jxg_default.debugLine, debugWST = jxg_default.debugWST, deepCopy = jxg_default.deepCopy, def = jxg_default.def, deprecated = jxg_default.deprecated, eliminateDuplicates = jxg_default.eliminateDuplicates, escapeHTML = jxg_default.escapeHTML, evalSlider = jxg_default.evalSlider, evaluate = jxg_default.evaluate, filterElements = jxg_default.filterElements, getBoardByContainerId = jxg_default.getBoardByContainerId, getCSSTransformMatrix = jxg_default.getCSSTransformMatrix, getCSSTransform = jxg_default.getCSSTransform, getDimensions = jxg_default.getDimensions, getOffset = jxg_default.getOffset, getPosition = jxg_default.getPosition, getProp = jxg_default.getProp, hex2rgb = jxg_default.hex2rgb, hsv2rgb = jxg_default.hsv2rgb, isAndroid = jxg_default.isAndroid, isApple = jxg_default.isApple, isArray = jxg_default.isArray, isDesktop = jxg_default.isDesktop, isInArray = jxg_default.isInArray, isInObject = jxg_default.isInObject, isMetroApp = jxg_default.isMetroApp, isMobile = jxg_default.isMobile, isMozilla = jxg_default.isMozilla, isBoard = jxg_default.isBoard, isName = jxg_default.isName, isNode = jxg_default.isNode, isNumber = jxg_default.isNumber, isObject = jxg_default.isObject, isPoint = jxg_default.isPoint, isPoint3D = jxg_default.isPoint3D, isPointType = jxg_default.isPointType, isPointType3D = jxg_default.isPointType3D, isString = jxg_default.isString, isTouchDevice = jxg_default.isTouchDevice, isTransformationOrArray = jxg_default.isTransformationOrArray, isWebWorker = jxg_default.isWebWorker, isWebkitAndroid = jxg_default.isWebkitAndroid, isWebkitApple = jxg_default.isWebkitApple, keys = jxg_default.keys, lightenColor = jxg_default.lightenColor, merge = jxg_default.merge, normalizePointFace = jxg_default.normalizePointFace, providePoints = jxg_default.providePoints, registerElement = jxg_default.registerElement, registerReader = jxg_default.registerReader, removeAllEvents = jxg_default.removeAllEvents, removeElementFromArray = jxg_default.removeElementFromArray, removeEvent = jxg_default.removeEvent, rgb2LMS = jxg_default.rgb2LMS, rgb2bw = jxg_default.rgb2bw, rgb2cb = jxg_default.rgb2cb, rgb2css = jxg_default.rgb2css, rgb2hex = jxg_default.rgb2hex, rgb2hsv = jxg_default.rgb2hsv, rgbParser = jxg_default.rgbParser, rgb2rgbo = jxg_default.rgba2rgbo, rgb2rgba = jxg_default.rgbo2rgba, sanitizeHTML = jxg_default.sanitizeHTML, shortcut = jxg_default.shortcut, strBool = jxg_default.str2Bool, supportsCanvas = jxg_default.supportsCanvas, supportsPointerEvents = jxg_default.supportsPointerEvents, supportsSVG = jxg_default.supportsSVG, supportsVML = jxg_default.supportsVML, swap = jxg_default.swap, timeChunk = jxg_default.timedChunk, toFixed = jxg_default.toFixed, toFullscreen = jxg_default.toFullscreen, toJSON = jxg_default.toJSON, trim = jxg_default.trim, trimNumber = jxg_default.trimNumber, truncate = jxg_default.truncate, unescapeHTML = jxg_default.unescapeHTML, uniqueArray = jxg_default.uniqueArray, useBlackWhiteOptions = jxg_default.useBlackWhiteOptions, useStandardOptions = jxg_default.useStandardOptions, warn = jxg_default.warn;
+var COORDS_BY_SCREEN = jxg_default.COORDS_BY_SCREEN, COORDS_BY_USER = jxg_default.COORDS_BY_USER, Dump = jxg_default.Dump, Expect = jxg_default.Expect, JSXGraph = jxg_default.JSXGraph, Mat = jxg_default.Math, Options = jxg_default.Options, boards = jxg_default.boards, elements = jxg_default.elements, palette = jxg_default.palette, paletteWong = jxg_default.paletteWong, Board = jxg_default.Board, Chart = jxg_default.Chart, Circle = jxg_default.Circle, Complex = jxg_default.Complex, Composition = jxg_default.Composition, Coords = jxg_default.Coords, CoordsElement = jxg_default.CoordsElement, Curve = jxg_default.Curve, GeometryElement = jxg_default.GeometryElement, Group = jxg_default.Group, Image$1 = jxg_default.Image, JessieCode = jxg_default.JessieCode, Prefix = jxg_default.PrefixParser, Line = jxg_default.Line, Point = jxg_default.Point, Polygon = jxg_default.Polygon, Text = jxg_default.Text, Ticks = jxg_default.Ticks, Transformation = jxg_default.Transformation, Turtle = jxg_default.Turtle, View3D = jxg_default.View3D, LMS2rgb = jxg_default.LMS2rgb, addEvent = jxg_default.addEvent, autoDigits = jxg_default.autoDigits, autoHighlight = jxg_default.autoHighlight, bind = jxg_default.bind, capitalize = jxg_default.capitalize, clearVisPropOld = jxg_default.clearVisPropOld, clone = jxg_default.clone, cloneAndCopy = jxg_default.cloneAndCopy, cmpArrays = jxg_default.cmpArrays, coordsArrayToMatrix = jxg_default.coordsArrayToMatrix, copyAttributes = jxg_default.copyAttributes, createEvalFunction = jxg_default.createEvalFunction, createFunction = jxg_default.createFunction, createHTMLSlider = jxg_default.createHTMLSlider, darkenColor = jxg_default.darkenColor, debug = jxg_default.debug, debugInt = jxg_default.debugInt, debugLine = jxg_default.debugLine, debugWST = jxg_default.debugWST, deepCopy = jxg_default.deepCopy, def = jxg_default.def, deprecated = jxg_default.deprecated, eliminateDuplicates = jxg_default.eliminateDuplicates, escapeHTML = jxg_default.escapeHTML, evalSlider = jxg_default.evalSlider, evaluate = jxg_default.evaluate, filterElements = jxg_default.filterElements, getBoardByContainerId = jxg_default.getBoardByContainerId, getCSSTransformMatrix = jxg_default.getCSSTransformMatrix, getCSSTransform = jxg_default.getCSSTransform, getDimensions = jxg_default.getDimensions, getOffset = jxg_default.getOffset, getPosition = jxg_default.getPosition, getProp = jxg_default.getProp, hex2rgb = jxg_default.hex2rgb, hsv2rgb = jxg_default.hsv2rgb, isAndroid = jxg_default.isAndroid, isApple = jxg_default.isApple, isArray = jxg_default.isArray, isDesktop = jxg_default.isDesktop, isInArray = jxg_default.isInArray, isInObject = jxg_default.isInObject, isMetroApp = jxg_default.isMetroApp, isMobile = jxg_default.isMobile, isMozilla = jxg_default.isMozilla, isBoard = jxg_default.isBoard, isName = jxg_default.isName, isNode = jxg_default.isNode, isNumber = jxg_default.isNumber, isObject = jxg_default.isObject, isPoint$1 = jxg_default.isPoint, isPoint3D = jxg_default.isPoint3D, isPointType = jxg_default.isPointType, isPointType3D = jxg_default.isPointType3D, isString = jxg_default.isString, isTouchDevice = jxg_default.isTouchDevice, isTransformationOrArray = jxg_default.isTransformationOrArray, isWebWorker = jxg_default.isWebWorker, isWebkitAndroid = jxg_default.isWebkitAndroid, isWebkitApple = jxg_default.isWebkitApple, keys = jxg_default.keys, lightenColor = jxg_default.lightenColor, merge = jxg_default.merge, normalizePointFace = jxg_default.normalizePointFace, providePoints = jxg_default.providePoints, registerElement = jxg_default.registerElement, registerReader = jxg_default.registerReader, removeAllEvents = jxg_default.removeAllEvents, removeElementFromArray = jxg_default.removeElementFromArray, removeEvent = jxg_default.removeEvent, rgb2LMS = jxg_default.rgb2LMS, rgb2bw = jxg_default.rgb2bw, rgb2cb = jxg_default.rgb2cb, rgb2css = jxg_default.rgb2css, rgb2hex = jxg_default.rgb2hex, rgb2hsv = jxg_default.rgb2hsv, rgbParser = jxg_default.rgbParser, rgb2rgbo = jxg_default.rgba2rgbo, rgb2rgba = jxg_default.rgbo2rgba, sanitizeHTML = jxg_default.sanitizeHTML, shortcut = jxg_default.shortcut, strBool = jxg_default.str2Bool, supportsCanvas = jxg_default.supportsCanvas, supportsPointerEvents = jxg_default.supportsPointerEvents, supportsSVG = jxg_default.supportsSVG, supportsVML = jxg_default.supportsVML, swap = jxg_default.swap, timeChunk = jxg_default.timedChunk, toFixed = jxg_default.toFixed, toFullscreen = jxg_default.toFullscreen, toJSON = jxg_default.toJSON, trim = jxg_default.trim, trimNumber = jxg_default.trimNumber, truncate = jxg_default.truncate, unescapeHTML = jxg_default.unescapeHTML, uniqueArray = jxg_default.uniqueArray, useBlackWhiteOptions = jxg_default.useBlackWhiteOptions, useStandardOptions = jxg_default.useStandardOptions, warn = jxg_default.warn;
 env_default.isBrowser ? window.JXG = jxg_default : env_default.isWebWorker() && (self.JXG = jxg_default);
-var src_default = jxg_default, JXG$1 = src_default, CLICK_MERGE_DISTANCE_PX = 12, CURVE_MAX_POINTS = 4;
+var src_default = jxg_default, JXG$1 = src_default, CLICK_MERGE_DISTANCE_PX = 12, CURVE_POINTS = {
+	curve: 4,
+	curve5: 5
+}, isCurveTool = (t) => t in CURVE_POINTS, TRIANGLE_POINTS = 3;
 function dist$2(t, n) {
 	return Math.hypot(t[0] - n[0], t[1] - n[1]);
 }
@@ -119614,30 +119835,33 @@ function pixelDistance(t, n, r) {
 	return Math.hypot(a[1] - o[1], a[2] - o[2]);
 }
 function buildShape(t, n, r, a, o = {}) {
-	let { text: c, radius: l, closed: u = !1, fixed: d = !0 } = o, f = {
+	let { text: c, radius: l, closed: u = !1, fixed: d = !0, showPoints: f = !0 } = o, m = {
 		withLabel: !1,
 		name: "",
+		visible: f,
 		size: 2,
 		strokeColor: a,
 		fillColor: a,
 		fixed: d
-	}, m = {
+	}, _ = {
 		strokeColor: a,
 		strokeWidth: 2,
 		fixed: d
-	}, _ = {
+	}, v = {
 		fillColor: a,
 		fillOpacity: .12
 	};
 	switch (n) {
 		case "point": return [t.create("point", r[0], {
-			...f,
+			...m,
+			visible: !0,
 			size: 4,
 			fixed: d
 		})];
 		case "coordinate": {
 			let n = t.create("point", r[0], {
-				...f,
+				...m,
+				visible: !0,
 				size: 4,
 				fixed: d
 			}), o = t.create("point", [() => n.X(), () => 0], {
@@ -119681,48 +119905,48 @@ function buildShape(t, n, r, a, o = {}) {
 			fixed: d
 		})];
 		case "line": {
-			let n = t.create("point", r[0], f), a = t.create("point", r[1], f);
+			let n = t.create("point", r[0], m), a = t.create("point", r[1], m);
 			return [
 				n,
 				a,
-				t.create("line", [n, a], m)
+				t.create("line", [n, a], _)
 			];
 		}
 		case "segment": {
-			let n = t.create("point", r[0], f), a = t.create("point", r[1], f);
+			let n = t.create("point", r[0], m), a = t.create("point", r[1], m);
 			return [
 				n,
 				a,
-				t.create("segment", [n, a], m)
+				t.create("segment", [n, a], _)
 			];
 		}
 		case "arrow": {
 			let n = t.create("point", r[0], {
-				...f,
+				...m,
 				visible: !1
 			}), a = t.create("point", r[1], {
-				...f,
+				...m,
 				visible: !1
 			});
 			return [
 				n,
 				a,
-				t.create("arrow", [n, a], m)
+				t.create("arrow", [n, a], _)
 			];
 		}
 		case "doubleArrow": {
 			let n = t.create("point", r[0], {
-				...f,
+				...m,
 				visible: !1
 			}), a = t.create("point", r[1], {
-				...f,
+				...m,
 				visible: !1
 			});
 			return [
 				n,
 				a,
 				t.create("segment", [n, a], {
-					...m,
+					..._,
 					firstArrow: {
 						type: 1,
 						size: 6
@@ -119735,7 +119959,7 @@ function buildShape(t, n, r, a, o = {}) {
 			];
 		}
 		case "rectangle": {
-			let n = t.create("point", r[0], f), a = t.create("point", r[1], f), o = t.create("point", [() => a.X(), () => n.Y()], f), c = t.create("point", [() => n.X(), () => a.Y()], f);
+			let n = t.create("point", r[0], m), a = t.create("point", r[1], m), o = t.create("point", [() => a.X(), () => n.Y()], m), c = t.create("point", [() => n.X(), () => a.Y()], m);
 			return [
 				n,
 				a,
@@ -119747,48 +119971,50 @@ function buildShape(t, n, r, a, o = {}) {
 					a,
 					c
 				], {
-					...m,
 					..._,
+					...v,
 					vertices: { visible: !1 },
 					withLines: !0
 				})
 			];
 		}
 		case "circle": {
-			let n = t.create("point", r[0], f);
+			let n = t.create("point", r[0], m);
 			if (r.length > 1) {
-				let a = t.create("point", r[1], f);
+				let a = t.create("point", r[1], m);
 				return [
 					n,
 					a,
 					t.create("circle", [n, a], {
-						...m,
-						..._
+						..._,
+						...v
 					})
 				];
 			}
 			return [n, t.create("circle", [n, l ?? 1], {
-				...m,
-				..._
+				..._,
+				...v
 			})];
 		}
-		case "polygon": {
-			let n = r.map((n) => t.create("point", n, f)), a = t.create("polygon", n, {
-				...m,
+		case "polygon":
+		case "triangle": {
+			let n = r.map((n) => t.create("point", n, m)), a = t.create("polygon", n, {
 				..._,
+				...v,
 				vertices: { visible: !1 }
 			});
 			return [...n, a];
 		}
 		case "scatter": {
 			let n = r.map((n) => t.create("point", n, {
-				...f,
+				...m,
 				size: 3
-			})), a = n.slice(1).map((r, a) => t.create("segment", [n[a], r], m));
-			return u && n.length >= 3 && a.push(t.create("segment", [n[n.length - 1], n[0]], m)), [...n, ...a];
+			})), a = n.slice(1).map((r, a) => t.create("segment", [n[a], r], _));
+			return u && n.length >= 3 && a.push(t.create("segment", [n[n.length - 1], n[0]], _)), [...n, ...a];
 		}
-		case "curve": {
-			let n = r.map((n) => t.create("point", n, f)), o = JXG$1.Math.Numerics.CardinalSpline(n, .5), c = t.create("curve", o, {
+		case "curve":
+		case "curve5": {
+			let n = r.map((n) => t.create("point", n, m)), o = JXG$1.Math.Numerics.CardinalSpline(n, .5), c = t.create("curve", o, {
 				strokeColor: a,
 				strokeWidth: 2,
 				fixed: d
@@ -119922,6 +120148,7 @@ var DrawingBoard$1 = (0, import_react.forwardRef)(function({ boundingBox: t = [
 				text: n.text,
 				radius: n.radius,
 				closed: n.closed,
+				showPoints: n.showPoints,
 				fixed: !0
 			});
 		});
@@ -120025,7 +120252,7 @@ var DrawingBoard$1 = (0, import_react.forwardRef)(function({ boundingBox: t = [
 			let r = ie.current;
 			if (!r) return;
 			m(r), r.liveObjects.forEach((n) => t.removeObject(n)), r.liveObjects = [];
-			let a = r.tool === "polygon" || n ? 3 : 2;
+			let a = r.tool === "polygon" || r.tool === "triangle" || n ? 3 : 2;
 			if (r.points.length < a) {
 				ie.current = null, Pe(null), t.update();
 				return;
@@ -120042,8 +120269,8 @@ var DrawingBoard$1 = (0, import_react.forwardRef)(function({ boundingBox: t = [
 			}), ie.current = null, Pe(null), t.update();
 		}, el = (n, r) => {
 			m(n);
-			let a = r ? [...n.points, r] : n.points;
-			a.length < 2 || (n.previewLine = t.create("curve", [a.map((t) => t[0]), a.map((t) => t[1])], {
+			let a = r ? [...n.points, r] : [...n.points];
+			a.length < 2 || (n.tool === "triangle" && a.length === TRIANGLE_POINTS && a.push(a[0]), n.previewLine = t.create("curve", [a.map((t) => t[0]), a.map((t) => t[1])], {
 				strokeColor: I.current,
 				strokeWidth: 2,
 				fixed: !0,
@@ -120113,7 +120340,7 @@ var DrawingBoard$1 = (0, import_react.forwardRef)(function({ boundingBox: t = [
 				}, Pe("Type your text, press Enter to finish, Esc to cancel."), t.update();
 				return;
 			}
-			if (r === "polygon" || r === "scatter" || r === "curve") {
+			if (r === "polygon" || r === "triangle" || r === "scatter" || isCurveTool(r)) {
 				if (t.mode !== t.BOARD_MODE_NONE) return;
 				let n = ie.current;
 				n && n.tool !== r && (_(), n = null), n || (n = {
@@ -120124,7 +120351,7 @@ var DrawingBoard$1 = (0, import_react.forwardRef)(function({ boundingBox: t = [
 				}, ie.current = n);
 				let o = n.points[n.points.length - 1];
 				if (o && pixelDistance(t, o, a) < CLICK_MERGE_DISTANCE_PX) {
-					Xr();
+					r !== "triangle" && Xr();
 					return;
 				}
 				if ((r === "polygon" || r === "scatter") && n.points.length >= 3 && pixelDistance(t, n.points[0], a) < CLICK_MERGE_DISTANCE_PX) {
@@ -120141,11 +120368,15 @@ var DrawingBoard$1 = (0, import_react.forwardRef)(function({ boundingBox: t = [
 					fixed: !0,
 					highlight: !1
 				});
-				if (n.liveObjects.push(c), r === "curve" && n.points.length >= CURVE_MAX_POINTS) {
+				if (n.liveObjects.push(c), r === "triangle" && n.points.length >= TRIANGLE_POINTS) {
 					Xr();
 					return;
 				}
-				r === "curve" ? Eu(n) : el(n), Pe(r === "polygon" ? "Click to add corners, click the first point (or press Enter) to close, Esc to cancel." : r === "scatter" ? "Click to add points. Press Enter or click the last point again to finish; click the first point to close the loop. Esc to cancel." : `Click up to ${CURVE_MAX_POINTS} points; the curve completes automatically after the ${CURVE_MAX_POINTS}th (Esc to cancel).`);
+				if (isCurveTool(r) && n.points.length >= CURVE_POINTS[r]) {
+					Xr();
+					return;
+				}
+				isCurveTool(r) ? Eu(n) : el(n), Pe(r === "triangle" ? "Click the three corners; the triangle completes on the third click (Esc to cancel)." : r === "polygon" ? "Click to add corners, click the first point (or press Enter) to close, Esc to cancel." : r === "scatter" ? "Click to add points. Press Enter or click the last point again to finish; click the first point to close the loop. Esc to cancel." : `Click up to ${CURVE_POINTS[r]} points; the curve completes automatically after the ${CURVE_POINTS[r]}th (Esc to cancel).`);
 				return;
 			}
 			if (t.mode !== t.BOARD_MODE_NONE) return;
@@ -120160,10 +120391,10 @@ var DrawingBoard$1 = (0, import_react.forwardRef)(function({ boundingBox: t = [
 			N.current === "coordinate" && W.current ? t.mode === t.BOARD_MODE_NONE && je(t.getUsrCoordsOfMouse(n)) : K.current && (xe(), t.update());
 			let r = ie.current;
 			if (!r) return;
-			if (r.tool === "polygon" || r.tool === "scatter" || r.tool === "curve") {
+			if (r.tool === "polygon" || r.tool === "triangle" || r.tool === "scatter" || isCurveTool(r.tool)) {
 				if (r.points.length === 0) return;
 				let a = t.getUsrCoordsOfMouse(n);
-				r.tool === "curve" ? Eu(r, a) : el(r, a), t.update();
+				isCurveTool(r.tool) ? Eu(r, a) : el(r, a), t.update();
 				return;
 			}
 			if (r.liveObjects.length === 0) return;
@@ -120172,7 +120403,7 @@ var DrawingBoard$1 = (0, import_react.forwardRef)(function({ boundingBox: t = [
 		}, bf = () => {
 			N.current === "select" && Oe.current?.();
 			let n = ie.current;
-			if (!n || n.liveObjects.length === 0 || n.tool === "polygon" || n.tool === "scatter" || n.tool === "curve") return;
+			if (!n || n.liveObjects.length === 0 || n.tool === "polygon" || n.tool === "triangle" || n.tool === "scatter" || isCurveTool(n.tool)) return;
 			let [r, a] = n.points;
 			dist$2(r, a) < (Math.abs(C - b) + Math.abs(O - E)) * .005 ? n.liveObjects.forEach((n) => t.removeObject(n)) : d(n.liveObjects, {
 				tool: n.tool,
@@ -120207,6 +120438,7 @@ var DrawingBoard$1 = (0, import_react.forwardRef)(function({ boundingBox: t = [
 				text: r.text,
 				radius: r.radius,
 				closed: r.closed,
+				showPoints: r.showPoints,
 				fixed: !0
 			}).forEach((t) => {
 				t.setAttribute({
@@ -120360,6 +120592,7 @@ function DrawingApp$1({ boundingBox: t = DEFAULT_BOUNDING_BOX$1, xLabel: n = "x"
 						y && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "output-button-wrapper",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
 								className: "output-button",
 								onClick: () => {
 									Xr.current?.downloadImage(b).catch((t) => {
@@ -120376,6 +120609,7 @@ function DrawingApp$1({ boundingBox: t = DEFAULT_BOUNDING_BOX$1, xLabel: n = "x"
 						C && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "output-button-wrapper",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
 								className: "output-button",
 								onClick: () => je((t) => !t),
 								"aria-label": Oe ? "Hide Drawing Data" : "Show Drawing Data",
@@ -120388,6 +120622,7 @@ function DrawingApp$1({ boundingBox: t = DEFAULT_BOUNDING_BOX$1, xLabel: n = "x"
 						gf.includes("undo") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "output-button-wrapper",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
 								className: "output-button",
 								onClick: () => Xr.current?.undo(),
 								disabled: j || !K,
@@ -120401,6 +120636,7 @@ function DrawingApp$1({ boundingBox: t = DEFAULT_BOUNDING_BOX$1, xLabel: n = "x"
 						gf.includes("redo") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "output-button-wrapper",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
 								className: "output-button",
 								onClick: () => Xr.current?.redo(),
 								disabled: j || !ue,
@@ -120414,6 +120650,7 @@ function DrawingApp$1({ boundingBox: t = DEFAULT_BOUNDING_BOX$1, xLabel: n = "x"
 						gf.includes("clear") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "output-button-wrapper",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
 								className: "output-button delete-button",
 								onClick: () => Xr.current?.clear(),
 								disabled: j,
@@ -120660,12 +120897,321 @@ function gradeMultipleChoice(t, n) {
 	let a = t.options[r], o = { score: +!!a.correct };
 	return a.feedback && (o.feedback = a.feedback), o;
 }
+function graphName(t) {
+	return `Graph ${String.fromCharCode(65 + t)}`;
+}
+function describeOption(t, n) {
+	let r = t.options[n];
+	return r.graph ? `${graphName(n)}: ${r.text}` : r.text;
+}
 function formatMultipleChoiceAnswer(t, n) {
 	let r = selectedIndex(t, n);
-	return r === null ? "_(no answer)_" : t.options[r].text;
+	return r === null ? "_(no answer)_" : describeOption(t, r);
 }
 function formatMultipleChoiceCorrect(t) {
-	return t.options.find((t) => t.correct)?.text ?? "";
+	let n = t.options.findIndex((t) => t.correct);
+	return n < 0 ? "" : describeOption(t, n);
+}
+//#endregion
+//#region src/components/graphView/geometry.ts
+var CANVAS = {
+	width: 260,
+	height: 220,
+	left: 30,
+	right: 24,
+	top: 16,
+	bottom: 28
+}, FUNCTION_SAMPLES = 120;
+function bounds(t) {
+	return {
+		xMin: t.xMin ?? 0,
+		xMax: t.xMax,
+		yMin: t.yMin ?? 0,
+		yMax: t.yMax
+	};
+}
+function scales(t) {
+	let { xMin: n, xMax: r, yMin: a, yMax: o } = bounds(t), c = CANVAS.width - CANVAS.left - CANVAS.right, l = CANVAS.height - CANVAS.top - CANVAS.bottom;
+	return {
+		x: (t) => CANVAS.left + (t - n) / (r - n) * c,
+		y: (t) => CANVAS.top + (o - t) / (o - a) * l,
+		plot: {
+			x: CANVAS.left,
+			y: CANVAS.top,
+			width: c,
+			height: l
+		}
+	};
+}
+function functionRuns(t, n) {
+	let { xMin: r, xMax: a, yMin: o, yMax: c } = bounds(t), l = parseExpression(n.fn);
+	if (!l.ok) return [];
+	let [u, d] = n.domain ?? [r, a], f = c - o, m = [], _ = [];
+	for (let t = 0; t <= FUNCTION_SAMPLES; t++) {
+		let n = u + (d - u) * t / FUNCTION_SAMPLES, r = evaluateAt(l.node, { x: n });
+		r.ok ? _.push([n, Math.min(c + f, Math.max(o - f, r.value))]) : _.length > 0 && (m.push(_), _ = []);
+	}
+	return _.length > 0 && m.push(_), m.filter((t) => t.length > 1);
+}
+function arrowHead(t, n, r = 8) {
+	let a = Math.atan2(n[1] - t[1], n[0] - t[0]), o = Math.PI / 7;
+	return [[n[0] - r * Math.cos(a - o), n[1] - r * Math.sin(a - o)], [n[0] - r * Math.cos(a + o), n[1] - r * Math.sin(a + o)]];
+}
+function centroid(t) {
+	let n = t.length || 1;
+	return [t.reduce((t, n) => t + n[0], 0) / n, t.reduce((t, n) => t + n[1], 0) / n];
+}
+function isPoint(t) {
+	return Array.isArray(t) && t.length === 2 && t.every((t) => typeof t == "number" && Number.isFinite(t));
+}
+var COLORS$1 = /* @__PURE__ */ new Set([
+	"blue",
+	"red",
+	"green",
+	"orange",
+	"purple",
+	"gray"
+]);
+function checkGraph(t) {
+	let { xMin: n, xMax: r, yMin: a, yMax: o } = bounds(t);
+	if (![
+		n,
+		r,
+		a,
+		o
+	].every(Number.isFinite) || !(n < r) || !(a < o)) throw new AuthoringError("graph needs finite bounds with xMin < xMax and yMin < yMax.");
+	if (!Array.isArray(t.shapes)) throw new AuthoringError("graph needs a shapes array.");
+	t.shapes.forEach((n, r) => {
+		let a = `graph shape ${r + 1} (${String(n.type)})`;
+		if (n.color !== void 0 && !COLORS$1.has(n.color)) throw new AuthoringError(`${a}: unknown color "${n.color}".`);
+		switch (n.type) {
+			case "segment":
+			case "arrow":
+				if (!isPoint(n.from) || !isPoint(n.to)) throw new AuthoringError(`${a} needs from and to as [x, y].`);
+				return;
+			case "point":
+			case "text":
+				if (!isPoint(n.at)) throw new AuthoringError(`${a} needs at as [x, y].`);
+				return;
+			case "polygon":
+				if (!Array.isArray(n.points) || n.points.length < 3 || !n.points.every(isPoint)) throw new AuthoringError(`${a} needs at least 3 points as [x, y].`);
+				return;
+			case "function":
+				if (!(typeof n.fn == "string" ? parseExpression(n.fn) : void 0)?.ok) throw new AuthoringError(`${a}: fn doesn't parse.`);
+				if (n.domain !== void 0 && !(isPoint(n.domain) && n.domain[0] < n.domain[1])) throw new AuthoringError(`${a}: domain must be [min, max] with min < max.`);
+				if (functionRuns(t, n).length === 0) throw new AuthoringError(`${a}: fn isn't defined anywhere on its domain (it may only use x).`);
+				return;
+			default: throw new AuthoringError(`${a}: unknown shape type.`);
+		}
+	});
+}
+//#endregion
+//#region src/components/graphView/GraphView.tsx
+var STROKE = {
+	default: "stroke-slate-800 dark:stroke-slate-200",
+	blue: "stroke-blue-600 dark:stroke-blue-400",
+	red: "stroke-red-600 dark:stroke-red-400",
+	green: "stroke-emerald-600 dark:stroke-emerald-400",
+	orange: "stroke-orange-600 dark:stroke-orange-400",
+	purple: "stroke-purple-600 dark:stroke-purple-400",
+	gray: "stroke-slate-400 dark:stroke-slate-500"
+}, FILL = {
+	default: "fill-slate-800 dark:fill-slate-200",
+	blue: "fill-blue-600 dark:fill-blue-400",
+	red: "fill-red-600 dark:fill-red-400",
+	green: "fill-emerald-600 dark:fill-emerald-400",
+	orange: "fill-orange-600 dark:fill-orange-400",
+	purple: "fill-purple-600 dark:fill-purple-400",
+	gray: "fill-slate-400 dark:fill-slate-500"
+}, HALO = "stroke-white dark:stroke-slate-900", haloProps = {
+	paintOrder: "stroke",
+	strokeWidth: 3,
+	strokeLinejoin: "round"
+};
+function GraphView({ spec: t, label: n, className: r }) {
+	let a = `graph-clip-${(0, import_react.useId)().replace(/:/g, "")}`, o = scales(t), { xMin: c, yMin: l } = bounds(t), u = ([t, n]) => [o.x(t), o.y(n)], d = u([c, l]), f = o.plot.x + o.plot.width, m = o.plot.y, _ = "fill-slate-700 dark:fill-slate-300";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		role: "img",
+		"aria-label": n,
+		viewBox: `0 0 ${CANVAS.width} ${CANVAS.height}`,
+		className: `h-auto w-full ${r ?? ""}`,
+		fontSize: 12,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("clipPath", {
+				id: a,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+					x: o.plot.x,
+					y: o.plot.y,
+					width: o.plot.width,
+					height: o.plot.height
+				})
+			}) }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
+				className: STROKE.default,
+				strokeWidth: 1.25,
+				fill: "none",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+						x1: d[0],
+						y1: d[1],
+						x2: f + 6,
+						y2: d[1]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+						x1: d[0],
+						y1: d[1],
+						x2: d[0],
+						y2: m - 6
+					}),
+					(t.xTicks ?? []).map((t) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+						x1: o.x(t),
+						y1: d[1],
+						x2: o.x(t),
+						y2: d[1] + 4
+					}, `xt${t}`)),
+					(t.yTicks ?? []).map((t) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+						x1: d[0] - 4,
+						y1: o.y(t),
+						x2: d[0],
+						y2: o.y(t)
+					}, `yt${t}`))
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
+				className: _,
+				children: [
+					(t.xTicks ?? []).map((t) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+						x: o.x(t),
+						y: d[1] + 15,
+						textAnchor: "middle",
+						fontSize: 10,
+						children: t
+					}, `xl${t}`)),
+					(t.yTicks ?? []).map((t) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+						x: d[0] - 6,
+						y: o.y(t) + 3.5,
+						textAnchor: "end",
+						fontSize: 10,
+						children: t
+					}, `yl${t}`)),
+					t.xLabel && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+						x: f + 4,
+						y: d[1] + 16,
+						textAnchor: "end",
+						fontStyle: "italic",
+						children: t.xLabel
+					}),
+					t.yLabel && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+						x: d[0] - 8,
+						y: m - 2,
+						textAnchor: "end",
+						fontStyle: "italic",
+						children: t.yLabel
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", {
+				clipPath: `url(#${a})`,
+				fill: "none",
+				strokeWidth: 2,
+				strokeLinecap: "round",
+				children: t.shapes.map((n, r) => {
+					let a = "color" in n && n.color ? n.color : "default";
+					switch (n.type) {
+						case "segment": {
+							let [t, o] = [u(n.from), u(n.to)];
+							return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+								className: STROKE[a],
+								x1: t[0],
+								y1: t[1],
+								x2: o[0],
+								y2: o[1],
+								strokeDasharray: n.dashed ? "6 4" : void 0
+							}, r);
+						}
+						case "function": return functionRuns(t, n).map((t, o) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("polyline", {
+							className: STROKE[a],
+							points: t.map((t) => u(t).join(",")).join(" "),
+							strokeDasharray: n.dashed ? "6 4" : void 0,
+							strokeLinejoin: "round"
+						}, `${r}-${o}`));
+						case "polygon": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("polygon", {
+							className: `${FILL[a]} ${STROKE[a]}`,
+							points: n.points.map((t) => u(t).join(",")).join(" "),
+							fillOpacity: .25,
+							strokeWidth: 0
+						}, r);
+						case "arrow": {
+							let [t, o] = [u(n.from), u(n.to)], [c, l] = arrowHead(t, o);
+							return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
+								className: STROKE[a],
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+									x1: t[0],
+									y1: t[1],
+									x2: o[0],
+									y2: o[1],
+									strokeWidth: 1.5
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("polyline", {
+									points: `${c.join(",")} ${o.join(",")} ${l.join(",")}`,
+									strokeWidth: 1.5,
+									strokeLinejoin: "round"
+								})]
+							}, r);
+						}
+						case "point": {
+							let t = u(n.at);
+							return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", { children: [n.guides && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("polyline", {
+								className: STROKE.gray,
+								points: `${d[0]},${t[1]} ${t[0]},${t[1]} ${t[0]},${d[1]}`,
+								strokeWidth: 1,
+								strokeDasharray: "3 3"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+								className: FILL[a],
+								cx: t[0],
+								cy: t[1],
+								r: 3.5,
+								stroke: "none"
+							})] }, r);
+						}
+						default: return null;
+					}
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", { children: t.shapes.map((n, r) => {
+				if (n.type === "text") {
+					let t = u(n.at);
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+						className: `${n.color ? FILL[n.color] : _} ${HALO}`,
+						x: t[0],
+						y: t[1] + 4,
+						textAnchor: "middle",
+						...haloProps,
+						children: n.text
+					}, r);
+				}
+				if (!n.label) return null;
+				let a = FILL[n.color ?? "default"], o, c = "start";
+				if (n.type === "segment" || n.type === "arrow") o = u(n.to);
+				else if (n.type === "point") o = u(n.at);
+				else if (n.type === "polygon") o = u(centroid(n.points)), c = "middle";
+				else {
+					let r = functionRuns(t, n), a = r[r.length - 1]?.[r[r.length - 1].length - 1];
+					if (!a) return null;
+					o = u(a);
+				}
+				let l = c === "middle" ? 0 : n.type === "point" ? 7 : 5, d = n.type === "polygon" || n.type === "point" ? 4 : -4;
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("text", {
+					className: `${a} ${HALO}`,
+					x: o[0] + l,
+					y: o[1] + d,
+					textAnchor: c,
+					fontWeight: 600,
+					...haloProps,
+					children: n.label
+				}, r);
+			}) })
+		]
+	});
 }
 //#endregion
 //#region src/elements/multipleChoice/MultipleChoiceInput.tsx
@@ -120673,7 +121219,49 @@ function toPlainText(t) {
 	return t.replace(/\$\$?([^$]*)\$\$?/g, "$1").replace(/[*_`]/g, "").trim();
 }
 function MultipleChoiceInput(t) {
-	return (t.part.display ?? "radio") === "dropdown" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dropdown, { ...t }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RadioGroup, { ...t });
+	return (t.part.display ?? "radio") === "dropdown" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dropdown, { ...t }) : t.part.options.some((t) => t.graph) ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GraphGrid, { ...t }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RadioGroup, { ...t });
+}
+function GraphGrid({ part: t, id: n, labelId: r, describedBy: a, value: o, onChange: c, disabled: l, invalid: u }) {
+	let d = selectedIndex(t, o);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "@container basis-full",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			role: "radiogroup",
+			id: n,
+			"aria-labelledby": r,
+			"aria-describedby": a,
+			"aria-invalid": u || void 0,
+			className: "grid grid-cols-1 gap-3 @lg:grid-cols-2",
+			children: t.options.map((t, r) => {
+				let a = `${n}-opt-${r}`, o = d === r;
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+					htmlFor: a,
+					className: `flex cursor-pointer flex-col gap-1 rounded-lg border p-2 transition-colors ${o ? "border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500 dark:border-indigo-400 dark:bg-indigo-950/50" : "border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800/60"} ${l ? "cursor-not-allowed opacity-80" : ""}`,
+					children: [t.graph ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GraphView, {
+						spec: t.graph,
+						label: t.text,
+						className: "mx-auto max-w-xs"
+					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, {
+						inline: !0,
+						className: "flex min-h-24 items-center justify-center break-words text-center",
+						children: t.text
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						className: "flex items-center gap-2 px-1 text-sm font-medium",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							type: "radio",
+							id: a,
+							name: n,
+							value: r,
+							checked: o,
+							disabled: l,
+							onChange: () => c(r),
+							className: "h-4 w-4 shrink-0 accent-indigo-600"
+						}), t.graph ? graphName(r) : null]
+					})]
+				}, a);
+			})
+		})
+	});
 }
 function RadioGroup({ part: t, id: n, labelId: r, describedBy: a, value: o, onChange: c, disabled: l, invalid: u }) {
 	let d = selectedIndex(t, o);
@@ -120738,10 +121326,13 @@ function checkMultipleChoice(t) {
 	if (n !== 1) throw new AuthoringError(`multiple-choice needs exactly one correct option (found ${n}).`);
 	let r = /* @__PURE__ */ new Set();
 	for (let n of t.options) {
-		let t = n.text.trim();
-		if (!t) throw new AuthoringError("multiple-choice option text must not be empty.");
-		if (r.has(t)) throw new AuthoringError(`duplicate option text "${n.text}".`);
-		r.add(t);
+		let a = n.text.trim();
+		if (!a) throw new AuthoringError("multiple-choice option text must not be empty.");
+		if (r.has(a)) throw new AuthoringError(`duplicate option text "${n.text}".`);
+		if (r.add(a), n.graph !== void 0) {
+			if (t.display === "dropdown") throw new AuthoringError("graph options need display \"radio\", not a dropdown.");
+			checkGraph(n.graph);
+		}
 	}
 	if (t.numberAnswers !== void 0) {
 		let n = t.numberAnswers;
@@ -121349,6 +121940,7 @@ function DrawingToolbar({ activeTool: t, onToolChange: n, color: r, onColorChang
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "color-swatch-row",
 					children: c.map((t) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
 						className: `color-swatch ${t === r ? "selected-color" : ""}`,
 						style: { background: t },
 						onClick: () => {
@@ -121925,6 +122517,7 @@ var DrawingBoard = (0, import_react.forwardRef)(function({ boundingBox: t = [
 				className: "svg-navigation",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
 						onClick: () => At((t) => {
 							let n = (t[1] - t[0]) * .1, r = (t[3] - t[2]) * .1;
 							return [
@@ -121937,6 +122530,7 @@ var DrawingBoard = (0, import_react.forwardRef)(function({ boundingBox: t = [
 						children: "+"
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
 						onClick: () => At((t) => {
 							let n = (t[1] - t[0]) * .1, r = (t[3] - t[2]) * .1;
 							return [
@@ -121949,6 +122543,7 @@ var DrawingBoard = (0, import_react.forwardRef)(function({ boundingBox: t = [
 						children: "−"
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
 						onClick: () => At(t),
 						children: "⌂"
 					})
@@ -122030,6 +122625,7 @@ function DrawingApp({ boundingBox: t = DEFAULT_BOUNDING_BOX, xLabel: n = "x", yL
 						yf && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "output-button-wrapper",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
 								className: `output-button ${I === "eraser" ? "footer-tool-active" : ""}`,
 								"aria-pressed": I === "eraser",
 								onClick: () => Io("eraser"),
@@ -122039,6 +122635,7 @@ function DrawingApp({ boundingBox: t = DEFAULT_BOUNDING_BOX, xLabel: n = "x", yL
 							})
 						}),
 						gf.includes("undo") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
 							className: "output-button",
 							onClick: () => Xr.current?.undo(),
 							disabled: j || !K,
@@ -122046,6 +122643,7 @@ function DrawingApp({ boundingBox: t = DEFAULT_BOUNDING_BOX, xLabel: n = "x", yL
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Undo2, {})
 						}),
 						gf.includes("redo") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
 							className: "output-button",
 							onClick: () => Xr.current?.redo(),
 							disabled: j || !ue,
@@ -122053,6 +122651,7 @@ function DrawingApp({ boundingBox: t = DEFAULT_BOUNDING_BOX, xLabel: n = "x", yL
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Redo2, {})
 						}),
 						gf.includes("clear") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
 							className: "output-button footer-delete-button",
 							onClick: () => Xr.current?.clear(),
 							disabled: j,
@@ -122060,6 +122659,7 @@ function DrawingApp({ boundingBox: t = DEFAULT_BOUNDING_BOX, xLabel: n = "x", yL
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, {})
 						}),
 						y && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
 							className: "output-button",
 							onClick: () => {
 								Xr.current?.downloadImage(b).catch((t) => {
@@ -122070,6 +122670,7 @@ function DrawingApp({ boundingBox: t = DEFAULT_BOUNDING_BOX, xLabel: n = "x", yL
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, {})
 						}),
 						C && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
 							className: "output-button",
 							onClick: () => {
 								Oe || zo(), je((t) => !t);
@@ -122499,9 +123100,12 @@ function gradeQuestion(t, n, r) {
 	};
 	let c = {};
 	for (let a of t) {
-		let t = getElement(a.type), o = t.manualGrading ? r?.[a.name] : void 0, l = o ? {
+		let t = getElement(a.type), o = isManualPart(a) ? r?.[a.name] : void 0, l = o ? {
 			score: o.score,
 			feedback: o.comment || void 0
+		} : a.manualGrading && !t.manualGrading ? {
+			score: 0,
+			pending: !0
 		} : t.grade(a, n[a.name]);
 		c[a.name] = {
 			...l,
@@ -122662,11 +123266,10 @@ function lastSubmission(t) {
 	return n[n.length - 1];
 }
 function hasManualParts(t) {
-	return t.some((t) => getElement(t.type).manualGrading);
+	return t.some(isManualPart);
 }
 function isFinished(t) {
-	let n = lastSubmission(t);
-	return n?.score === 1 || attemptsRemaining(t) === 0 || n !== void 0 && hasManualParts(t.preparedParts);
+	return lastSubmission(t) !== void 0 || attemptsRemaining(t) === 0;
 }
 function isDraftSaved(t) {
 	let n = lastSubmission(t);
@@ -122682,7 +123285,7 @@ function isDone(t, n) {
 	return n ? t.submissions.length > 0 : isFinished(t);
 }
 function canNewVariant(t, n) {
-	return n === "exercise" && currentVariantSubmissions(t).length > 0 && attemptsRemaining(t) !== 0 && !hasManualParts(t.preparedParts);
+	return !n && currentVariantSubmissions(t).length > 0 && attemptsRemaining(t) !== 0 && !hasManualParts(t.preparedParts);
 }
 function questionPoints(t) {
 	return t.bestScore * t.points;
@@ -122772,14 +123375,14 @@ function reduce(t, n, { hideGrades: r = !1 }) {
 				bestScore: Math.max(...c.map((t) => t.score))
 			};
 		});
-		case "newVariant": return updateQuestion(t, n.index, (r) => canNewVariant(r, t.mode) ? {
-			...r,
-			variant: r.variant + 1,
+		case "newVariant": return updateQuestion(t, n.index, (t) => canNewVariant(t, r) ? {
+			...t,
+			variant: t.variant + 1,
 			seed: n.seed,
 			preparedParts: n.preparedParts,
 			draft: {},
 			validation: null
-		} : r);
+		} : t);
 		case "goTo": return n.index < 0 || n.index >= t.questions.length || n.index === t.currentIndex ? t : {
 			...t,
 			currentIndex: n.index
@@ -123589,7 +124192,123 @@ var profitMaximum = {
 			}
 		]
 	}]
-}, noParams = () => ({});
+}, EVENTS = [
+	{
+		event: "Consumers' incomes rise, and coffee is a normal good.",
+		shift: "demand-right"
+	},
+	{
+		event: "Consumers expect the price of coffee to rise next month.",
+		shift: "demand-right"
+	},
+	{
+		event: "The price of tea, a substitute for coffee, falls.",
+		shift: "demand-left"
+	},
+	{
+		event: "A health report says coffee is bad for you.",
+		shift: "demand-left"
+	},
+	{
+		event: "A new roasting technology lowers the cost of producing coffee.",
+		shift: "supply-right"
+	},
+	{
+		event: "More firms enter the coffee market.",
+		shift: "supply-right"
+	},
+	{
+		event: "A frost destroys part of the coffee bean harvest.",
+		shift: "supply-left"
+	},
+	{
+		event: "Wages of coffee workers rise.",
+		shift: "supply-left"
+	}
+], DESCRIPTIONS = {
+	"demand-right": "Demand shifts right (D₁ to D₂): price and quantity both rise.",
+	"demand-left": "Demand shifts left (D₁ to D₂): price and quantity both fall.",
+	"supply-right": "Supply shifts right (S₁ to S₂): price falls, quantity rises.",
+	"supply-left": "Supply shifts left (S₁ to S₂): price rises, quantity falls."
+};
+function shiftGraph(t, n) {
+	let r = t.startsWith("demand"), a = t.endsWith("right") ? n : -n, o = (t) => [[1 + t, 10], [9 + t, 2]], c = (t) => [[1 + t, 2], [9 + t, 10]], l = r ? [5 + a / 2, 6 + a / 2] : [5 + a / 2, 6 - a / 2], u = r ? a > 0 ? 8.5 : 4 : a > 0 ? 3.5 : 8, d = r ? 11 - u : u - 1, f = Math.sign(a);
+	return {
+		xMax: 12,
+		yMax: 12,
+		xLabel: "Q",
+		yLabel: "P",
+		shapes: [
+			{
+				type: "segment",
+				from: o(0)[0],
+				to: o(0)[1],
+				color: "blue",
+				label: "D₁"
+			},
+			{
+				type: "segment",
+				from: c(0)[0],
+				to: c(0)[1],
+				color: "red",
+				label: "S₁"
+			},
+			r ? {
+				type: "segment",
+				from: o(a)[0],
+				to: o(a)[1],
+				color: "blue",
+				dashed: !0,
+				label: "D₂"
+			} : {
+				type: "segment",
+				from: c(a)[0],
+				to: c(a)[1],
+				color: "red",
+				dashed: !0,
+				label: "S₂"
+			},
+			{
+				type: "arrow",
+				from: [d + .4 * f, u],
+				to: [d + a - .4 * f, u],
+				color: "gray"
+			},
+			{
+				type: "point",
+				at: [5, 6],
+				label: "e₁"
+			},
+			{
+				type: "point",
+				at: l,
+				label: "e₂"
+			}
+		]
+	};
+}
+var supplyDemandShiftGraph = {
+	id: "supply-demand-shift-graph",
+	title: "Which graph shows the change?",
+	generate: (t) => ({
+		...t.pick(EVENTS),
+		size: t.pick([
+			2,
+			2.5,
+			3
+		])
+	}),
+	render: ({ event: t }) => `In the market for coffee: **${t}**\n\nWhich graph shows the effect on the market? The dashed curve is the new one.`,
+	parts: ({ shift: t, size: n }) => [{
+		type: "multiple-choice",
+		name: "graph",
+		options: Object.keys(DESCRIPTIONS).map((r) => ({
+			text: DESCRIPTIONS[r],
+			correct: r === t,
+			graph: shiftGraph(r, n)
+		}))
+	}]
+}, noParams$1 = () => ({});
 function mc(t, n, r, a, o = {}) {
 	return {
 		type: "multiple-choice",
@@ -123617,11 +124336,11 @@ function dropdown(t, n, r, a) {
 	};
 }
 //#endregion
-//#region exams/sample-exam2/questions/01_mc_productivity_growth.js
+//#region exams/macro-sample-exam2/questions/01_mc_productivity_growth.js
 var productivityGrowth = {
 	id: "exam2-q01-productivity-growth",
 	title: "Labor productivity and total factor productivity",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Answer both parts about labor productivity and total factor productivity (TFP).",
 	parts: () => [mc("difference", "**(a)** The difference between the growth rate of labor productivity and the growth rate of total factor productivity depends on", [
 		"the growth rate of the amount of capital per unit of labor.",
@@ -123642,7 +124361,7 @@ var productivityGrowth = {
 ], solowExogenousEndogenous = {
 	id: "exam2-q02-solow-exogenous-endogenous",
 	title: "Exogenous and endogenous variables in the Solow model",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Answer the following questions about the Solow model.",
 	parts: () => [
 		mc("savingRate", "**(a)** In the Solow model, the saving rate ($s$) is", NATURE, 1),
@@ -123657,7 +124376,7 @@ var productivityGrowth = {
 }, solowNoProductivityGrowth = {
 	id: "exam2-q03-solow-no-productivity-growth",
 	title: "Solow model without productivity growth",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "According to the Solow model of economic growth, if there is no productivity growth, what will happen to output per worker, consumption per worker, and capital per worker in the long run?",
 	parts: () => [mc("longRun", "", [
 		"all will increase",
@@ -123668,7 +124387,7 @@ var productivityGrowth = {
 }, capitalLaborRatio = {
 	id: "exam2-q04-capital-labor-ratio",
 	title: "Steady-state capital-labor ratio and consumption",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Is the following statement true or false?",
 	parts: () => [{
 		type: "true-false",
@@ -123681,7 +124400,7 @@ var productivityGrowth = {
 }, endogenousGrowth = {
 	id: "exam2-q05-endogenous-growth",
 	title: "Endogenous growth theory",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Answer both parts about endogenous growth theory.",
 	parts: () => [mc("explanations", "**(a)** What two explanations of productivity growth does endogenous growth theory offer?", [
 		"population growth and increased saving",
@@ -123697,7 +124416,7 @@ var productivityGrowth = {
 }, usSavingRate = {
 	id: "exam2-q06-us-saving-rate",
 	title: "Why the U.S. saving rate may be too low",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Some economists argue that the U.S. saving rate is too low. Which of the following is a reasonable explanation for why the invisible hand of the market has failed to achieve a saving rate which optimally balances present consumption against future increases in living standards?",
 	parts: () => [mc("explanation", "", [
 		"Americans are predisposed to overweight the value of present consumption as compared to future consumption.",
@@ -123709,7 +124428,7 @@ var productivityGrowth = {
 }, assetDesirability = {
 	id: "exam2-q07-asset-desirability",
 	title: "Return, risk, liquidity and asset desirability",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Answer the following questions about what makes an asset desirable.",
 	parts: () => [
 		mc("return", "**(a)** How does the *expected rate of return* on an asset affect its desirability?", [
@@ -123731,7 +124450,7 @@ var productivityGrowth = {
 }, velocityOfMoney = {
 	id: "exam2-q08-velocity-of-money",
 	title: "Velocity of money",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Answer both parts about the velocity of money.",
 	parts: () => [mc("definition", "**(a)** Define the velocity of money.", [
 		"It is the ratio of the amount of money in circulation to the price level.",
@@ -123742,7 +124461,7 @@ var productivityGrowth = {
 }, moneyDemandVariables = {
 	id: "exam2-q09-money-demand-variables",
 	title: "Determinants of the demand for money",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Which of the following four variables has little impact on the aggregate demand for money?",
 	parts: () => [mc("variable", "", [
 		"the real exchange rate",
@@ -123757,7 +124476,7 @@ var productivityGrowth = {
 ], assetMarketPriceLevel = {
 	id: "exam2-q10-asset-market-price-level",
 	title: "Asset market equilibrium and the price level",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Consider the equilibrium condition for the asset market\n\n$$\n\\frac{M}{P} = L(Y, r + \\pi^e).\n$$\n\nUsing this condition, answer the following questions.",
 	parts: () => [
 		dropdown("inflationExpectations", "**(1)** A decrease in inflation expectations ($\\pi^e$), with no change in output, real interest rate, or the money supply, will result in ___ in the price level.", EFFECTS, "a decrease"),
@@ -123767,7 +124486,7 @@ var productivityGrowth = {
 }, nominalMoneyDemand = {
 	id: "exam2-q11-nominal-money-demand",
 	title: "A 10% fall in nominal money demand",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Which of the following is most likely to lead to a decrease of 10% in the nominal demand for money?",
 	parts: () => [mc("cause", "", [
 		"A decrease in real income of 5%.",
@@ -123778,7 +124497,7 @@ var productivityGrowth = {
 }, assetMarketVariables = {
 	id: "exam2-q12-asset-market-variables",
 	title: "Variables in the asset market equilibrium condition",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Which of these variables is **not** a variable in the equation for the asset market equilibrium condition?",
 	parts: () => [mc("variable", "", [
 		"Real income",
@@ -123789,7 +124508,7 @@ var productivityGrowth = {
 }, greatModeration = {
 	id: "exam2-q13-great-moderation",
 	title: "The Great Moderation",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Which of the following is **not** a reasonable explanation for the Great Moderation?",
 	parts: () => [mc("explanation", "", [
 		"higher oil prices",
@@ -123797,37 +124516,21 @@ var productivityGrowth = {
 		"changes in technology",
 		"improved supply-chain management"
 	], 0)]
-}, usContractions = {
-	id: "exam2-q14-us-contractions",
-	title: "Deepest and longest U.S. contractions",
-	generate: noParams,
-	render: () => "Answer both parts about U.S. business cycle history.",
-	parts: () => [mc("deepest", "**(a)** The deepest contraction in U.S. history occurred", [
-		"in the 1960s.",
-		"from 2007 to 2009.",
-		"during the 1930s.",
-		"in the 1970s."
-	], 2, { order: "fixed" }), mc("longest", "**(b)** Since World War II, the longest U.S. recession occurred", [
-		"in the 1990s.",
-		"in the 1980s.",
-		"in the 1970s.",
-		"in the 2000s."
-	], 3, { order: "fixed" })]
 }, TERMS = [
 	"procyclical and countercyclical",
 	"peak and trough",
 	"stable and unstable",
 	"leading, coincident, and lagging"
 ], cyclicalTerms = {
-	id: "exam2-q15-cyclical-terms",
+	id: "exam2-q14-cyclical-terms",
 	title: "Direction and timing of cyclical variables",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Answer both parts about the terms used to describe business cycle variables.",
 	parts: () => [mc("direction", "**(a)** What terms are used to describe the way a variable moves in terms of direction when economic activity is rising or falling?", TERMS, 0), mc("timing", "**(b)** What terms are used to describe the timing of cyclical changes in economic variables?", TERMS, 3)]
 }, CYCLICALITY = ["Procyclical", "Countercyclical"], procyclicalCountercyclical = {
-	id: "exam2-q16-procyclical-countercyclical",
+	id: "exam2-q15-procyclical-countercyclical",
 	title: "Procyclical or countercyclical?",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Identify the following variables as being procyclical or countercyclical.",
 	parts: () => [
 		dropdown("unemployment", "**(1)** Unemployment:", CYCLICALITY, "Countercyclical"),
@@ -123835,26 +124538,10 @@ var productivityGrowth = {
 		dropdown("inflation", "**(3)** Inflation:", CYCLICALITY, "Procyclical"),
 		dropdown("nominalRates", "**(4)** Nominal interest rates:", CYCLICALITY, "Procyclical")
 	]
-}, CHANGES$2 = [
-	"Increase",
-	"Decrease",
-	"Remain unchanged"
-], recessionEffects = {
-	id: "exam2-q17-recession-effects",
-	title: "What happens in a recession",
-	generate: noParams,
-	render: () => "If you knew that the economy was falling into a recession, what would you expect to happen during the next few quarters to each of the following?",
-	parts: () => [
-		dropdown("production", "**(1)** Production:", CHANGES$2, "Decrease"),
-		dropdown("investment", "**(2)** Investment:", CHANGES$2, "Decrease"),
-		dropdown("productivity", "**(3)** Average labor productivity:", CHANGES$2, "Decrease"),
-		dropdown("realWage", "**(4)** The real wage:", CHANGES$2, "Decrease"),
-		dropdown("unemployment", "**(5)** The unemployment rate:", CHANGES$2, "Increase")
-	]
 }, durableGoodsRecessions = {
-	id: "exam2-q18-durable-goods-recessions",
+	id: "exam2-q16-durable-goods-recessions",
 	title: "Durable goods spending in recessions",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Consumer expenditures on durable goods such as cars and furniture, as well as purchases of new houses, fall much more than expenditures on nondurable goods and services during most recessions. Why do you think that is?",
 	parts: () => [mc("reason", "", [
 		"because companies stop making cars, furniture, and houses in recessions",
@@ -123863,9 +124550,9 @@ var productivityGrowth = {
 		"because the government increases taxes on cars, furniture, and houses in recessions"
 	], 1)]
 }, positiveAdShock = {
-	id: "exam2-q19-positive-ad-shock",
+	id: "exam2-q17-positive-ad-shock",
 	title: "A positive aggregate demand shock",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "The economy starts at long-run equilibrium **A**, where the aggregate demand curve $AD^1$ crosses the vertical long-run aggregate supply curve $LRAS^1$ and the horizontal short-run aggregate supply curve $SRAS^1$. Consumers then become more optimistic, causing a positive aggregate demand shock.",
 	parts: () => [mc("adCurve", "**(a)** What happens to the aggregate demand curve?", [
 		"It shifts up and to the right (to $AD^2$).",
@@ -123878,9 +124565,9 @@ var productivityGrowth = {
 		"lower output and the same price level."
 	], 0)]
 }, keynesiansClassicals = {
-	id: "exam2-q20-keynesians-classicals",
+	id: "exam2-q18-keynesians-classicals",
 	title: "Keynesians vs. classicals",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "How do Keynesians and classicals differ in their beliefs about how long it takes the economy to reach long-run equilibrium? What implications do these differences in beliefs have for Keynesian and classical views about the usefulness of antirecessionary policies?",
 	parts: () => [mc("prices", "**(a)** Classical economists think prices adjust _____ and that antirecessionary policies are _____, whereas Keynesian economists think the opposite.", [
 		"rapidly; necessary",
@@ -123894,9 +124581,9 @@ var productivityGrowth = {
 		"aggregate demand; both aggregate demand and aggregate supply"
 	], 1)]
 }, feLine = {
-	id: "exam2-q21-fe-line",
+	id: "exam2-q19-fe-line",
 	title: "The FE line",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Answer both parts about the full-employment (*FE*) line.",
 	parts: () => [mc("position", "**(a)** The position of the *FE* line is determined by:", [
 		"the price level and interest rate.",
@@ -123909,25 +124596,14 @@ var productivityGrowth = {
 		"an increase in labor supply.",
 		"an increase in the capital stock."
 	], 1)]
-}, isCurveDefinition = {
-	id: "exam2-q22-is-curve-definition",
-	title: "What the IS curve represents",
-	generate: noParams,
-	render: () => "The *IS* curve represents:",
-	parts: () => [mc("definition", "", [
-		"combinations of output and the real interest rate such that desired national saving is equal to desired investment.",
-		"combinations of output and the real interest rate such that output is equal to full-employment output.",
-		"combinations of output and the real interest rate such that the real interest rate is equal to the full-employment interest rate.",
-		"combinations of output and the real interest rate such that money demand is equal to money supply."
-	], 0)]
 }, SHIFTS$1 = [
 	"shifts the *IS* curve down and to the left.",
 	"shifts the *IS* curve up and to the right.",
 	"does not change the *IS* curve."
 ], isCurveShifts = {
-	id: "exam2-q23-is-curve-shifts",
+	id: "exam2-q20-is-curve-shifts",
 	title: "What shifts the IS curve",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "In each of the following cases, what is the effect on the *IS* curve?",
 	parts: () => [
 		mc("capitalTax", "**(a)** An increase in the effective tax rate on capital", SHIFTS$1, 0, { order: "fixed" }),
@@ -123939,55 +124615,37 @@ var productivityGrowth = {
 	"shifts the *LM* curve down and to the right.",
 	"does not shift the *LM* curve."
 ], lmCurveShifts = {
-	id: "exam2-q24-lm-curve-shifts",
+	id: "exam2-q21-lm-curve-shifts",
 	title: "What shifts the LM curve",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "In each of the following cases, what is the effect on the *LM* curve?",
 	parts: () => [
 		mc("expectedInflation", "**(a)** An increase in the expected inflation rate", SHIFTS, 1, { order: "fixed" }),
 		mc("governmentSpending", "**(b)** An increase in government spending", SHIFTS, 2, { order: "fixed" }),
 		mc("priceLevel", "**(c)** An increase in the price level", SHIFTS, 0, { order: "fixed" })
 	]
-}, CHANGES$1 = [
+}, CHANGES = [
 	"will increase.",
 	"will stay the same.",
 	"will decrease."
 ], adverseSupplyShock = {
-	id: "exam2-q25-adverse-supply-shock",
+	id: "exam2-q22-adverse-supply-shock",
 	title: "General-equilibrium effects of a temporary adverse supply shock",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Consider the general-equilibrium effects of a **temporary adverse supply shock**. For each of the following variables, select whether you would expect it to increase, decrease, or remain constant in general equilibrium as a result of the shock.",
 	parts: () => [
-		dropdown("output", "**(1)** Output", CHANGES$1, "will decrease."),
-		dropdown("realInterestRate", "**(2)** The real interest rate", CHANGES$1, "will increase."),
-		dropdown("priceLevel", "**(3)** The price level", CHANGES$1, "will increase."),
-		dropdown("consumption", "**(4)** Consumption", CHANGES$1, "will decrease."),
-		dropdown("investment", "**(5)** Investment", CHANGES$1, "will decrease."),
-		dropdown("governmentSpending", "**(6)** Government spending", CHANGES$1, "will stay the same."),
-		dropdown("moneySupply", "**(7)** The nominal money supply", CHANGES$1, "will stay the same.")
-	]
-}, CHANGES = [
-	"Increases",
-	"Decreases",
-	"Remains unchanged"
-], atmMoneyDemand = {
-	id: "exam2-q26-atm-money-demand",
-	title: "ATMs and the demand for money (IS-LM)",
-	generate: noParams,
-	render: () => "Use the *IS-LM* model to determine the effects of an increased usage of automatic teller machines that reduces the demand for money. Show the effects on the general equilibrium values of the following variables.",
-	parts: () => [
-		dropdown("realWage", "**(1)** Real wage", CHANGES, "Remains unchanged"),
-		dropdown("employment", "**(2)** Employment", CHANGES, "Remains unchanged"),
-		dropdown("output", "**(3)** Output", CHANGES, "Remains unchanged"),
-		dropdown("priceLevel", "**(4)** Price level", CHANGES, "Increases"),
-		dropdown("realInterestRate", "**(5)** Real interest rate", CHANGES, "Remains unchanged"),
-		dropdown("investment", "**(6)** Investment", CHANGES, "Remains unchanged"),
-		dropdown("consumption", "**(7)** Consumption", CHANGES, "Remains unchanged")
+		dropdown("output", "**(1)** Output", CHANGES, "will decrease."),
+		dropdown("realInterestRate", "**(2)** The real interest rate", CHANGES, "will increase."),
+		dropdown("priceLevel", "**(3)** The price level", CHANGES, "will increase."),
+		dropdown("consumption", "**(4)** Consumption", CHANGES, "will decrease."),
+		dropdown("investment", "**(5)** Investment", CHANGES, "will decrease."),
+		dropdown("governmentSpending", "**(6)** Government spending", CHANGES, "will stay the same."),
+		dropdown("moneySupply", "**(7)** The nominal money supply", CHANGES, "will stay the same.")
 	]
 }, moneyNeutrality = {
-	id: "exam2-q27-money-neutrality",
+	id: "exam2-q23-money-neutrality",
 	title: "Neutrality of money",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "When economists say that money is neutral, this means that:",
 	parts: () => [mc("meaning", "", [
 		"a change in the money supply changes real variables but not nominal variables.",
@@ -123996,9 +124654,9 @@ var productivityGrowth = {
 		"a change in the money supply will stall the economy, preventing further growth."
 	], 2)]
 }, adAsMoneySupply = {
-	id: "exam2-q28-ad-as-money-supply",
+	id: "exam2-q24-ad-as-money-supply",
 	title: "A decrease in the money supply in the AD-AS model",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Answer both parts about a **decrease** in the money supply in the *AD-AS* model.",
 	parts: () => [mc("shortRun", "**(a)** In the *AD-AS* model, the short-run effect of a decrease in the money supply is", [
 		"a shift down and to the left of the *AD* curve, causing output to fall at an unchanged price level.",
@@ -124014,9 +124672,9 @@ var productivityGrowth = {
 		"a proportionate fall in the price level, but no changes to real variables such as output."
 	], 4)]
 }, srasLras = {
-	id: "exam2-q29-sras-lras",
+	id: "exam2-q25-sras-lras",
 	title: "Short-run and long-run aggregate supply",
-	generate: noParams,
+	generate: noParams$1,
 	render: () => "Answer the following questions about the short-run (*SRAS*) and long-run (*LRAS*) aggregate supply curves.",
 	parts: () => [
 		mc("shapes", "**(a)** Describe the *SRAS* curve and the *LRAS* curve.", [
@@ -124038,25 +124696,69 @@ var productivityGrowth = {
 			"because the price level depends on the amount of output"
 		], 1)
 	]
-}, deriveLmCurve = {
-	id: "exam2-q30-derive-lm-curve",
-	title: "Deriving the LM curve",
-	generate: noParams,
-	render: () => "In the money market, the real money supply is fixed at $110$ (a vertical *MS* line). Real money demand equals the real money supply at a real interest rate of\n\n- $r = 6\\%$ when real GDP is $Y = 8{,}000$,\n- $r = 8\\%$ when $Y = 12{,}000$,\n- $r = 10\\%$ when $Y = 16{,}000$.\n\nDerive the *LM* curve graphically: use the **segment** tool to draw the *LM* curve through the three money-market equilibria (real GDP is in thousands on the horizontal axis). Draw the *LM* segment **first**; you may then label it with the text tool.",
+}, tex$1 = (t) => t.toLocaleString("en-US").replace(",", "{,}"), goodsMarketInterestRate = {
+	id: "exam2-q26-goods-market-interest-rate",
+	title: "National saving and the equilibrium interest rate",
+	generate: (t) => ({ G: t.pick([
+		600,
+		800,
+		1e3,
+		1200,
+		1400
+	]) }),
+	render: ({ G: t }) => `Consider an economy described by the following equations:
+
+$$\n\\begin{aligned} Y &= C + I + G \\\\ Y &= 5{,}000 \\\\ G &= ${tex$1(t)} \\\\ T &= 0 \\\\ C &= 250 + 0.75(Y - T) - 50r \\\\ I &= 1{,}000 - 50r \\end{aligned}
+\$\$
+
+where \$r\$ is the real interest rate in percent.
+
+Answer in order: each step is graded using **your own** answers to the steps before, so a mistake only costs the step where you made it.`,
+	parts: ({ G: t }) => [{
+		type: "conditional-grading",
+		name: "steps",
+		steps: [
+			{
+				name: "a",
+				kind: "expression",
+				label: "a) National saving as a function of $r$: $S =$",
+				placeholder: "e.g. 2r + 3",
+				variables: { r: [0, 20] },
+				correct: `${1e3 - t} + 50 r`
+			},
+			{
+				name: "b",
+				kind: "number",
+				label: "b) The equilibrium interest rate $r^* =$",
+				suffix: "%",
+				correct: "(1000 - a(0)) / (a(1) - a(0) + 50)"
+			},
+			{
+				name: "c",
+				kind: "number",
+				label: "c) Investment at the equilibrium $I^* =$",
+				correct: "1000 - 50 * b"
+			}
+		]
+	}]
+}, E0 = [4, 5], E1 = [6, 3.5], isAt = (t) => [t, E0[1] + (E1[1] - E0[1]) / (E1[0] - E0[0]) * (t - E0[0])], lmAt = ([t, n], r) => [r, n + 1.2 * (r - t)], BLACK$2 = "#111827", BLUE$2 = "#2563eb", RED$2 = "#dc2626", supplyShockIsLmFe = {
+	id: "exam2-q27-supply-shock-is-lm-fe",
+	title: "A temporary beneficial supply shock in the IS-LM-FE model",
+	generate: noParams$1,
+	render: () => "The graph shows output $Y$ on the horizontal axis and the real interest rate $r$ on the vertical axis. Suppose that the economy is in general equilibrium at point $E_0$, as shown below, and a temporary beneficial supply shock occurs which raises output above its previous full-employment level, from $Y = 4$ to $Y = 6$.\n\nDraw the **two curves that would shift**, showing the new long-run equilibrium of the economy. Use the segment, line or curve tool; you may label your curves with the text tool (labels are not graded).",
 	parts: () => [{
-		type: "svgDrawing",
-		name: "lm",
+		type: "jsxgraph",
+		name: "shift",
 		props: {
 			boundingBox: [
-				0,
-				20,
-				0,
-				16
+				-1,
+				11,
+				-1,
+				11
 			],
-			xLabel: "Real GDP, Y (thousands)",
-			yLabel: "Real interest rate, r (%)",
-			width: 700,
-			height: 600,
+			xLabel: "Y",
+			yLabel: "r",
+			height: 620,
 			showColorPicker: !1,
 			showDownloadButton: !1,
 			showOutputButton: !1,
@@ -124072,44 +124774,154 @@ var productivityGrowth = {
 				"clear"
 			],
 			defaultTool: "segment",
+			initialObjects: [
+				{
+					type: "segment",
+					points: [[4, 0], [4, 9.3]],
+					color: BLACK$2,
+					showPoints: !1
+				},
+				{
+					type: "text",
+					points: [[4.1, 9.5]],
+					text: "FE₀",
+					color: BLACK$2
+				},
+				{
+					type: "segment",
+					points: [isAt(1.5), isAt(8.5)],
+					color: BLUE$2,
+					showPoints: !1
+				},
+				{
+					type: "text",
+					points: [[8.6, 1.7]],
+					text: "IS₀",
+					color: BLUE$2
+				},
+				{
+					type: "segment",
+					points: [lmAt(E0, 1.5), lmAt(E0, 6.5)],
+					color: RED$2,
+					showPoints: !1
+				},
+				{
+					type: "text",
+					points: [[6.6, 8.2]],
+					text: "LM₀",
+					color: RED$2
+				},
+				{
+					type: "point",
+					points: [E0],
+					color: BLACK$2
+				},
+				{
+					type: "text",
+					points: [[4.12, 4.3]],
+					text: "E₀",
+					color: BLACK$2
+				}
+			],
+			anyOrder: !0,
 			expectedDrawing: [{
 				type: "segment",
-				yIntercept: 2,
-				slope: .5,
-				tolerance: .1
-			}]
+				x: E1[0],
+				tolerance: .04
+			}, {
+				type: "segment",
+				through: E1,
+				slope: "up",
+				tolerance: .04
+			}],
+			suggestedAnswer: [
+				{
+					type: "segment",
+					points: [[6, 0], [6, 9.3]],
+					color: BLACK$2,
+					showPoints: !1
+				},
+				{
+					type: "text",
+					points: [[6.1, 9.5]],
+					text: "FE₁",
+					color: BLACK$2
+				},
+				{
+					type: "segment",
+					points: [lmAt(E1, 3.5), lmAt(E1, 8.5)],
+					color: RED$2,
+					showPoints: !1
+				},
+				{
+					type: "text",
+					points: [[8.6, 6.7]],
+					text: "LM₁",
+					color: RED$2
+				},
+				{
+					type: "text",
+					points: [[6.12, 2.8]],
+					text: "E₁",
+					color: BLACK$2
+				}
+			]
 		}
 	}]
-}, goodsMarketInterestRate = {
-	id: "exam2-q31-goods-market-interest-rate",
-	title: "Real interest rates that clear the goods market",
-	generate: noParams,
-	render: () => "In an economy, the desired consumption and investment functions are given by\n\n$$\n\\begin{aligned} C^d &= 2{,}000 + 0.70Y - 4{,}500r \\\\ I^d &= 2{,}000 - 4{,}000r \\end{aligned}\n$$\n\nwhere $Y$ is output and $r$ is the real interest rate. Government purchases are $G = 2{,}100$.\n\nThe equation for desired national saving is\n\n$$\nS^d = -4{,}100 + 0.30Y + 4{,}500r.\n$$\n\nUsing the condition that at equilibrium, quantity of goods supplied = quantity of goods demanded, determine the real interest rates that clear the goods market when $Y = 10{,}000$ and $Y = 12{,}000$. Enter each response as a percentage rounded to the nearest integer.",
-	parts: () => [{
-		type: "integer",
-		name: "r10000",
-		label: "When $Y = 10{,}000$: $r =$",
-		suffix: "%",
-		correct: 36
-	}, {
-		type: "integer",
-		name: "r12000",
-		label: "When $Y = 12{,}000$: $r =$",
-		suffix: "%",
-		correct: 29
+}, tex = (t) => t.toLocaleString("en-US").replace(",", "{,}"), isLmEquilibrium = {
+	id: "exam2-q28-is-lm-equilibrium",
+	title: "Solve the IS-LM model for the general equilibrium",
+	generate: (t) => {
+		let n = t.int(2, 8), r = t.pick([
+			20,
+			25,
+			40,
+			50
+		]), a = t.pick([
+			30,
+			50,
+			60,
+			100
+		]), o = t.pick([
+			400,
+			500,
+			600,
+			800
+		]);
+		return {
+			r: n,
+			b: r,
+			d: a,
+			c: o,
+			a: o + (r + a) * n
+		};
+	},
+	render: ({ a: t, b: n, c: r, d: a }) => `In an economy, the goods market is in equilibrium along the *IS* curve and the asset market is in equilibrium along the *LM* curve:
+
+$$\n\\begin{aligned} IS:&\\quad Y = ${tex(t)} - ${n}r \\\\ LM:&\\quad Y = ${tex(r)} + ${a}r \\end{aligned}\n$$\n\nwhere \$Y\$ is output and \$r\$ is the real interest rate in percent.
+
+Solve the two equations simultaneously for the real interest rate \$r^*\$ and output \$Y^*\$ at which both markets are in equilibrium. **Show your steps**, and say in one sentence what the solution means.`,
+	parts: ({ a: t, b: n, c: r, d: a, r: o }) => [{
+		type: "essay",
+		name: "solution",
+		maxWords: 150,
+		rows: 8,
+		modelAnswer: `Set $IS = LM$: $${tex(t)} - ${n}r = ${tex(r)} + ${a}r$, so $${n + a}r = ${tex(t - r)}$ and $r^* = ${tex(t - r)} / ${n + a} = ${o}\\%$.\n\nThen $Y^* = ${tex(t)} - ${n}(${o}) = ${tex(t - n * o)}$ (check with LM: $${tex(r)} + ${a}(${o}) = ${tex(r + a * o)}$).\n\nAt $r^* = ${o}\\%$ and $Y^* = ${tex(r + a * o)}$ the goods market and the asset market clear at the same time (where the IS and LM curves cross).`
 	}]
-}, beneficialSupplyShock = {
-	id: "exam2-q32-beneficial-supply-shock",
-	title: "A temporary beneficial supply shock (IS-LM-FE)",
-	generate: noParams,
-	render: () => "Suppose that the economy is in general equilibrium, and a temporary beneficial supply shock occurs which raises output above its previous full-employment level. Which of the following correctly describes the move to the new general equilibrium in the *IS-LM-FE* diagram?",
-	parts: () => [mc("newEquilibrium", "", [
-		"The *FE* line shifts right (to $FE_1$), and the price level falls, shifting the *LM* curve down and to the right (to $LM_1$) until it meets *IS* on $FE_1$.",
-		"The *FE* line shifts right (to $FE_1$), and the *IS* curve shifts down and to the left (to $IS_1$) until it meets *LM* on $FE_1$.",
-		"The *FE* line shifts left (to $FE_1$), and the price level rises, shifting the *LM* curve up and to the left (to $LM_1$) until it meets *IS* on $FE_1$.",
-		"The *FE* line shifts left (to $FE_1$), and the *IS* curve shifts down and to the left (to $IS_1$) until it meets *LM* on $FE_1$."
-	], 0)]
-}, questions$1 = [
+}, chinaUsGrowth = {
+	id: "exam2-q29-china-us-growth",
+	title: "Why China grows faster than the U.S.",
+	generate: noParams$1,
+	render: () => "Why do you think China grows faster than the U.S.? Use the **Solow model** in your answer (at most **100 characters**, spaces included).",
+	parts: () => [{
+		type: "essay",
+		name: "answer",
+		maxChars: 100,
+		rows: 3,
+		equationEditor: !1,
+		modelAnswer: "China has less capital per worker, so higher MPK and faster growth as it converges to steady state."
+	}]
+}, questions$2 = [
 	productivityGrowth,
 	solowExogenousEndogenous,
 	solowNoProductivityGrowth,
@@ -124123,35 +124935,486 @@ var productivityGrowth = {
 	nominalMoneyDemand,
 	assetMarketVariables,
 	greatModeration,
-	usContractions,
 	cyclicalTerms,
 	procyclicalCountercyclical,
-	recessionEffects,
 	durableGoodsRecessions,
 	positiveAdShock,
 	keynesiansClassicals,
 	feLine,
-	isCurveDefinition,
 	isCurveShifts,
 	lmCurveShifts,
 	adverseSupplyShock,
-	atmMoneyDemand,
 	moneyNeutrality,
 	adAsMoneySupply,
 	srasLras,
-	deriveLmCurve,
 	goodsMarketInterestRate,
-	beneficialSupplyShock
-], assessment = {
+	supplyShockIsLmFe,
+	isLmEquilibrium,
+	chinaUsGrowth
+], threePoints = /* @__PURE__ */ new Set([
+	productivityGrowth,
+	solowExogenousEndogenous,
+	endogenousGrowth,
+	assetDesirability,
+	velocityOfMoney,
+	assetMarketPriceLevel,
+	cyclicalTerms,
+	procyclicalCountercyclical,
+	positiveAdShock,
+	keynesiansClassicals,
+	feLine,
+	isCurveShifts,
+	lmCurveShifts,
+	adverseSupplyShock,
+	adAsMoneySupply,
+	srasLras,
+	goodsMarketInterestRate
+]), assessment$1 = {
 	id: "sample-exam2",
-	title: "Sample Exam 2 (not ready yet)",
-	description: "ECON 31303 Intermediate Macroeconomics. 32 questions, equal weight.",
-	mode: "exam",
-	gradeButton: !1,
+	title: "Sample Exam 2",
+	description: "ECON 31303 Intermediate Macroeconomics. 29 questions; those with sub-parts are worth 3 points, the rest 1.",
+	mode: "exercise",
+	gradeButton: !0,
+	resetButton: !0,
+	questions: questions$2.map((t) => ({
+		questionId: t.id,
+		points: threePoints.has(t) ? 3 : 1
+	}))
+}, noParams = () => ({});
+function trueFalseDefend({ id: t, title: n, statement: r, correct: a, modelAnswer: o }) {
+	return {
+		id: t,
+		title: n,
+		generate: noParams,
+		render: () => "Is the following statement true or false? Then briefly defend your answer.",
+		parts: () => [{
+			type: "true-false",
+			name: "statement",
+			statements: [{
+				text: r,
+				correct: a
+			}]
+		}, {
+			type: "essay",
+			name: "defense",
+			label: "Briefly defend your answer:",
+			maxWords: 100,
+			rows: 4,
+			modelAnswer: o
+		}]
+	};
+}
+//#endregion
+//#region exams/micro-sample-exam2/questions/01_true-false-essay_mpl_and_apl.js
+var mplAndApl = trueFalseDefend({
+	id: "micro-exam2-q01-mpl-and-apl",
+	title: "Diminishing marginal product and average product",
+	statement: "If the marginal product of labor is decreasing, the average product of labor must also be decreasing.",
+	correct: !1,
+	modelAnswer: "False. The average product falls only when the marginal product is *below* it. Right after its peak, $MP_L$ is decreasing but still above $AP_L$, so $AP_L$ keeps rising until the two are equal (at the maximum of $AP_L$)."
+}), longRunAverageCost = trueFalseDefend({
+	id: "micro-exam2-q02-long-run-average-cost",
+	title: "Why the long-run average cost curve rises",
+	statement: "A typical long-run $AC$ curve eventually increases with output which is explained by diminishing returns to labor.",
+	correct: !1,
+	modelAnswer: "False. In the long run every input is variable, so diminishing returns to a single input (labor, with capital fixed) is a short-run idea. The long-run $AC$ rises because of **diseconomies of scale** (e.g. management and coordination problems in very large firms)."
+}), longRunVsShortRunCost = trueFalseDefend({
+	id: "micro-exam2-q03-long-run-vs-short-run-cost",
+	title: "Long-run versus short-run cost",
+	statement: "In the long run, a firm can always produce at same cost or a lower cost than in the short run.",
+	correct: !0,
+	modelAnswer: "True. In the long run the firm can choose every input, including the one fixed in the short run, so it can always pick the short-run input mix again (same cost) or a cheaper one. The long-run $AC$ is the lower envelope of the short-run $AC$ curves."
+}), convexIsoquant = trueFalseDefend({
+	id: "micro-exam2-q04-convex-isoquant",
+	title: "Diminishing returns and convex isoquants",
+	statement: "If a production functions exhibit diminishing returns with respect to each input then the isoquant definitely be convex (bowed inward).",
+	correct: !1,
+	modelAnswer: "False. Convexity means a diminishing $MRTS = MP_L / MP_K$ along the isoquant, which also depends on how each input changes the other's marginal product. Diminishing marginal returns to each input alone don't guarantee it: a production function can have diminishing returns to each input and still have isoquants that aren't convex."
+}), avcAndMc = trueFalseDefend({
+	id: "micro-exam2-q05-avc-and-mc",
+	title: "Rising average variable cost and marginal cost",
+	statement: "Whenever the average variable cost is increasing, the marginal cost must be greater than the average cost.",
+	correct: !1,
+	modelAnswer: "False. A rising $AVC$ means $MC > AVC$, but not necessarily $MC > ATC$. Between the minimum of $AVC$ and the minimum of $ATC$ (which lies at a larger output), $AVC$ is rising while $ATC$ is still falling, so there $MC < ATC$."
+}), competitiveSupplyCurve = trueFalseDefend({
+	id: "micro-exam2-q06-competitive-supply-curve",
+	title: "The supply curve of a competitive firm",
+	statement: "The supply curve of a perfectly competitive firm is its marginal cost curve above average total cost.",
+	correct: !1,
+	modelAnswer: "False. In the short run the firm keeps producing as long as price covers average **variable** cost (fixed costs are sunk), so its short-run supply curve is the $MC$ curve above the minimum of $AVC$. Only the long-run supply curve is $MC$ above the minimum of $ATC$."
+}), gravelProduction = trueFalseDefend({
+	id: "micro-exam2-q07-gravel-production",
+	title: "Labor in Vietnam, machines in the Netherlands",
+	statement: "Given that the market price of a gravel making machine is the same globally, the main reason why gravel is produced with labor in Vietnam and with machines in the Netherlands is due to society's or consumers' preferences.",
+	correct: !1,
+	modelAnswer: "False. It is due to relative input prices. Wages are low in Vietnam and high in the Netherlands, so with the same machine price the isocost line ($w/r$) is flatter in Vietnam. Cost minimization ($MRTS = w/r$) then picks a labor-intensive mix in Vietnam and a capital-intensive mix in the Netherlands."
+}), perUnitTaxSurplus = trueFalseDefend({
+	id: "micro-exam2-q08-per-unit-tax-surplus",
+	title: "A per-unit tax and consumer and producer surplus",
+	statement: "A per-unit tax in a competitive market always reduces both consumer surplus and producer surplus.",
+	correct: !1,
+	modelAnswer: "False (because of *always*). With normally sloped curves the tax burden is shared and both surpluses fall. But if supply is perfectly elastic, consumers bear the whole tax and producer surplus (zero) doesn't change; if demand is perfectly elastic, producers bear it all and consumer surplus doesn't change."
+}), priceCeilingDwl = trueFalseDefend({
+	id: "micro-exam2-q09-price-ceiling-dwl",
+	title: "Price ceilings and deadweight loss",
+	statement: "A price ceiling always creates deadweight loss.",
+	correct: !1,
+	modelAnswer: "False. A price ceiling set at or above the equilibrium price is not binding: the market still clears at the equilibrium, so there is no deadweight loss. Only a binding ceiling (below equilibrium) reduces the quantity traded and creates DWL."
+}), minimumAtc = trueFalseDefend({
+	id: "micro-exam2-q10-minimum-atc",
+	title: "The minimum of average total cost",
+	statement: "The minimum of the $ATC$ of a firm with total cost of $TC=q^3+1024$ and $MC=3q^2$ occurs at $q=6$ units of output.",
+	correct: !1,
+	modelAnswer: "False. $ATC = q^2 + 1024/q$ is lowest where $MC = ATC$: So inserting q=6, must yield the same values for MC and ATC; but, simple insertion gives ATC= 206.67 and MC= 108"
+}), P$1 = 8, avc = (t) => .1 * t * t - 1.6 * t + 10, mcAt = (t) => .3 * t * t - 3.2 * t + 10, curvePoints = (t, n) => Array.from({ length: n * 2 + 1 }, (n, r) => [r / 2, t(r / 2)]), BLACK$1 = "#111827", BLUE$1 = "#2563eb", RED$1 = "#dc2626", optimalOutputMcAvc = {
+	id: "micro-exam2-q11-optimal-output-mc-avc",
+	title: "The profit-maximizing point on the MC and AVC curves",
+	generate: noParams,
+	render: () => "**(a)** On the axes below (output $q$ on the horizontal axis, dollars per unit of output on the vertical axis), draw a typical short-run average variable cost ($AVC$) curve and marginal cost ($MC$) curve in the same diagram, using the 5-point curve tool (click 5 points along each curve). Label them with the text tool.\n\nThen select a price above the minimum of $AVC$ and draw it as a horizontal line with the segment tool. The price line crosses $MC$ twice: mark both points with the coordinate tool and label the output where $MC$ is falling $q_1$ and the output where $MC$ is rising $q_2$.\n\n**(b)** Answer the question below the graph. You will be grade based on the shape of the curves you draw and where you intersect them.",
+	parts: () => [{
+		type: "jsxgraph",
+		name: "diagram",
+		weight: 2,
+		manualGrading: !0,
+		props: {
+			boundingBox: [
+				-1,
+				13.5,
+				-1,
+				21.5
+			],
+			xLabel: "q",
+			yLabel: "$",
+			height: 560,
+			showColorPicker: !1,
+			showDownloadButton: !1,
+			showOutputButton: !1,
+			enabledTools: [
+				"select",
+				"curve5",
+				"segment",
+				"coordinate",
+				"text",
+				"eraser"
+			],
+			enabledActions: [
+				"undo",
+				"redo",
+				"clear"
+			],
+			defaultTool: "curve5",
+			suggestedAnswer: [
+				{
+					type: "curve",
+					points: curvePoints(mcAt, 12),
+					color: RED$1,
+					showPoints: !1
+				},
+				{
+					type: "text",
+					points: [[11.4, 15]],
+					text: "MC",
+					color: RED$1
+				},
+				{
+					type: "curve",
+					points: curvePoints(avc, 13),
+					color: BLUE$1,
+					showPoints: !1
+				},
+				{
+					type: "text",
+					points: [[12.4, 6.8]],
+					text: "AVC",
+					color: BLUE$1
+				},
+				{
+					type: "segment",
+					points: [[0, P$1], [13, P$1]],
+					color: BLACK$1,
+					showPoints: !1
+				},
+				{
+					type: "text",
+					points: [[12.2, 8.5]],
+					text: "P",
+					color: BLACK$1
+				},
+				{
+					type: "point",
+					points: [[2 / 3, P$1]],
+					color: BLACK$1
+				},
+				{
+					type: "segment",
+					points: [[2 / 3, 0], [2 / 3, P$1]],
+					color: BLACK$1,
+					showPoints: !1
+				},
+				{
+					type: "text",
+					points: [[.8, .6]],
+					text: "q₁",
+					color: BLACK$1
+				},
+				{
+					type: "point",
+					points: [[10, P$1]],
+					color: BLACK$1
+				},
+				{
+					type: "segment",
+					points: [[10, 0], [10, P$1]],
+					color: BLACK$1,
+					showPoints: !1
+				},
+				{
+					type: "text",
+					points: [[10.15, .6]],
+					text: "q₂ (optimal)",
+					color: BLACK$1
+				}
+			]
+		}
+	}, {
+		type: "essay",
+		name: "why",
+		label: "**(b)** $P = MC$ at both $q_1$ and $q_2$. Why is $q_2$ (where $MC$ is rising) the optimal output, and not $q_1$ (where $MC$ is falling)?",
+		maxWords: 120,
+		rows: 5,
+		modelAnswer: "At $q_1$, $MC$ is falling: for each unit just beyond $q_1$, $P > MC$, so producing more raises profit. $q_1$ is a profit **minimum**, not a maximum. At $q_2$, $MC$ is rising and cuts the price line from below: units before $q_2$ have $P > MC$ (they add to profit) and units after it have $P < MC$ (they lower it). So profit is maximized at $q_2$ (the second-order condition: $MC$ must be rising). Since $P$ is above minimum $AVC$, the firm covers its variable cost there and produces $q_2$ rather than shutting down."
+	}]
+}, BLACK = "#111827", BLUE = "#2563eb", RED = "#dc2626", GREEN = "#16a34a", ORANGE = "#ea580c", num = (t, n, r, a) => ({
+	type: "number",
+	name: t,
+	label: n,
+	correct: r,
+	suffix: a
+}), monopolyProfitDwl = {
+	id: "micro-exam2-q12-monopoly-profit-dwl",
+	title: "Monopoly profit and deadweight loss",
+	generate: noParams,
+	render: () => "A monopolist faces the demand curve $D: P = 120 - Q$ shown below. Its marginal cost and average total cost are constant: $MC = ATC = \\$40$.\n\n**(a)** On the graph, draw:\n\n1. the monopolist's **marginal revenue** ($MR$) curve, with the segment tool;\n2. the monopolist's **profit**, as a rectangle (rectangle tool: drag from one corner to the opposite one);\n3. the **deadweight loss** (DWL) of the monopoly, as a triangle (triangle tool: click its three corners).\n\nYou may label your shapes with the text tool and mark points with the coordinate tool (labels and coordinates are not graded); any other extra shape lowers the score.\n\n**(b)** Read the answers off your graph.",
+	parts: () => [
+		{
+			type: "jsxgraph",
+			name: "diagram",
+			weight: 3,
+			props: {
+				boundingBox: [
+					-8,
+					140,
+					-8,
+					140
+				],
+				xLabel: "Q",
+				yLabel: "P",
+				height: 600,
+				showColorPicker: !0,
+				showDownloadButton: !1,
+				showOutputButton: !1,
+				enabledTools: [
+					"select",
+					"segment",
+					"rectangle",
+					"triangle",
+					"coordinate",
+					"text",
+					"eraser"
+				],
+				enabledActions: [
+					"undo",
+					"redo",
+					"clear"
+				],
+				defaultTool: "segment",
+				initialObjects: [
+					{
+						type: "segment",
+						points: [[0, 120], [120, 0]],
+						color: BLUE,
+						showPoints: !1
+					},
+					{
+						type: "text",
+						points: [[112, 14]],
+						text: "D",
+						color: BLUE
+					},
+					{
+						type: "segment",
+						points: [[0, 40], [130, 40]],
+						color: RED,
+						showPoints: !1
+					},
+					{
+						type: "text",
+						points: [[108, 46]],
+						text: "MC = ATC",
+						color: RED
+					}
+				],
+				anyOrder: !0,
+				expectedDrawing: [
+					{
+						type: "segment",
+						slope: -2,
+						yIntercept: 120,
+						tolerance: .1
+					},
+					{
+						type: "rectangle",
+						points: [[0, 40], [40, 80]]
+					},
+					{
+						type: "triangle",
+						points: [
+							[40, 80],
+							[40, 40],
+							[80, 40]
+						]
+					}
+				],
+				suggestedAnswer: [
+					{
+						type: "segment",
+						points: [[0, 120], [60, 0]],
+						color: BLACK,
+						showPoints: !1
+					},
+					{
+						type: "text",
+						points: [[56, 10]],
+						text: "MR",
+						color: BLACK
+					},
+					{
+						type: "rectangle",
+						points: [[0, 40], [40, 80]],
+						color: GREEN,
+						showPoints: !1
+					},
+					{
+						type: "text",
+						points: [[8, 62]],
+						text: "Profit",
+						color: GREEN
+					},
+					{
+						type: "triangle",
+						points: [
+							[40, 80],
+							[40, 40],
+							[80, 40]
+						],
+						color: ORANGE,
+						showPoints: !1
+					},
+					{
+						type: "text",
+						points: [[46, 50]],
+						text: "DWL",
+						color: ORANGE
+					},
+					{
+						type: "point",
+						points: [[40, 80]],
+						color: BLACK
+					},
+					{
+						type: "text",
+						points: [[42, 86]],
+						text: "(Qm, Pm) = (40, 80)",
+						color: BLACK
+					}
+				]
+			}
+		},
+		num("quantity", "**(b)** The monopoly quantity $Q_m =$", 40),
+		num("price", "The monopoly price $P_m =$ \\$", 80),
+		num("profit", "The monopolist's profit $=$ \\$", 1600),
+		num("dwl", "The deadweight loss $DWL =$ \\$", 800)
+	]
+}, P = 32, costCurvesProfit = {
+	id: "micro-exam2-q13-cost-curves-profit",
+	title: "Cost curves and profit maximization",
+	generate: noParams,
+	render: () => "Given\n\n$$TC = q^3 + 5q + 2000,$$\n\nwhich implies that\n\n$$MC = 3q^2 + 5,$$\n\nwhere $q$ is yard area in square-feet on which landscaping service is performed by a typical firm in the industry.\n\nAnswer in order: each step is graded using **your own** answers to the steps before, so a mistake only costs the step where you made it. Round decimals to two places.",
+	parts: () => [{
+		type: "conditional-grading",
+		name: "steps",
+		steps: [
+			{
+				name: "a",
+				kind: "expression",
+				label: "a) The equation for average variable cost: $AVC =$",
+				placeholder: "e.g. 2q + 3",
+				variables: { q: [1, 9] },
+				correct: "q^2 + 5"
+			},
+			{
+				name: "b",
+				kind: "expression",
+				label: "b) The equation for average total cost: $ATC =$",
+				placeholder: "e.g. 2q + 3 + 10/q",
+				variables: { q: [1, 9] },
+				correct: "q^2 + 5 + 2000 / q"
+			},
+			{
+				name: "c",
+				kind: "number",
+				label: "c) The minimum of $AVC$ occurs at $q =$",
+				correct: "0",
+				atol: .005
+			},
+			{
+				name: "minAvc",
+				kind: "number",
+				label: "and the minimum $AVC =$",
+				correct: "a(c)"
+			},
+			{
+				name: "d",
+				kind: "number",
+				label: `d) If the market price is $P = ${P}$, profit is maximized at $q^* =$`,
+				correct: `sqrt((${P} - 5) / 3)`
+			},
+			{
+				name: "profit",
+				kind: "number",
+				label: "and the profit at this quantity is $\\pi^* =$",
+				correct: `(${P} - b(d)) * d`
+			}
+		]
+	}]
+}, questions$1 = [
+	mplAndApl,
+	longRunAverageCost,
+	longRunVsShortRunCost,
+	convexIsoquant,
+	avcAndMc,
+	competitiveSupplyCurve,
+	gravelProduction,
+	perUnitTaxSurplus,
+	priceCeilingDwl,
+	minimumAtc,
+	optimalOutputMcAvc,
+	monopolyProfitDwl,
+	costCurvesProfit
+], points = /* @__PURE__ */ new Map([
+	[optimalOutputMcAvc, 12],
+	[monopolyProfitDwl, 13],
+	[costCurvesProfit, 35]
+]), assessment = {
+	id: "micro-sample-exam2",
+	title: "Micro Sample Exam 2",
+	description: "Econ 30303 Intermediate Microeconomics (Ch 6-9). 13 questions, 100 points: true/false with a defense, diagrams, and a calculation.",
+	mode: "exercise",
+	gradeButton: !0,
 	resetButton: !0,
 	questions: questions$1.map((t) => ({
 		questionId: t.id,
-		points: 1
+		points: points.get(t) ?? 4
 	}))
 }, questions = [
 	typesOfGoods,
@@ -124167,8 +125430,9 @@ var productivityGrowth = {
 	incomeDemandPriceChain,
 	marginalCostExpression,
 	quadraticEssay,
-	profitMaximum
-], courseQuestions = [...questions$1], allQuestions = [...questions, ...courseQuestions], byId = new Map(allQuestions.map((t) => [t.id, t]));
+	profitMaximum,
+	supplyDemandShiftGraph
+], courseQuestions = [...questions$2, ...questions$1], allQuestions = [...questions, ...courseQuestions], byId = new Map(allQuestions.map((t) => [t.id, t]));
 if (byId.size !== allQuestions.length) throw Error("Duplicate question ids in the question bank.");
 function getQuestion(t) {
 	return byId.get(t);
@@ -124427,7 +125691,7 @@ function QuestionView({ index: t }) {
 						variant: "primary",
 						disabled: f,
 						children: "Grade"
-					}), canNewVariant(c, n.mode) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					}), canNewVariant(c, o) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 						onClick: () => a.newVariant(t),
 						children: "New variant"
 					})]
@@ -124450,7 +125714,7 @@ function QuestionView({ index: t }) {
 				] }) : null : d && pendingPoints(c) > 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Submitted. Your teacher will grade this answer later." }) : d ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
 					"Submission score: ",
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: formatPercent(d.score) }),
-					d.score === 1 ? " — well done!" : f ? " — no attempts left." : ""
+					d.score === 1 ? " — well done!" : canNewVariant(c, o) ? " — the correct answer is shown below. Press New variant to try again with new numbers." : f ? " — no attempts left." : ""
 				] }) : null
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", {
@@ -124461,7 +125725,7 @@ function QuestionView({ index: t }) {
 						attemptsUsed(c),
 						c.maxAttempts === null ? " (unlimited)" : ` of ${c.maxAttempts} · ${m} remaining`
 					] }),
-					n.mode === "exercise" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
 						"Variant ",
 						c.variant + 1,
 						_ > 0 ? ` · ${_} attempt${_ === 1 ? "" : "s"} on this variant` : ""
@@ -124478,8 +125742,16 @@ function QuestionView({ index: t }) {
 //#endregion
 //#region src/components/AssessmentView.tsx
 function statusOf(t, n) {
-	return n ? attemptsUsed(t) > 0 ? "saved" : "not started" : t.bestScore >= 1 ? "complete" : pendingPoints(t) > 0 ? "awaiting teacher's grade" : isFinished(t) ? "closed" : attemptsUsed(t) > 0 ? "in progress" : "not started";
+	return n ? attemptsUsed(t) > 0 ? "saved" : "not started" : t.bestScore >= 1 ? "complete" : pendingPoints(t) > 0 ? "awaiting teacher's grade" : isFinished(t) && !canNewVariant(t, !1) ? "closed" : attemptsUsed(t) > 0 ? "in progress" : "not started";
 }
+var STATUS_MARK = {
+	complete: "✓",
+	saved: "✓",
+	"awaiting teacher's grade": "⧗",
+	closed: "●",
+	"in progress": "◐",
+	"not started": "○"
+};
 function AssessmentView({ onShowResults: t } = {}) {
 	let { assessment: n, state: r, bank: a, actions: o, saved: c, persistence: l, hideGrades: u } = useAssessment(), [d, f] = (0, import_react.useState)(!1), [m, _] = (0, import_react.useState)(null), { earned: v, possible: y, pending: b } = totals(r), C = r.currentIndex, E = r.questions.length - 1, O = r.questions[C], k = (t, n) => {
 		if (u && O && !isDraftSaved(O)) {
@@ -124493,10 +125765,11 @@ function AssessmentView({ onShowResults: t } = {}) {
 	}, A = () => {
 		t ? t() : window.location.hash = `#/assessment/${n.id}/results`;
 	};
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-4",
-		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "@container",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "space-y-4",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
 				className: "space-y-2",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -124569,52 +125842,86 @@ function AssessmentView({ onShowResults: t } = {}) {
 						children: l.saveFailedMessage
 					})
 				]
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
-				"aria-label": "Questions",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ol", {
-					className: "m-0 flex list-none flex-wrap gap-2 p-0",
-					children: r.questions.map((t, n) => {
-						let r = statusOf(t, u), c = u ? `${t.points} points` : `${formatPoints(t.bestScore * t.points)} of ${t.points} points`, l = a(t.questionId)?.title ?? t.questionId;
-						return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							type: "button",
-							onClick: () => k(() => o.goTo(n), !1),
-							"aria-current": n === C ? "step" : void 0,
-							"aria-label": `Question ${n + 1}: ${l}, ${r}, ${c}`,
-							className: `rounded-md border px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${n === C ? "border-indigo-500 bg-indigo-50 text-indigo-800 dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-200" : "border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"}`,
-							children: ["Q", n + 1]
-						}) }, n);
-					})
-				})
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QuestionView, { index: C }, `${C}`) }),
-			u && m === C && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-				role: "alert",
-				className: "rounded-md bg-amber-100 px-3 py-2 text-sm text-amber-900 dark:bg-amber-900/50 dark:text-amber-100",
-				children: [
-					"You haven't answered this question completely, so it wasn't saved. Answer it, or press",
-					" ",
-					C < E ? "Save & next" : "Save & finish",
-					" again to skip it for now."
-				]
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "flex justify-between gap-2",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-					onClick: () => k(() => o.goTo(C - 1), !1),
-					disabled: C === 0,
-					children: "← Previous"
-				}), C < E ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-					variant: u ? "primary" : void 0,
-					onClick: () => k(() => o.goTo(C + 1), !0),
-					children: u ? "Save & next →" : "Next →"
-				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
-					variant: "primary",
-					onClick: () => k(A, !0),
-					children: u ? "Save & finish →" : "Finish & see results →"
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-col gap-4 @4xl:grid @4xl:grid-cols-[15rem_minmax(0,1fr)] @4xl:items-start",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
+					"aria-label": "Questions",
+					className: "@4xl:sticky @4xl:top-4 @4xl:max-h-[calc(100vh-2rem)] @4xl:overflow-y-auto @4xl:rounded-lg @4xl:border @4xl:border-slate-200 @4xl:p-2 @4xl:dark:border-slate-800",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						"aria-hidden": "true",
+						className: "mb-2 hidden px-2 text-xs font-semibold uppercase tracking-wide text-slate-500 @4xl:block dark:text-slate-400",
+						children: "Questions"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ol", {
+						className: "m-0 flex list-none flex-wrap gap-2 p-0 @4xl:flex-col @4xl:flex-nowrap @4xl:gap-1",
+						children: r.questions.map((t, n) => {
+							let r = statusOf(t, u), c = u ? `${t.points} points` : `${formatPoints(t.bestScore * t.points)} of ${t.points} points`, l = a(t.questionId)?.title ?? t.questionId;
+							return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								onClick: () => k(() => o.goTo(n), !1),
+								"aria-current": n === C ? "step" : void 0,
+								"aria-label": `Question ${n + 1}: ${l}, ${r}, ${c}`,
+								title: `${l} (${r})`,
+								className: `flex items-center gap-2 rounded-md border px-3 py-1.5 text-left text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 @4xl:w-full @4xl:px-2 ${n === C ? "border-indigo-500 bg-indigo-50 text-indigo-800 dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-200" : "border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 @4xl:border-transparent @4xl:bg-transparent @4xl:dark:border-transparent @4xl:dark:bg-transparent"}`,
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										"aria-hidden": "true",
+										className: "hidden w-4 shrink-0 text-center text-slate-500 @4xl:inline dark:text-slate-400",
+										children: STATUS_MARK[r]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "shrink-0",
+										children: ["Q", n + 1]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "hidden min-w-0 flex-1 truncate font-normal @4xl:inline",
+										children: l
+									}),
+									!u && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "hidden shrink-0 text-xs font-normal text-slate-500 @4xl:inline dark:text-slate-400",
+										children: [
+											formatPoints(t.bestScore * t.points),
+											"/",
+											t.points
+										]
+									})
+								]
+							}) }, n);
+						})
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "min-w-0 space-y-4",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(QuestionView, { index: C }, `${C}`) }),
+						u && m === C && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							role: "alert",
+							className: "rounded-md bg-amber-100 px-3 py-2 text-sm text-amber-900 dark:bg-amber-900/50 dark:text-amber-100",
+							children: [
+								"You haven't answered this question completely, so it wasn't saved. Answer it, or press",
+								" ",
+								C < E ? "Save & next" : "Save & finish",
+								" again to skip it for now."
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex justify-between gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+								onClick: () => k(() => o.goTo(C - 1), !1),
+								disabled: C === 0,
+								children: "← Previous"
+							}), C < E ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+								variant: u ? "primary" : void 0,
+								onClick: () => k(() => o.goTo(C + 1), !0),
+								children: u ? "Save & next →" : "Next →"
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+								variant: "primary",
+								onClick: () => k(A, !0),
+								children: u ? "Save & finish →" : "Finish & see results →"
+							})]
+						})
+					]
 				})]
-			})
-		]
+			})]
+		})
 	});
 }
 //#endregion
@@ -124800,7 +126107,7 @@ function VariantReview({ group: t, variant: n, idPrefix: r, points: a, onGrade: 
 			n.message
 		]
 	});
-	let c = t.submissions[t.submissions.length - 1], l = c ? gradeQuestion(n.parts, c.values, c.manualGrades) : null, u = n.parts.reduce((t, n) => t + (n.weight ?? 1), 0), d = n.parts.filter((t) => getElement(t.type).manualGrading);
+	let c = t.submissions[t.submissions.length - 1], l = c ? gradeQuestion(n.parts, c.values, c.manualGrades) : null, u = n.parts.reduce((t, n) => t + (n.weight ?? 1), 0), d = n.parts.filter(isManualPart);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 		"aria-label": `Variant ${t.variant + 1}`,
 		className: "space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800",
@@ -125513,36 +126820,36 @@ function sessionTime(t) {
 	let n = Math.max(0, Math.round(t / 1e3));
 	return `PT${Math.floor(n / 3600)}H${Math.floor(n % 3600 / 60)}M${n % 60}S`;
 }
-function connectScorm(t, n, { hideGrades: r = !1, warn: a = console.warn } = {}) {
-	if (t.Initialize("") !== "true") return a(`SCORM Initialize failed: ${t.GetErrorString(t.GetLastError())}`), null;
-	let o = Date.now(), c = (n, r) => {
+function connectScorm(t, n, { hideGrades: r = !1, canReset: a = !1, warn: o = console.warn } = {}) {
+	if (t.Initialize("") !== "true") return o(`SCORM Initialize failed: ${t.GetErrorString(t.GetLastError())}`), null;
+	let c = Date.now(), l = (n, r) => {
 		if (t.SetValue(n, r) === "true") return !0;
-		let o = t.GetLastError(), c = t.GetDiagnostic?.(o);
-		return a(`SCORM SetValue(${n}) failed: error ${o} ${t.GetErrorString(o)}` + (c ? ` (${c})` : "") + ` [value length ${r.length}: ${JSON.stringify(r.slice(0, 80))}]`), !1;
-	}, l = Number.parseFloat(t.GetValue("cmi.scaled_passing_score")), u = Number.isFinite(l) ? l : null, d = "", f, m = !1, _ = () => {
-		clearTimeout(f), f = void 0, !m && t.Commit("") !== "true" && a(`SCORM Commit failed: ${t.GetErrorString(t.GetLastError())}`);
+		let a = t.GetLastError(), c = t.GetDiagnostic?.(a);
+		return o(`SCORM SetValue(${n}) failed: error ${a} ${t.GetErrorString(a)}` + (c ? ` (${c})` : "") + ` [value length ${r.length}: ${JSON.stringify(r.slice(0, 80))}]`), !1;
+	}, u = Number.parseFloat(t.GetValue("cmi.scaled_passing_score")), d = Number.isFinite(u) ? u : null, f = "", m, _ = !1, v = () => {
+		clearTimeout(m), m = void 0, !_ && t.Commit("") !== "true" && o(`SCORM Commit failed: ${t.GetErrorString(t.GetLastError())}`);
 	};
-	c("cmi.exit", "suspend");
-	let v = t.GetValue("cmi.learner_name");
+	l("cmi.exit", "suspend");
+	let y = t.GetValue("cmi.learner_name");
 	return {
-		canReset: !1,
+		canReset: a,
 		saveFailedMessage: "Your latest answers couldn't be saved to the course site. Keep this page open and check your internet connection; the quiz tries again each time you change or save an answer. If this message doesn't go away, tell your instructor.",
-		learnerName: v ? displayName(v) : void 0,
+		learnerName: y ? displayName(y) : void 0,
 		load: (r) => decodeSuspendData(t.GetValue("cmi.suspend_data"), r, n),
 		save(t) {
-			if (m) return !1;
-			let o = encodeSuspendData(t);
-			if (o.length > 64e3) return a(`SCORM suspend_data is ${o.length} characters, over the ${SUSPEND_LIMIT} limit; not saved.`), !1;
-			let l = c("cmi.suspend_data", o), v = scormReport(t, n, u, r), y = JSON.stringify(v);
-			if (y !== d) {
-				for (let [t, n] of v) l = c(t, n) && l;
-				d = y, _();
-			} else f === void 0 && (f = setTimeout(_, COMMIT_DELAY_MS));
-			return l;
+			if (_) return !1;
+			let a = encodeSuspendData(t);
+			if (a.length > 64e3) return o(`SCORM suspend_data is ${a.length} characters, over the ${SUSPEND_LIMIT} limit; not saved.`), !1;
+			let c = l("cmi.suspend_data", a), u = scormReport(t, n, d, r), y = JSON.stringify(u);
+			if (y !== f) {
+				for (let [t, n] of u) c = l(t, n) && c;
+				f = y, v();
+			} else m === void 0 && (m = setTimeout(v, COMMIT_DELAY_MS));
+			return c;
 		},
 		clear: () => {},
 		terminate() {
-			m || (c("cmi.session_time", sessionTime(Date.now() - o)), _(), m = !0, t.Terminate("") !== "true" && a(`SCORM Terminate failed: ${t.GetErrorString(t.GetLastError())}`));
+			_ || (l("cmi.session_time", sessionTime(Date.now() - c)), v(), _ = !0, t.Terminate("") !== "true" && o(`SCORM Terminate failed: ${t.GetErrorString(t.GetLastError())}`));
 		}
 	};
 }
@@ -125560,7 +126867,10 @@ function mount(t, { assessment: n, questions: r, review: a }) {
 	}) })), () => o.unmount();
 }
 function mountScorm(t, { assessment: n, questions: r }) {
-	let a = questionBank(r), o = findScormApi(), c = o ? connectScorm(o, a, { hideGrades: hidesGrades(n) }) : null, l = () => c?.terminate();
+	let a = questionBank(r), o = findScormApi(), c = o ? connectScorm(o, a, {
+		hideGrades: hidesGrades(n),
+		canReset: n.mode === "exercise"
+	}) : null, l = () => c?.terminate();
 	window.addEventListener("pagehide", l), window.addEventListener("beforeunload", l);
 	let u = (0, import_client.createRoot)(t);
 	return u.render(/* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_react.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {

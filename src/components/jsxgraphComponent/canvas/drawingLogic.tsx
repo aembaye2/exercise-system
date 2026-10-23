@@ -16,10 +16,12 @@ export type ToolName =
   | "doubleArrow"
   | "segment"
   | "rectangle"
+  | "triangle"
   | "circle"
   | "polygon"
   | "scatter"
   | "curve"
+  | "curve5"
   | "text"
   | "coordinate"
   | "eraser";
@@ -40,6 +42,9 @@ export interface InitialObjectSpec {
   text?: string;
   /** Only used for `type: "scatter"`: also connect the last point back to the first. */
   closed?: boolean;
+  /** Show the shape's defining points as dots (default true). Set false for fixed
+   * curves in a diagram, where the dots mean nothing and can give away points. */
+  showPoints?: boolean;
   color?: string;
 }
 
@@ -122,7 +127,10 @@ interface CoordinateHover {
 }
 
 const CLICK_MERGE_DISTANCE_PX = 12;
-const CURVE_MAX_POINTS = 4;
+/** Clicks per curve: the curve completes automatically after the last one. */
+const CURVE_POINTS: Partial<Record<ToolName, number>> = { curve: 4, curve5: 5 };
+const isCurveTool = (tool: ToolName) => tool in CURVE_POINTS;
+const TRIANGLE_POINTS = 3;
 
 function dist(a: Point2D, b: Point2D) {
   return Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -143,13 +151,14 @@ function buildShape(
   tool: ToolName,
   points: Point2D[],
   color: string,
-  opts: { text?: string; radius?: number; closed?: boolean; fixed?: boolean } = {}
+  opts: { text?: string; radius?: number; closed?: boolean; fixed?: boolean; showPoints?: boolean } = {}
 ): any[] {
-  const { text, radius, closed = false, fixed = true } = opts;
+  const { text, radius, closed = false, fixed = true, showPoints = true } = opts;
 
   const pointAttr = {
     withLabel: false,
     name: "",
+    visible: showPoints,
     size: 2,
     strokeColor: color,
     fillColor: color,
@@ -160,12 +169,12 @@ function buildShape(
 
   switch (tool) {
     case "point": {
-      const p = board.create("point", points[0], { ...pointAttr, size: 4, fixed });
+      const p = board.create("point", points[0], { ...pointAttr, visible: true, size: 4, fixed });
       return [p];
     }
 
     case "coordinate": {
-      const p = board.create("point", points[0], { ...pointAttr, size: 4, fixed });
+      const p = board.create("point", points[0], { ...pointAttr, visible: true, size: 4, fixed });
 
       // Invisible anchors on each axis so the guide lines stay attached if
       // the point is later dragged (in select mode).
@@ -259,7 +268,8 @@ function buildShape(
       return [center, c];
     }
 
-    case "polygon": {
+    case "polygon":
+    case "triangle": {
       const pts = points.map((pt) => board.create("point", pt, pointAttr));
       const poly = board.create("polygon", pts, {
         ...lineAttr,
@@ -280,7 +290,8 @@ function buildShape(
       return [...pts, ...segs];
     }
 
-    case "curve": {
+    case "curve":
+    case "curve5": {
       const pts = points.map((pt) => board.create("point", pt, pointAttr));
       const spline = JXG.Math.Numerics.CardinalSpline(pts, 0.5);
       const curve = board.create("curve", spline, { strokeColor: color, strokeWidth: 2, fixed });
@@ -485,6 +496,7 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
         text: spec.text,
         radius: spec.radius,
         closed: spec.closed,
+        showPoints: spec.showPoints,
         fixed: true,
       });
     });
@@ -647,7 +659,7 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
       pending.liveObjects.forEach((el) => board.removeObject(el));
       pending.liveObjects = [];
 
-      const minPoints = pending.tool === "polygon" || closed ? 3 : 2;
+      const minPoints = pending.tool === "polygon" || pending.tool === "triangle" || closed ? 3 : 2;
       if (pending.points.length < minPoints) {
         pendingRef.current = null;
         setHint(null);
@@ -676,8 +688,10 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
      * final polygon edges so the in-progress shape looks like the real one. */
     const redrawPreview = (pending: PendingShape, extra?: Point2D) => {
       clearPreviewLine(pending);
-      const pts = extra ? [...pending.points, extra] : pending.points;
+      const pts = extra ? [...pending.points, extra] : [...pending.points];
       if (pts.length < 2) return;
+      // A triangle's preview closes back to its first corner once it has all three.
+      if (pending.tool === "triangle" && pts.length === TRIANGLE_POINTS) pts.push(pts[0]);
       pending.previewLine = board.create(
         "curve",
         [pts.map((p) => p[0]), pts.map((p) => p[1])],
@@ -779,7 +793,7 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
         return;
       }
 
-      if (tool === "polygon" || tool === "scatter" || tool === "curve") {
+      if (tool === "polygon" || tool === "triangle" || tool === "scatter" || isCurveTool(tool)) {
         if (board.mode !== board.BOARD_MODE_NONE) return;
         let pending = pendingRef.current;
 
@@ -795,7 +809,8 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
 
         const last = pending.points[pending.points.length - 1];
         if (last && pixelDistance(board, last, coords) < CLICK_MERGE_DISTANCE_PX) {
-          finalizePendingShape();
+          // A triangle needs three distinct corners: a repeated click is ignored, not a finish.
+          if (tool !== "triangle") finalizePendingShape();
           return;
         }
 
@@ -822,22 +837,29 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
         });
         pending.liveObjects.push(marker);
 
-        if (tool === "curve" && pending.points.length >= CURVE_MAX_POINTS) {
+        if (tool === "triangle" && pending.points.length >= TRIANGLE_POINTS) {
           finalizePendingShape();
           return;
         }
 
-        if (tool === "curve") {
+        if (isCurveTool(tool) && pending.points.length >= CURVE_POINTS[tool]!) {
+          finalizePendingShape();
+          return;
+        }
+
+        if (isCurveTool(tool)) {
           redrawCurvePreview(pending);
         } else {
           redrawPreview(pending);
         }
         setHint(
-          tool === "polygon"
+          tool === "triangle"
+            ? "Click the three corners; the triangle completes on the third click (Esc to cancel)."
+            : tool === "polygon"
             ? "Click to add corners, click the first point (or press Enter) to close, Esc to cancel."
             : tool === "scatter"
             ? "Click to add points. Press Enter or click the last point again to finish; click the first point to close the loop. Esc to cancel."
-            : `Click up to ${CURVE_MAX_POINTS} points; the curve completes automatically after the ${CURVE_MAX_POINTS}th (Esc to cancel).`
+            : `Click up to ${CURVE_POINTS[tool]} points; the curve completes automatically after the ${CURVE_POINTS[tool]}th (Esc to cancel).`
         );
         return;
       }
@@ -861,10 +883,10 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
       const pending = pendingRef.current;
       if (!pending) return;
 
-      if (pending.tool === "polygon" || pending.tool === "scatter" || pending.tool === "curve") {
+      if (pending.tool === "polygon" || pending.tool === "triangle" || pending.tool === "scatter" || isCurveTool(pending.tool)) {
         if (pending.points.length === 0) return;
         const coords = board.getUsrCoordsOfMouse(evt) as Point2D;
-        if (pending.tool === "curve") {
+        if (isCurveTool(pending.tool)) {
           redrawCurvePreview(pending, coords);
         } else {
           redrawPreview(pending, coords);
@@ -885,7 +907,7 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
       if (activeToolRef.current === "select") onDrawingsChangeRef.current?.();
       const pending = pendingRef.current;
       if (!pending || pending.liveObjects.length === 0) return;
-      if (pending.tool === "polygon" || pending.tool === "scatter" || pending.tool === "curve") return;
+      if (pending.tool === "polygon" || pending.tool === "triangle" || pending.tool === "scatter" || isCurveTool(pending.tool)) return;
 
       const [a, b] = pending.points;
       if (dist(a, b) < (Math.abs(xMax - xMin) + Math.abs(yMax - yMin)) * 0.005) {
@@ -959,6 +981,7 @@ const DrawingBoard = forwardRef<DrawingBoardHandle, DrawingBoardProps>(function 
         text: spec.text,
         radius: spec.radius,
         closed: spec.closed,
+        showPoints: spec.showPoints,
         fixed: true,
       }).forEach((el) => {
         el.setAttribute({ dash: 2, highlight: false });

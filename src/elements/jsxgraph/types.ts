@@ -4,8 +4,8 @@ import type { DrawingQuestionProps, ExpectedShape, UserDrawing } from "../../com
 /**
  * Props for the drawing component (`DrawingQuestionProps` in
  * `src/components/jsxgraphComponent`), as plain JSON. `expectedDrawing` is
- * required here: the exercise app grades the student's drawing against it when
- * they submit.
+ * required here (the exercise app grades the student's drawing against it when
+ * they submit), except in a part with `manualGrading: true`, which the teacher grades.
  */
 export interface JsxGraphProps extends DrawingQuestionProps {
   expectedDrawing: ExpectedShape[];

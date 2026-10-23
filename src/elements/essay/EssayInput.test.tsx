@@ -18,7 +18,7 @@ vi.mock("mathlive", () => {
   return { MathfieldElement };
 });
 
-const part: EssayPart = { type: "essay", name: "e", modelAnswer: "m", maxWords: 3, maxChars: 100 };
+const part: EssayPart = { type: "essay", name: "e", modelAnswer: "m", maxWords: 3, maxChars: 100, equationEditor: true };
 
 function setup(value?: string, disabled = false) {
   const onChange = vi.fn();
@@ -73,8 +73,12 @@ describe("EssayInput", () => {
     expect(preview.querySelectorAll(".katex-html .vlist-t").length).toBeGreaterThan(0);
   });
 
-  it("hides the equation button when the question turns the editor off", () => {
-    render(<EssayInput part={{ ...part, equationEditor: false }} id="q-e2" labelId="lbl" value="" onChange={vi.fn()} />);
+  it("hides the equation button unless the question turns the editor on", () => {
+    const { unmount } = render(<EssayInput part={{ ...part, equationEditor: false }} id="q-e2" labelId="lbl" value="" onChange={vi.fn()} />);
+    expect(screen.queryByRole("button", { name: "Insert equation" })).toBeNull();
+    unmount();
+    const { equationEditor: _, ...byDefault } = part;
+    render(<EssayInput part={byDefault} id="q-e3" labelId="lbl" value="" onChange={vi.fn()} />);
     expect(screen.queryByRole("button", { name: "Insert equation" })).toBeNull();
   });
 
